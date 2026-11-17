@@ -1,5 +1,7 @@
 package options;
 
+import backend.Language;
+
 /**
  * Lets the player nudge the HUD text elements around and stores the offsets in ClientPrefs.
  * Inspired by Edak Engine's Gameplay Customize state, which does the same thing with the
@@ -9,7 +11,12 @@ class HudCustomizeState extends MusicBeatState
 {
 	static inline var ELEMENT_COUNT:Int = 4;
 
-	var names:Array<String> = ['Score Text', 'Judgement Counters', 'NPS Counter', 'Hit Timing Readout'];
+	var names:Array<String> = [
+		Language.getPhrase('hudcustom_score', 'Score Text'),
+		Language.getPhrase('hudcustom_judgements', 'Judgement Counters'),
+		Language.getPhrase('hudcustom_nps', 'NPS Counter'),
+		Language.getPhrase('hudcustom_timing', 'Hit Timing Readout')
+	];
 	var texts:Array<FlxText> = [];
 	var baseX:Array<Float> = [];
 	var baseY:Array<Float> = [];
@@ -41,10 +48,12 @@ class HudCustomizeState extends MusicBeatState
 		offsetsY = [ClientPrefs.data.hudScoreY, ClientPrefs.data.hudJudgementY, ClientPrefs.data.hudNpsY, ClientPrefs.data.hudTimingY];
 
 		var scoreY:Float = FlxG.height - 100;
-		addElement(0, 0, scoreY, FlxG.width, 20, CENTER, 'Score: 123456 | Misses: 2 | Rating: SICK! (98.5%) - FC');
-		addElement(1, 0, scoreY + 24, FlxG.width, 18, CENTER, 'SICK: 240 | GOOD: 12 | BAD: 3 | SHIT: 1 | MISS: 2');
-		addElement(2, 10, 10, 160, 18, LEFT, 'NPS: 8.4');
-		addElement(3, FlxG.width - 130, 10, 120, 18, RIGHT, '-12ms');
+		addElement(0, 0, scoreY, FlxG.width, 20, CENTER,
+			Language.getPhrase('score_text', 'Score: {1} | Misses: {2} | Rating: {3}', [123456, 2, 'SICK! (98.5%) - FC']));
+		addElement(1, 0, scoreY + 24, FlxG.width, 18, CENTER,
+			Language.getPhrase('hud_judgements', 'SICK: {1} | GOOD: {2} | BAD: {3} | SHIT: {4} | MISS: {5}', [240, 12, 3, 1, 2]));
+		addElement(2, 10, 10, 160, 18, LEFT, Language.getPhrase('hud_nps', 'NPS: {1}', [8.4]));
+		addElement(3, FlxG.width - 130, 10, 120, 18, RIGHT, Language.getPhrase('hud_hit_ms', '{1}ms', ['-12']));
 
 		highlight = new FlxSprite().makeGraphic(1, 1, FlxColor.YELLOW);
 		highlight.alpha = 0.3;
@@ -57,7 +66,8 @@ class HudCustomizeState extends MusicBeatState
 		infoTxt.scrollFactor.set();
 		add(infoTxt);
 
-		helpTxt = new FlxText(0, FlxG.height - 42, FlxG.width, 'MOUSE: drag\nARROWS: select   RESET: reset   BACK: save & exit', 16);
+		helpTxt = new FlxText(0, FlxG.height - 42, FlxG.width,
+			Language.getPhrase('hudcustom_help', 'MOUSE: drag\nARROWS: select   RESET: reset   BACK: save & exit'), 16);
 		helpTxt.setFormat(Paths.font('vcr.ttf'), 16, 0xFFAAAAAA, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		helpTxt.borderSize = 1;
 		helpTxt.scrollFactor.set();
@@ -172,7 +182,8 @@ class HudCustomizeState extends MusicBeatState
 
 	function updateInfoText():Void
 	{
-		infoTxt.text = '> ${names[selected]} <   (${Math.round(offsetsX[selected])}, ${Math.round(offsetsY[selected])})';
+		infoTxt.text = Language.getPhrase('hudcustom_selected', '> {1} <   ({2}, {3})',
+			[names[selected], Math.round(offsetsX[selected]), Math.round(offsetsY[selected])]);
 	}
 
 	function saveOffsets():Void

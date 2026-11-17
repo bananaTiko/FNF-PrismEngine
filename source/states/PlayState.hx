@@ -1268,9 +1268,14 @@ class PlayState extends MusicBeatState
 	{
 		if (ClientPrefs.data.sekaiScoring)
 		{
-			var counts:String = '${sekaiLabel('sick')}: ${ratingsData[0].hits} | GREAT: ${ratingsData[1].hits}'
-				+ ' | GOOD: ${ratingsData[2].hits} | BAD: ${ratingsData[3].hits} | MISS: $songMisses';
-			scoreTxt.text = 'Score: ${formatScore(songScore)} | $counts';
+			var counts:String = Language.getPhrase('hud_judgements_sekai', '{1}: {2} | {3}: {4} | {5}: {6} | {7}: {8} | {9}: {10}', [
+				sekaiLabel('sick'), ratingsData[0].hits,
+				sekaiLabel('good'), ratingsData[1].hits,
+				sekaiLabel('bad'), ratingsData[2].hits,
+				sekaiLabel('shit'), ratingsData[3].hits,
+				sekaiLabel('miss'), songMisses
+			]);
+			scoreTxt.text = Language.getPhrase('hud_score_sekai', 'Score: {1} | {2}', [formatScore(songScore), counts]);
 			updateHudStats();
 			return;
 		}
@@ -1295,16 +1300,17 @@ class PlayState extends MusicBeatState
 	{
 		if (judgementTxt != null)
 		{
-			judgementTxt.text = 'SICK: ${ratingsData[0].hits} | GOOD: ${ratingsData[1].hits} | BAD: ${ratingsData[2].hits} | SHIT: ${ratingsData[3].hits} | MISS: $songMisses';
+			judgementTxt.text = Language.getPhrase('hud_judgements', 'SICK: {1} | GOOD: {2} | BAD: {3} | SHIT: {4} | MISS: {5}',
+				[ratingsData[0].hits, ratingsData[1].hits, ratingsData[2].hits, ratingsData[3].hits, songMisses]);
 		}
 
 		if (npsTxt != null)
-			npsTxt.text = 'NPS: ${CoolUtil.floorDecimal(currentNPS, 1)}';
+			npsTxt.text = Language.getPhrase('hud_nps', 'NPS: {1}', [CoolUtil.floorDecimal(currentNPS, 1)]);
 
 		if (hitTimingTxt != null && totalPlayed > 0)
 		{
 			var rounded:Int = Math.round(lastHitDiff);
-			hitTimingTxt.text = (rounded > 0 ? '+' : '') + rounded + 'ms';
+			hitTimingTxt.text = Language.getPhrase('hud_hit_ms', '{1}ms', [(rounded > 0 ? '+' : '') + rounded]);
 			hitTimingTxt.color = switch (noteHitRating()) {
 				case 'sick': 0xFF66FF99;
 				case 'good': 0xFF99CCFF;
@@ -1358,16 +1364,15 @@ class PlayState extends MusicBeatState
 		var length:Float = (FlxG.sound.music != null) ? FlxG.sound.music.length / 1000 : 0;
 		var position:Float = Conductor.songPosition / 1000;
 		var flags:String = '';
-		if (practiceMode) flags += ' | PRACTICE';
-		if (cpuControlled) flags += ' | BOTPLAY';
-		if (instakillOnMiss) flags += ' | INSTAKILL';
-		if (endingSong) flags += ' | ENDING';
+		if (practiceMode) flags += ' | ' + Language.getPhrase('debug_practice', 'PRACTICE');
+		if (cpuControlled) flags += ' | ' + Language.getPhrase('debug_botplay', 'BOTPLAY');
+		if (instakillOnMiss) flags += ' | ' + Language.getPhrase('debug_instakill', 'INSTAKILL');
+		if (endingSong) flags += ' | ' + Language.getPhrase('debug_ending', 'ENDING');
 
-		debugOverlay.text = 'FPS: $currentFPS | MEM: $mem\n'
-			+ 'Song: ${SONG.song} (${Difficulty.getString()})\n'
-			+ 'Time: ${formatTime(position)} / ${formatTime(length)} | BPM: ${Conductor.bpm}\n'
-			+ 'Notes: ${notes.length} | Combo: $combo / $maxCombo | Acc: ${CoolUtil.floorDecimal(ratingPercent * 100, 2)}%'
-			+ ' | NPS: ${CoolUtil.floorDecimal(currentNPS, 1)}' + flags;
+		debugOverlay.text = Language.getPhrase('debug_overlay',
+			'FPS: {1} | MEM: {2}\nSong: {3} ({4})\nTime: {5} / {6} | BPM: {7}\nNotes: {8} | Combo: {9} / {10} | Acc: {11}% | NPS: {12}{13}',
+			[currentFPS, mem, SONG.song, Difficulty.getString(), formatTime(position), formatTime(length), Conductor.bpm,
+			 notes.length, combo, maxCombo, CoolUtil.floorDecimal(ratingPercent * 100, 2), CoolUtil.floorDecimal(currentNPS, 1), flags]);
 	}
 
 	/** Andromeda-style judgement presets: override the rating windows without touching the saved sliders. */
@@ -1442,11 +1447,11 @@ class PlayState extends MusicBeatState
 	{
 		return switch (rating)
 		{
-			case 'sick', 'perfect': 'PERFECT';
-			case 'good', 'great': 'GREAT';
-			case 'bad', 'good2': 'GOOD';
-			case 'shit', 'bad2': 'BAD';
-			case 'miss': 'MISS';
+			case 'sick', 'perfect': Language.getPhrase('judge_perfect', 'PERFECT');
+			case 'good', 'great': Language.getPhrase('judge_great', 'GREAT');
+			case 'bad', 'good2': Language.getPhrase('judge_good', 'GOOD');
+			case 'shit', 'bad2': Language.getPhrase('judge_bad', 'BAD');
+			case 'miss': Language.getPhrase('judge_miss', 'MISS');
 			default: rating.toUpperCase();
 		}
 	}

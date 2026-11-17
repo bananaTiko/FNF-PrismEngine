@@ -1,6 +1,7 @@
 package substates;
 
 import backend.CoolUtil;
+import backend.Language;
 import backend.Paths;
 import backend.PlayStats;
 import states.PlayState;
@@ -67,18 +68,28 @@ class ResultsSubState extends MusicBeatSubstate
 		FlxTween.tween(rankText.scale, {x: 1.05, y: 1.05}, 1.2, {type: FlxTween.PINGPONG});
 
 		var judgeLabels:Array<String> = ClientPrefs.data.sekaiScoring
-			? ['PERFECT', 'GREAT', 'GOOD', 'BAD']
-			: ['Sick', 'Good', 'Bad', 'Shit'];
+			? [
+				Language.getPhrase('judge_perfect', 'PERFECT'),
+				Language.getPhrase('judge_great', 'GREAT'),
+				Language.getPhrase('judge_good', 'GOOD'),
+				Language.getPhrase('judge_bad', 'BAD')
+			]
+			: [
+				Language.getPhrase('judge_sick', 'Sick'),
+				Language.getPhrase('judge_good_default', 'Good'),
+				Language.getPhrase('judge_bad_default', 'Bad'),
+				Language.getPhrase('judge_shit', 'Shit')
+			];
 		var judgeCounts:Array<Int> = [data.sicks, data.goods, data.bads, data.shits];
 		var judgeLine:String = '';
 		for (i in 0...judgeLabels.length)
 			judgeLine += (i > 0 ? '  |  ' : '') + '${judgeLabels[i]}: ${judgeCounts[i]}';
 
 		var lines:Array<String> = [
-			'Score: ${data.score}',
-			'Accuracy: $accuracy%',
-			'Max Combo: ${data.maxCombo}',
-			'Misses: ${data.misses}',
+			Language.getPhrase('results_score', 'Score: {1}', [data.score]),
+			Language.getPhrase('results_accuracy', 'Accuracy: {1}%', [accuracy]),
+			Language.getPhrase('results_max_combo', 'Max Combo: {1}', [data.maxCombo]),
+			Language.getPhrase('results_misses', 'Misses: {1}', [data.misses]),
 			judgeLine
 		];
 		var y:Float = 300;
@@ -88,24 +99,26 @@ class ResultsSubState extends MusicBeatSubstate
 			y += 44;
 		}
 
-		var lifetime:String = 'Lifetime: ${PlayStats.notesHit} notes hit over ${PlayStats.songsPlayed} songs';
+		var lifetime:String = Language.getPhrase('results_lifetime', 'Lifetime: {1} notes hit over {2} songs', [PlayStats.notesHit, PlayStats.songsPlayed]);
 		if (PlayStats.songsPlayed > 0)
-			lifetime += ' | ${PlayStats.playTimeString()} played | ${CoolUtil.floorDecimal(PlayStats.lifetimeAccuracy(), 1)}% average';
+			lifetime += Language.getPhrase('results_lifetime_extra', ' | {1} played | {2}% average', [PlayStats.playTimeString(), CoolUtil.floorDecimal(PlayStats.lifetimeAccuracy(), 1)]);
 		addText(lifetime, 560, 18, 0xFF888888);
 
-		addText('Press ACCEPT to continue', FlxG.height - 80, 24, 0xFFAAAAAA);
+		addText(Language.getPhrase('results_continue', 'Press ACCEPT to continue'), FlxG.height - 80, 24, 0xFFAAAAAA);
 
 		if (ClientPrefs.data.sekaiScoring)
 		{
 			var clearType:String = null;
 			if (data.misses == 0 && data.bads == 0 && data.shits == 0)
-				clearType = (data.goods == 0) ? 'ALL PERFECT' : 'FULL COMBO';
+				clearType = (data.goods == 0)
+					? Language.getPhrase('results_all_perfect', 'ALL PERFECT')
+					: Language.getPhrase('results_full_combo', 'FULL COMBO');
 			if (clearType != null) addText(clearType, 232, 20, 0xFF9BE7FF);
 		}
 
 		if (data.newBest)
 		{
-			var best:FlxText = addText('NEW BEST SCORE!', 258, 28, 0xFFFFD700);
+			var best:FlxText = addText(Language.getPhrase('results_new_best', 'NEW BEST SCORE!'), 258, 28, 0xFFFFD700);
 			FlxTween.tween(best, {alpha: 0.35}, 0.6, {type: FlxTween.PINGPONG});
 		}
 

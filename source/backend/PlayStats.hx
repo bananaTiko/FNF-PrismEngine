@@ -69,9 +69,9 @@ class PlayStats
 		var minutes:Int = Std.int((total % 3600) / 60);
 		var seconds:Int = total % 60;
 
-		if (hours > 0) return '${hours}h ${minutes}m';
-		if (minutes > 0) return '${minutes}m ${seconds}s';
-		return '${seconds}s';
+		if (hours > 0) return Language.getPhrase('playtime_hours', '{1}h {2}m', [hours, minutes]);
+		if (minutes > 0) return Language.getPhrase('playtime_minutes', '{1}m {2}s', [minutes, seconds]);
+		return Language.getPhrase('playtime_seconds', '{1}s', [seconds]);
 	}
 
 	static function intField(obj:Dynamic, field:String):Int
