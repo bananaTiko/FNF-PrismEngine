@@ -1079,6 +1079,8 @@ class PlayState extends MusicBeatState
 			return false;
 		}
 
+		if (ClientPrefs.data.skipCountdown) skipCountdown = true;
+
 		seenCutscene = true;
 		inCutscene = false;
 		var ret:Dynamic = callOnScripts('onStartCountdown', null, true);
@@ -1421,6 +1423,18 @@ class PlayState extends MusicBeatState
 		var bonus:Float = Math.floor(currentCombo / 100) * 0.01;
 		if (bonus > 0.1) bonus = 0.1;
 		return 1 + bonus;
+	}
+
+	/** Tints the judgement popup to match the rating, like Mr Meowzz's Color Ratings. */
+	function ratingTint(rating:String):Int
+	{
+		return switch (rating)
+		{
+			case 'sick': 0xFF7CFF7C;
+			case 'good': 0xFF9BD2FF;
+			case 'bad': 0xFFFFD07C;
+			default: 0xFFFF8080;
+		}
 	}
 
 	/** SEKAI calls Prism's four judgements PERFECT/GREAT/GOOD/BAD. */
@@ -2985,6 +2999,7 @@ class PlayState extends MusicBeatState
 		}
 
 		rating.loadGraphic(Paths.image(uiFolder + daRating.image + uiPostfix));
+		if (ClientPrefs.data.colorRatings) rating.color = ratingTint(daRating.name);
 		rating.screenCenter();
 		rating.x = placement - 40;
 		rating.y -= 60;
@@ -3285,6 +3300,10 @@ class PlayState extends MusicBeatState
 		// score and data
 		var subtract:Float = pressMissDamage;
 		if(note != null) subtract = note.missHealth;
+
+		// Mr Meowzz's Miss Sounds option, using Psych's own missnote1-3.
+		if (ClientPrefs.data.missSounds)
+			FlxG.sound.play(Paths.sound('missnote' + FlxG.random.int(1, 3)), 0.6);
 
 		// GUITAR HERO SUSTAIN CHECK LOL!!!!
 		if (note != null && guitarHeroSustains && note.parent == null) {

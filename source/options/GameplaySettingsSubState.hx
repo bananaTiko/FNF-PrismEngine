@@ -26,6 +26,18 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Skip Countdown',
+			'If checked, the song starts without the 3-2-1-GO countdown.',
+			'skipCountdown',
+			BOOL);
+		addOption(option);
+
+		var option:Option = new Option('Miss Sounds',
+			'If checked, a quick note plays every time you miss.',
+			'missSounds',
+			BOOL);
+		addOption(option);
+
 		var option:Option = new Option('Colorful Stage Scoring',
 			'If checked, uses Project SEKAI judgements (PERFECT/GREAT/GOOD/BAD), its 41.7/83.3/108.3/125ms windows and its combo-based score multiplier.',
 			'sekaiScoring',

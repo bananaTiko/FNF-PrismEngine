@@ -91,6 +91,12 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Color Ratings',
+			'Tints each judgement popup by its rating instead of using the plain art.',
+			'colorRatings',
+			BOOL);
+		addOption(option);
+
 		var option:Option = new Option('Hide Score Text',
 			'Hides the score/misses/rating line without hiding the rest of the HUD.',
 			'hideScoreText',

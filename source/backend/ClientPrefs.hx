@@ -51,6 +51,9 @@ import states.TitleState;
 	public var hideScoreText:Bool = false;
 	public var laneUnderlay:Bool = false;
 	public var sustainAlpha:Float = 0.6;
+	public var skipCountdown:Bool = false;
+	public var missSounds:Bool = false;
+	public var colorRatings:Bool = false;
 
 	// HUD element offsets, edited from Options > Customize HUD
 	public var hudScoreX:Float = 0;
