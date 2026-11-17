@@ -31,4 +31,14 @@ class BGSprite extends FlxSprite
 			animation.play(idleAnim, forceplay);
 		}
 	}
+
+	/**
+	 * Turns this background into a pixel art sprite (used by the ported erect stages).
+	 */
+	public function makePixel():Void
+	{
+		scale.set(PlayState.daPixelZoom, PlayState.daPixelZoom);
+		updateHitbox();
+		antialiasing = false;
+	}
 }

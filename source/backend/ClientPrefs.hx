@@ -77,6 +77,8 @@ import states.TitleState;
 	public var discordRPC:Bool = true;
 	public var loadingScreen:Bool = true;
 	public var language:String = 'en-US';
+	public var favorites:Array<String> = [];
+	public var freeplaySort:String = 'Name';
 }
 
 class ClientPrefs {

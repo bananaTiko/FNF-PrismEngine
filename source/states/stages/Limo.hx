@@ -1,6 +1,5 @@
 package states.stages;
 
-import states.stages.objects.*;
 
 enum HenchmenKillState
 {

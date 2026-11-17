@@ -1,0 +1,31 @@
+{
+	"songs": [
+		["Bopeebo Erect", "dad", [146, 113, 253]],
+		["Fresh Erect", "dad", [146, 113, 253]],
+		["Dad Battle Erect", "dad", [146, 113, 253]],
+		["Spookeez Erect", "spooky", [146, 113, 253]],
+		["South Erect", "spooky", [146, 113, 253]],
+		["Philly Nice Erect", "pico", [146, 113, 253]],
+		["Blammed Erect", "pico", [146, 113, 253]],
+		["Pico Erect", "pico", [146, 113, 253]],
+		["Satin Panties Erect", "mom", [146, 113, 253]],
+		["High Erect", "mom", [146, 113, 253]],
+		["Cocoa Erect", "parents", [146, 113, 253]],
+		["Eggnog Erect", "parents", [146, 113, 253]],
+		["Senpai Erect", "senpai-pixel", [146, 113, 253]],
+		["Roses Erect", "senpai-pixel", [146, 113, 253]],
+		["Thorns Erect", "spirit-pixel", [146, 113, 253]],
+		["Ugh Erect", "tankman", [146, 113, 253]],
+		["Darnell Erect", "darnell", [146, 113, 253]]
+	],
+	"weekCharacters": ["dad", "bf", "gf"],
+	"weekBackground": "stage",
+	"storyName": "Erect Mixes",
+	"weekBefore": "weekend1",
+	"weekName": "Erect Mixes",
+	"difficulties": "Erect,Nightmare",
+	"startUnlocked": true,
+	"hiddenUntilUnlocked": false,
+	"hideStoryMode": false,
+	"hideFreeplay": false
+}

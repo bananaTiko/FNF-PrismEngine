@@ -40,6 +40,9 @@ import objects.Note.EventNote;
 import objects.*;
 import states.stages.*;
 import states.stages.objects.*;
+import states.stages.erect.*;
+import states.stages.scripts.PicoCapableStage;
+import states.stages.scripts.VSliceEvents;
 
 #if LUA_ALLOWED
 import psychlua.*;
@@ -71,6 +74,12 @@ import crowplexus.hscript.Printer;
  * "function eventEarlyTrigger" - Used for making your event start a few MILLISECONDS earlier
  * "function triggerEvent" - Called when the song hits your event's timestamp, this is probably what you were looking for
 **/
+typedef ScriptLogEntry =
+{
+	var text:String;
+	var color:FlxColor;
+}
+
 class PlayState extends MusicBeatState
 {
 	public static var STRUM_X = 42;
@@ -170,6 +179,8 @@ class PlayState extends MusicBeatState
 	public var camZooming:Bool = false;
 	public var camZoomingMult:Float = 1;
 	public var camZoomingDecay:Float = 1;
+	public var camZoomingFrequency:Float = 4; // how many beats between camera bops, used by the V-Slice events
+	public var defaultStageZoom:Float = 1; // the zoom the stage was set up with, used by the "Zoom Camera" event
 	private var curSong:String = "";
 
 	public var gfSpeed:Int = 1;
@@ -250,6 +261,8 @@ class PlayState extends MusicBeatState
 	// Lua shit
 	public static var instance:PlayState;
 	#if LUA_ALLOWED public var luaArray:Array<FunkinLua> = []; #end
+	// History shown by the in-game script console (F1)
+	public var scriptLog:Array<ScriptLogEntry> = [];
 
 	#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
 	private var luaDebugGroup:FlxTypedGroup<psychlua.DebugLuaText>;
@@ -343,6 +356,7 @@ class PlayState extends MusicBeatState
 
 		var stageData:StageFile = StageData.getStageFile(curStage);
 		defaultCamZoom = stageData.defaultZoom;
+		defaultStageZoom = defaultCamZoom;
 
 		stageUI = "normal";
 		if (stageData.stageUI != null && stageData.stageUI.trim().length > 0)
@@ -389,7 +403,23 @@ class PlayState extends MusicBeatState
 			case 'tank': new Tank();					//Week 7 - Ugh, Guns, Stress
 			case 'phillyStreets': new PhillyStreets(); 	//Weekend 1 - Darnell, Lit Up, 2Hot
 			case 'phillyBlazin': new PhillyBlazin();	//Weekend 1 - Blazin
+
+			//Erect / V-Slice special stages
+			case 'mainStageErect': erect(new MainStageErect());			//Week 1 Special
+			case 'spookyMansionErect': erect(new SpookyMansionErect());	//Week 2 Special
+			case 'phillyTrainErect': erect(new PhillyTrainErect());		//Week 3 Special
+			case 'limoRideErect': erect(new LimoRideErect());			//Week 4 Special
+			case 'mallXmasErect': erect(new MallXmasErect());			//Week 5 Special
+			case 'schoolErect': erect(new SchoolErect());					//Week 6 Special - Erect Mode
+			case 'schoolPico': erect(new SchoolErect());					//Week 6 Special - Pico
+			case 'schoolEvilErect': erect(new SchoolEvilErect());		//Week 6 Special - Thorns
+			case 'tankmanBattlefieldErect': erect(new TankErect());		//Week 7 Special
+			case 'phillyStreetsErect': erect(new PhillyStreetsErect());	//Weekend 1 Special
 		}
+
+		// V-Slice style events (scroll speed, camera bopping, target camera, zoom camera)
+		// work on every stage, like they do in P-Slice
+		new VSliceEvents();
 		if(isPixelStage) introSoundsSuffix = '-pixel';
 
 		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
@@ -701,6 +731,10 @@ class PlayState extends MusicBeatState
 			spr.y += newText.height + 2;
 		});
 		luaDebugGroup.add(newText);
+
+		scriptLog.push({text: text, color: color});
+		if (scriptLog.length > 100)
+			scriptLog.shift();
 
 		Sys.println(text);
 	}
@@ -1224,11 +1258,43 @@ class PlayState extends MusicBeatState
 
 	public function startNextDialogue() {
 		dialogueCount++;
+		stagesFunc(function(stage:BaseStage) stage.startNextDialogue(dialogueCount));
 		callOnScripts('onNextDialogue', [dialogueCount]);
 	}
 
 	public function skipDialogue() {
+		stagesFunc(function(stage:BaseStage) stage.onSkipDialogue(dialogueCount));
 		callOnScripts('onSkipDialogue', [dialogueCount]);
+	}
+
+	/**
+	 * Adds the shared ABot/Nene speaker stage once, drawn behind the characters.
+	 * Used by the erect stages, and exposed to Lua/HScript as `markAsPicoCapable()`
+	 * so modded stages can opt into the speakers too.
+	 */
+	public function addPicoSpeakers(forceABot:Bool = false):PicoCapableStage
+	{
+		if (PicoCapableStage.instance == null)
+		{
+			var pico:PicoCapableStage = new PicoCapableStage(forceABot);
+			stages.remove(pico);
+			stages.insert(stages.length - 2, pico);
+		}
+		return PicoCapableStage.instance;
+	}
+
+	// Marks the stage as an erect one: they all share the ABot/Nene speakers
+	function erect(stage:BaseStage):BaseStage
+	{
+		addPicoSpeakers();
+		return stage;
+	}
+
+	function makeGameOverSubstate():GameOverSubstate
+	{
+		var subState:GameOverSubstate = new GameOverSubstate(boyfriend);
+		stagesFunc(function(stage:BaseStage) stage.gameOverStart(subState));
+		return subState;
 	}
 
 	function startSong():Void
@@ -1865,6 +1931,17 @@ class PlayState extends MusicBeatState
 		}
 		#end
 
+		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
+		// Scripting quality of life: F1 opens the script console, F5 hot-reloads every loaded script
+		if (!inCutscene && !startingSong && !paused)
+		{
+			if (FlxG.keys.justPressed.F1)
+				openSubState(new psychlua.ScriptConsole());
+			else if (FlxG.keys.justPressed.F5)
+				reloadScripts();
+		}
+		#end
+
 		setOnScripts('botPlay', cpuControlled);
 		callOnScripts('onUpdatePost', [elapsed]);
 	}
@@ -2013,7 +2090,7 @@ class PlayState extends MusicBeatState
 						vocals.stop();
 						opponentVocals.stop();
 						FlxG.sound.music.stop();
-						openSubState(new GameOverSubstate(boyfriend));
+						openSubState(makeGameOverSubstate());
 						gameOverTimer = null;
 					});
 				}
@@ -2022,7 +2099,7 @@ class PlayState extends MusicBeatState
 					vocals.stop();
 					opponentVocals.stop();
 					FlxG.sound.music.stop();
-					openSubState(new GameOverSubstate(boyfriend));
+					openSubState(makeGameOverSubstate());
 				}
 
 				// MusicBeatState.switchState(new GameOverState(boyfriend.getScreenPosition().x, boyfriend.getScreenPosition().y));
@@ -3261,7 +3338,9 @@ class PlayState extends MusicBeatState
 			if (generatedMusic && !endingSong && !isCameraOnForcedPos)
 				moveCameraSection();
 
-			if (camZooming && FlxG.camera.zoom < 1.35 && ClientPrefs.data.camZooms)
+			var zoomFreq:Int = Math.round(camZoomingFrequency);
+			if (zoomFreq < 1) zoomFreq = 1;
+			if (camZooming && curBeat % zoomFreq == 0 && FlxG.camera.zoom < 1.35 && ClientPrefs.data.camZooms)
 			{
 				FlxG.camera.zoom += 0.015 * camZoomingMult;
 				camHUD.zoom += 0.03 * camZoomingMult;
@@ -3347,6 +3426,75 @@ class PlayState extends MusicBeatState
 			if(newScript != null)
 				newScript.destroy();
 		}
+	}
+	#end
+
+	#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
+	/**
+	 * Destroys every loaded Lua/HScript file and runs it again from disk.
+	 * Lets scripters iterate without restarting the song.
+	 */
+	public function reloadScripts():Int
+	{
+		var loaded:Int = 0;
+
+		#if LUA_ALLOWED
+		var luaPaths:Array<String> = [];
+		for (lua in luaArray)
+			if (lua.scriptName != null && lua.scriptName.length > 0 && !luaPaths.contains(lua.scriptName))
+				luaPaths.push(lua.scriptName);
+
+		var oldLuas:Array<FunkinLua> = luaArray.copy();
+		luaArray = [];
+		for (lua in oldLuas)
+		{
+			try {
+				lua.call('onDestroy', []);
+			} catch(e:Dynamic) {}
+			lua.stop();
+		}
+
+		for (path in luaPaths)
+		{
+			try {
+				new FunkinLua(path);
+				loaded++;
+			} catch(e:Dynamic) {
+				addTextToDebug('Failed to reload $path: $e', FlxColor.RED);
+			}
+		}
+		#end
+
+		#if HSCRIPT_ALLOWED
+		var hscriptPaths:Array<String> = [];
+		for (script in hscriptArray)
+			if (script != null && script.origin != null && script.origin.length > 0 && !hscriptPaths.contains(script.origin))
+				hscriptPaths.push(script.origin);
+
+		var oldScripts:Array<HScript> = hscriptArray.copy();
+		hscriptArray = [];
+		for (script in oldScripts)
+		{
+			if (script == null) continue;
+			try {
+				if (script.exists('onDestroy')) script.call('onDestroy');
+			} catch(e:Dynamic) {}
+			script.destroy();
+		}
+
+		for (path in hscriptPaths)
+		{
+			try {
+				initHScript(path);
+				loaded++;
+			} catch(e:Dynamic) {
+				addTextToDebug('Failed to reload $path: $e', FlxColor.RED);
+			}
+		}
+		#end
+
+		addTextToDebug('Reloaded $loaded script(s).', FlxColor.LIME);
+		return loaded;
 	}
 	#end
 
@@ -3641,5 +3789,255 @@ class PlayState extends MusicBeatState
 		FlxG.log.warn('This platform doesn\'t support Runtime Shaders!');
 		#end
 		return false;
+	}
+
+	//! Restart transition (ported from P-Slice PR #319)
+	inline function destroyStrum(s:StrumNote)
+	{
+		if (s == null) return;
+		FlxTween.cancelTweensOf(s);
+		if (strumLineNotes != null) strumLineNotes.remove(s, true);
+		s.destroy();
+	}
+
+	function clearAllStrums():Void
+	{
+		// playerStrums/opponentStrums reference the same StrumNotes that live in strumLineNotes
+		if (playerStrums != null)
+		{
+			for (s in playerStrums) destroyStrum(s);
+			playerStrums.clear();
+		}
+
+		if (opponentStrums != null)
+		{
+			for (s in opponentStrums) destroyStrum(s);
+			opponentStrums.clear();
+		}
+
+		if (strumLineNotes != null) strumLineNotes.clear();
+	}
+
+	/**
+	 * Soft restart used by the restart transition: fades the song out on screen
+	 * (notes drop away, score counts down) before the state actually resets.
+	 */
+	public function DoRestart():Void
+	{
+		clearAllStrums();
+
+		KillOldCountdown();
+
+		camGame.zoom = defaultCamZoom;
+
+		// resets the camera because this isn't an actual restart, it just restarts the music beat state
+		cast(camGame, backend.PsychCamera).GoZero();
+
+		paused = false;
+		canReset = false;
+		startedCountdown = false;
+		canPause = false;
+
+		freezeCamera = true;
+
+		allowDebugKeys = false;
+
+		camZooming = false;
+
+		endingSong = false;
+
+		startingSong = true;
+
+		inCutscene = false;
+
+		isDead = false;
+
+		// stop the steps
+		curSection = 0;
+		curStep = 0;
+		curBeat = 0;
+		curDecStep = 0;
+		curDecBeat = 0;
+		lastBeatHit = -1;
+		lastStepHit = -1;
+
+		// stun everyone and make them do an idle
+		for (c in [boyfriend, dad, gf]) if (c != null)
+		{
+			c.active = true;
+			c.stunned = true;
+			c.specialAnim = false;
+			c.holdTimer = 0;
+			if (c.animation != null && c.animation.curAnim != null)
+				c.animation.curAnim.paused = false;
+			c.recalculateDanceIdle();
+			c.dance();
+		}
+
+		characterBopper(0);
+
+		var healthTweenDone:Bool = false;
+		var scoreTweenDone:Bool = false;
+		var notesDone:Bool = false;
+
+		var tryReset:Void->Void = function()
+		{
+			if (healthTweenDone && scoreTweenDone && notesDone)
+				MusicBeatState.resetState();
+		};
+
+		var sc0:Int = combo;
+		var ss0:Int = songScore;
+		var rp0:Float = ratingPercent;
+
+		FlxTween.num(1, 0, 0.2, {ease: FlxEase.circOut}, function(k:Float)
+		{
+			combo = Std.int(sc0 * k);
+			songScore = Std.int(ss0 * k);
+			ratingPercent = rp0 * k;
+			updateScore(false, false);
+			RecalculateRating(false, false);
+		}).onComplete = function(_)
+		{
+			combo = 0;
+			songScore = 0;
+			ratingPercent = 0;
+			ratingName = '?';
+			updateScore(false, false);
+			RecalculateRating(false, false);
+
+			scoreTweenDone = true;
+			tryReset();
+		};
+
+		var h0:Float = health;
+		FlxTween.num(h0, 1, 0.3, {ease: FlxEase.quintInOut}, function(v:Float) health = v)
+			.onComplete = function(_)
+			{
+				healthTweenDone = true;
+				tryReset();
+			};
+
+		generatedMusic = false;
+		eventNotes = [];
+		noteTypes = [];
+		eventsPushed = [];
+
+		timeBar.visible = false;
+		timeTxt.visible = false;
+		timeBar.alpha = 0;
+		timeTxt.alpha = 0;
+		songLength = 0;
+		songPercent = 0;
+
+		FlxG.camera.zoom = defaultCamZoom;
+
+		camHUD.zoom = 1;
+
+		// stop vocals
+		if (FlxG.sound.music != null) FlxG.sound.music.stop();
+
+		if (vocals != null)
+		{
+			vocals.stop();
+			vocals.time = 0;
+		}
+
+		if (opponentVocals != null)
+		{
+			opponentVocals.stop();
+			opponentVocals.time = 0;
+		}
+
+		isCameraOnForcedPos = false;
+		moveCameraSection(0);
+
+		songHits = 0;
+		songMisses = 0;
+		totalPlayed = 0;
+		totalNotesHit = 0;
+		keysPressed = [];
+		boyfriendIdleTime = 0;
+		boyfriendIdled = false;
+
+		var dropY:Float = ClientPrefs.data.downScroll ? -200 : FlxG.height + 200;
+		var tDur:Float = 0.90;
+		var tCnt:Int = 0;
+		var done:Int = 0;
+
+		// kills out notes
+		notes.forEachAlive(function(n:Note)
+		{
+			n.canBeHit = false;
+			n.ignoreNote = true;
+			n.velocity.set(0, 0);
+			n.acceleration.set(0, 0);
+			n.copyY = false;
+			n.copyAngle = false;
+			n.copyAlpha = false;
+
+			tCnt++;
+			FlxTween.tween(n, {y: dropY}, tDur, {
+				ease: FlxEase.sineIn,
+				onComplete: function(_)
+				{
+					n.visible = false;
+					n.kill();
+					n.destroy();
+					done++;
+					if (done == tCnt)
+					{
+						notesDone = true;
+						tryReset();
+					}
+				}
+			});
+		});
+
+		if (tCnt == 0)
+		{
+			notesDone = true;
+			tryReset();
+		}
+	}
+
+	public function KillOldCountdown():Void
+	{
+		// stops timers
+		var timers = [startTimer, finishTimer, gameOverTimer];
+
+		for (i in 0...timers.length)
+		{
+			if (timers[i] != null)
+			{
+				timers[i].cancel();
+				timers[i] = null;
+			}
+		}
+
+		startTimer = null;
+		finishTimer = null;
+		gameOverTimer = null;
+
+		var sprites = [countdownReady, countdownSet, countdownGo];
+
+		// kills sprites
+		for (spr in sprites)
+		{
+			if (spr != null)
+			{
+				remove(spr, true);
+				spr.destroy();
+			}
+		}
+
+		countdownReady = null;
+		countdownSet = null;
+		countdownGo = null;
+
+		startedCountdown = false;
+		startOnTime = 0;
+		startCallback = null;
+		endCallback = null;
 	}
 }

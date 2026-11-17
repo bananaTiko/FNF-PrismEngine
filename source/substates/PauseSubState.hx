@@ -273,7 +273,7 @@ class PauseSubState extends MusicBeatSubstate
 					PlayState.changedDifficulty = true;
 					practiceText.visible = PlayState.instance.practiceMode;
 				case "Restart Song":
-					restartSong();
+					restartSong(!PlayState.chartingMode); // restarts in place with the transition, unless in charting mode
 				case "Leave Charting Mode":
 					restartSong();
 					PlayState.chartingMode = false;
@@ -353,12 +353,22 @@ class PauseSubState extends MusicBeatSubstate
 		FlxG.sound.music.volume = 0;
 		PlayState.instance.vocals.volume = 0;
 
-		if(noTrans)
+		// close this substate if we restart in place, otherwise the pause menu stays on screen
+		if (PlayState.instance.subState != null && noTrans)
+		{
+			PlayState.instance.closeSubState();
+		}
+
+		if (noTrans)
 		{
 			FlxTransitionableState.skipNextTransIn = true;
 			FlxTransitionableState.skipNextTransOut = true;
+			PlayState.instance.DoRestart(); // fades the song out instead of hard resetting the state
 		}
-		MusicBeatState.resetState();
+		else
+		{
+			MusicBeatState.resetState();
+		}
 	}
 
 	override function destroy()

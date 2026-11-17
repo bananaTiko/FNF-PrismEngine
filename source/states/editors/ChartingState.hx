@@ -1782,6 +1782,60 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 	var cachedSectionTimes:Array<Float>;
 	var cachedSectionCrochets:Array<Float>;
 	var cachedSectionBPMs:Array<Float>;
+	/**
+	 * Moonchart chart import: pick a chart file in any format moonchart supports
+	 * (FNF, osu!mania, Quaver, StepMania, Guitar Hero, MIDI...) and load it into the editor.
+	 */
+	function openMoonchartImport():Void
+	{
+		if(!fileDialog.completed) return;
+		upperBox.isMinimized = true;
+		upperBox.bg.visible = false;
+
+		fileDialog.open(null, 'Open a chart file (Moonchart)', null, function()
+		{
+			var chartPath:String = fileDialog.path.replace('\\', '/');
+
+			// FNF (V-Slice) and similar formats keep their notes in a separate metadata file
+			if(MoonchartImporter.needsMetadata(chartPath))
+				fileDialog.open(null, 'Open the metadata JSON for this chart', null,
+					function() importMoonchart(chartPath, fileDialog.path.replace('\\', '/')));
+			else
+				importMoonchart(chartPath, null);
+		});
+	}
+
+	function importMoonchart(chartPath:String, ?metaPath:String):Void
+	{
+		var formatName:String = MoonchartImporter.getFormatName(chartPath);
+		try
+		{
+			var converted:String = MoonchartImporter.convertToPsych(chartPath, metaPath, Difficulty.getDefault());
+			if(converted == null || converted.length < 1)
+			{
+				showOutput('Error: Moonchart could not read this chart' + (formatName != null ? ' ($formatName)' : '') + '.', true);
+				return;
+			}
+
+			var loadedChart:SwagSong = Song.parseJSON(converted, 'moonchart_import');
+			if(loadedChart == null || !Reflect.hasField(loadedChart, 'song'))
+			{
+				showOutput('Error: Converted chart is not a valid chart.', true);
+				return;
+			}
+
+			loadChart(loadedChart);
+			reloadNotesDropdowns();
+			prepareReload();
+			showOutput('Imported chart with Moonchart' + (formatName != null ? ' ($formatName)' : '') + '!');
+		}
+		catch(e:Exception)
+		{
+			showOutput('Error: ${e.message}', true);
+			trace(e.stack);
+		}
+	}
+
 	function loadChart(song:SwagSong)
 	{
 		PlayState.SONG = song;
@@ -3967,6 +4021,11 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		btn.text.alignment = LEFT;
 		tab_group.add(btn);
 		
+		btnY += 20;
+		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Moonchart Import...', openMoonchartImport, btnWid);
+		btn.text.alignment = LEFT;
+		tab_group.add(btn);
+
 		btnY += 20;
 		var btn:PsychUIButton = new PsychUIButton(btnX, btnY, '  Update (Legacy)...', function()
 		{

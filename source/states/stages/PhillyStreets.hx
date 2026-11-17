@@ -7,7 +7,6 @@ import flixel.addons.display.FlxTiledSprite;
 import flixel.graphics.frames.FlxAtlasFrames;
 
 import substates.GameOverSubstate;
-import states.stages.objects.*;
 
 import objects.Note;
 

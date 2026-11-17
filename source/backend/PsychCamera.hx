@@ -5,12 +5,52 @@ package backend;
 
 class PsychCamera extends FlxCamera
 {
+	var camName:String;
+
+	public var X:Int;
+	public var Y:Int;
+
+	// When true the camera snaps straight to the reset point instead of lerping there
+	public var ForcePos:Bool = false;
+
+	var resetActive:Bool = false;
+	var resetTarget:FlxPoint = FlxPoint.get();
+	var resetEpsilon:Float = 0.5;
+
+	public function new(name:String = 'camera', X:Int = 0, Y:Int = 0, Width:Int = 0, Height:Int = 0, Zoom:Float = 0)
+	{
+		camName = name;
+		this.X = X;
+		this.Y = Y;
+		super(X, Y, Width, Height, Zoom);
+	}
+
 	override public function update(elapsed:Float):Void
 	{
-		// follow the target, if there is one
-		if (target != null)
+		if (ForcePos)
 		{
-			updateFollowDelta(elapsed);
+			scroll.set(resetTarget.x, resetTarget.y);
+			resetActive = false;
+		}
+		else
+		{
+			// follow the target, if there is one
+			if (target != null && !resetActive)
+			{
+				updateFollowDelta(elapsed);
+			}
+
+			if (resetActive)
+			{
+				var mult:Float = 1 - Math.exp(-elapsed * followLerp / (1 / 60));
+				scroll.x += (resetTarget.x - scroll.x) * mult;
+				scroll.y += (resetTarget.y - scroll.y) * mult;
+				if (Math.abs(scroll.x - resetTarget.x) <= resetEpsilon && Math.abs(scroll.y - resetTarget.y) <= resetEpsilon)
+				{
+					scroll.set(resetTarget.x, resetTarget.y);
+					resetActive = false;
+				}
+			}
 		}
 
 		updateScroll();
@@ -21,6 +61,33 @@ class PsychCamera extends FlxCamera
 
 		updateFlashSpritePosition();
 		updateShake(elapsed);
+	}
+
+	public inline function resetToPoint(p:FlxPoint):Void
+	{
+		resetTo(p.x, p.y);
+	}
+
+	public inline function resetTo(x:Float, y:Float):Void
+	{
+		resetTarget.set(x, y);
+		if (ForcePos)
+		{
+			scroll.set(resetTarget.x, resetTarget.y);
+			resetActive = false;
+		}
+		else
+		{
+			resetActive = true;
+		}
+	}
+
+	/**
+	 * Sends the camera back to the position it was created with.
+	 */
+	public inline function GoZero():Void
+	{
+		resetTo(X, Y);
 	}
 
 	public function updateFollowDelta(?elapsed:Float = 0):Void

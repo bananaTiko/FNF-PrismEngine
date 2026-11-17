@@ -1,6 +1,7 @@
 package states.stages.objects;
 
-import flixel.graphics.frames.FlxAtlasFrames;
+import backend.VsliceOptions;
+
 
 class TankmenBG extends FlxSprite
 {
@@ -8,6 +9,7 @@ class TankmenBG extends FlxSprite
 	private var tankSpeed:Float;
 	private var endingOffset:Float;
 	private var goingRight:Bool;
+	private var offsetRight:Bool;
 	public var strumTime:Float;
 
 	public function new(x:Float, y:Float, facingRight:Bool)
@@ -23,17 +25,18 @@ class TankmenBG extends FlxSprite
 		animation.addByPrefix('shot', 'John Shot ' + FlxG.random.int(1, 2), 24, false);
 		animation.play('run');
 		animation.curAnim.curFrame = FlxG.random.int(0, animation.curAnim.frames.length - 1);
-		antialiasing = ClientPrefs.data.antialiasing;
+		antialiasing = VsliceOptions.ANTIALIASING;
 
 		scale.set(0.8, 0.8);
 		updateHitbox();
 	}
 
-	public function resetShit(x:Float, y:Float, goingRight:Bool):Void
+	public function resetShit(x:Float, y:Float, goingRight:Bool, offsetRight:Bool = false):Void
 	{
 		this.x = x;
 		this.y = y;
 		this.goingRight = goingRight;
+		this.offsetRight = offsetRight;
 		endingOffset = FlxG.random.float(50, 200);
 		tankSpeed = FlxG.random.float(0.6, 1);
 		flipX = goingRight;
@@ -61,7 +64,7 @@ class TankmenBG extends FlxSprite
 		if(Conductor.songPosition > strumTime)
 		{
 			animation.play('shot');
-			if(goingRight)
+			if(goingRight && !offsetRight)
 			{
 				offset.x = 300;
 				offset.y = 200;

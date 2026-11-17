@@ -5,29 +5,40 @@ import lime.utils.Assets as LimeAssets;
 
 class CoolUtil
 {
+	// Raw link to gitVersion.txt. Point this at a branch (not a commit hash), otherwise the
+	// check always reads the same pinned version and can never see an update.
+	public static final VERSION_URL:String = "https://raw.githubusercontent.com/bananaTiko/FNF-PrismEngine/Prism-Engine-Main/gitVersion.txt";
+
+	// Latest version published on the repository's gitVersion.txt. Empty until the request finishes.
+	public static var latestVersion:String = '';
+
 	public static function checkForUpdates(url:String = null):String {
 		if (url == null || url.length == 0)
-			url = "https://raw.githubusercontent.com/ShadowMario/FNF-PsychEngine/main/gitVersion.txt";
-		var version:String = states.MainMenuState.psychEngineVersion.trim();
+			url = VERSION_URL;
+		var version:String = states.MainMenuState.prismEngineVersion.trim();
 		if(ClientPrefs.data.checkForUpdates) {
 			trace('checking for updates...');
-			var http = new haxe.Http(url);
-			http.onData = function (data:String)
-			{
-				var newVersion:String = data.split('\n')[0].trim();
-				trace('version online: $newVersion, your version: $version');
-				if(newVersion != version) {
-					trace('versions arent matching! please update');
-					version = newVersion;
-					http.onData = null;
-					http.onError = null;
-					http = null;
+			try {
+				var http = new haxe.Http(url);
+									http.onData = function (data:String)
+					{
+						var newVersion:String = data.split('\n')[0].trim();
+						trace('version online: $newVersion, your version: $version');
+						// Only accept a plain version string, so 404 pages or HTML aren't read as a version
+						if (newVersion.length > 0 && newVersion.length <= 32 && ~/^[0-9A-Za-z._+-]+$/.match(newVersion))
+							latestVersion = newVersion;
+						else
+							trace('unexpected version response, ignoring: $newVersion');
+						http.onData = null;
+						http.onError = null;
+					}
+				http.onError = function (error) {
+					trace('error: $error');
 				}
+				http.request();
+			} catch(e:Dynamic) {
+				trace('error while checking for updates: $e');
 			}
-			http.onError = function (error) {
-				trace('error: $error');
-			}
-			http.request();
 		}
 		return version;
 	}

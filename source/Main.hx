@@ -75,6 +75,11 @@ class Main extends Sprite
 		backend.Native.fixScaling();
 		#end
 
+		// P-Slice style widescreen scaling, keeps the game filling wide displays instead of letterboxing it
+		#if mobile
+		FlxG.scaleMode = new backend.MobileScaleMode(true);
+		#end
+
 		// Credits to MAJigsaw77 (he's the og author for this code)
 		#if android
 		Sys.setCwd(Path.addTrailingSlash(Context.getExternalFilesDir()));
@@ -85,13 +90,18 @@ class Main extends Sprite
 		hxvlc.util.Handle.init(#if (hxvlc >= "1.8.0")  ['--no-lua'] #end);
 		#end
 
-		#if LUA_ALLOWED
+		// Global mods must load no matter which script backend is enabled, otherwise
+		// Lua-less builds silently lose every "runsGlobally" mod's assets and scripts.
 		Mods.pushGlobalMods();
-		#end
 		Mods.loadTopMod();
 
-		FlxG.save.bind('funkin', CoolUtil.getSavePath());
+		FlxG.save.bind('prism', CoolUtil.getSavePath());
 		Highscore.load();
+
+		#if CHECK_FOR_UPDATES
+		if(FlxG.save.data.checkForUpdates == null || FlxG.save.data.checkForUpdates)
+			CoolUtil.checkForUpdates();
+		#end
 
 		#if HSCRIPT_ALLOWED
 		Iris.warn = function(x, ?pos:haxe.PosInfos) {
@@ -215,14 +225,13 @@ class Main extends Sprite
 	function onCrash(e:UncaughtErrorEvent):Void
 	{
 		var errMsg:String = "";
-		var path:String;
 		var callStack:Array<StackItem> = CallStack.exceptionStack(true);
 		var dateNow:String = Date.now().toString();
 
 		dateNow = dateNow.replace(" ", "_");
-		dateNow = dateNow.replace(":", "'");
+		dateNow = ~/:/g.replace(dateNow, "'");
 
-		path = "./crash/" + "PsychEngine_" + dateNow + ".txt";
+		var fileName:String = "PrismEngine_" + dateNow + ".txt";
 
 		for (stackItem in callStack)
 		{
@@ -235,21 +244,33 @@ class Main extends Sprite
 			}
 		}
 
-		errMsg += "\nUncaught Error: " + e.error;
-		// remove if you're modding and want the crash log message to contain the link
-		// please remember to actually modify the link for the github page to report the issues to.
+			errMsg += "\nUncaught Error: " + e.error;
 		#if officialBuild
-		errMsg += "\nPlease report this error to the GitHub page: https://github.com/ShadowMario/FNF-PsychEngine";
+		errMsg += "\nPlease report this error to the GitHub page: https://github.com/bananaTiko/FNF-PrismEngine/issues";
 		#end
 		errMsg += "\n\n> Crash Handler written by: sqirra-rng";
 
-		if (!FileSystem.exists("./crash/"))
-			FileSystem.createDirectory("./crash/");
+		// The folder next to the executable can be read-only (Program Files, macOS app bundles),
+		// so write to the app storage folder first and fall back to "./crash/" if that fails.
+		var crashDir:String = lime.system.System.applicationStorageDirectory;
+		if (!crashDir.endsWith("/") && !crashDir.endsWith("\\")) crashDir += "/";
+		crashDir += "crash/";
+		var crashPath:String = crashDir + fileName;
 
-		File.saveContent(path, errMsg + "\n");
+		try {
+			if (!FileSystem.exists(crashDir))
+				FileSystem.createDirectory(crashDir);
+			File.saveContent(crashPath, errMsg + "\n");
+		} catch (err:Dynamic) {
+			crashDir = "./crash/";
+			crashPath = crashDir + fileName;
+			if (!FileSystem.exists(crashDir))
+				FileSystem.createDirectory(crashDir);
+			File.saveContent(crashPath, errMsg + "\n");
+		}
 
 		Sys.println(errMsg);
-		Sys.println("Crash dump saved in " + Path.normalize(path));
+		Sys.println("Crash dump saved in " + Path.normalize(crashPath));
 
 		Application.current.window.alert(errMsg, "Error!");
 		#if DISCORD_ALLOWED

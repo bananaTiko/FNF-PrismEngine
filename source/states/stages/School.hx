@@ -1,6 +1,5 @@
 package states.stages;
 
-import states.stages.objects.*;
 import substates.GameOverSubstate;
 import cutscenes.DialogueBox;
 

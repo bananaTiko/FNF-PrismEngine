@@ -84,7 +84,7 @@ class FunkinLua {
 		set('Function_Continue', LuaUtils.Function_Continue);
 		set('luaDebugMode', false);
 		set('luaDeprecatedWarnings', true);
-		set('version', MainMenuState.psychEngineVersion.trim());
+		set('version', MainMenuState.prismEngineVersion.trim());
 		set('modFolder', this.modFolder);
 
 		// Song/Week shit
@@ -215,6 +215,12 @@ class FunkinLua {
 				runningScripts.push(script.scriptName);
 
 			return runningScripts;
+		});
+
+		// Adds the ABot/Nene speaker stage to the current stage, for modded stages that want it
+		addLocalCallback("markAsPicoCapable", function(?forceABot:Bool = false) {
+			game.addPicoSpeakers(forceABot == true);
+			return true;
 		});
 
 		addLocalCallback("setOnScripts", function(varName:String, arg:Dynamic, ?ignoreSelf:Bool = false, ?exclusions:Array<String> = null) {

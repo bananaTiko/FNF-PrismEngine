@@ -1,6 +1,5 @@
 package states.stages;
 
-import states.stages.objects.*;
 import objects.Character;
 
 class Philly extends BaseStage

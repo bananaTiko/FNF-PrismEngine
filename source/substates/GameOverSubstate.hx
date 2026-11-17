@@ -1,6 +1,7 @@
 package substates;
 
 import backend.WeekData;
+import backend.VsliceOptions;
 
 import objects.Character;
 import flixel.FlxObject;
@@ -178,18 +179,28 @@ class GameOverSubstate extends MusicBeatSubstate
 			{
 				switch(PlayState.SONG.stage)
 				{
-					case 'tank':
+					case 'tank', 'tankmanBattlefieldErect':
 						coolStartDeath(0.2);
-						
-						var exclude:Array<Int> = [];
-						//if(!ClientPrefs.cursing) exclude = [1, 3, 8, 13, 17, 21];
-	
-						FlxG.sound.play(Paths.sound('jeffGameover/jeffGameover-' + FlxG.random.int(1, 25, exclude)), 1, false, null, true, function() {
+
+						var resumeMusic:Void->Void = function()
+						{
 							if(!isEnding)
 							{
 								FlxG.sound.music.fadeIn(0.2, 1, 4);
 							}
-						});
+						};
+
+						// Jeff's death lines depend on who the player is (same as P-Slice)
+						switch (PlayState.SONG.player1)
+						{
+							case 'bf-holding-gf', 'bf':
+								var exclude:Array<Int> = VsliceOptions.NAUGHTYNESS ? [] : [1, 3, 8, 13, 17, 21];
+								FlxG.sound.play(Paths.sound('jeffGameover/jeffGameover-' + FlxG.random.int(1, 25, exclude)), 1, false, null, true, resumeMusic);
+							case 'pico-playable', 'pico-holding-nene':
+								FlxG.sound.play(Paths.sound('jeffGameover-pico/jeffGameover-' + FlxG.random.int(1, 9)), 1, false, null, true, resumeMusic);
+							default:
+								FlxG.sound.play(Paths.sound('jeffGameover-pico/jeffGameover-10'), 1, false, null, true, resumeMusic);
+						}
 
 					default:
 						coolStartDeath();

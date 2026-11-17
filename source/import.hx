@@ -33,11 +33,18 @@ import backend.BaseStage;
 import backend.Difficulty;
 import backend.Mods;
 import backend.Language;
+import backend.MoonchartImporter;
 
 import backend.ui.*; //Psych-UI
 
 import objects.Alphabet;
 import objects.BGSprite;
+import objects.FlxAtlasSprite;
+import objects.FunkinSprite;
+import objects.FunkinSound;
+
+//P-Slice stage code
+import states.stages.objects.*;
 
 import states.PlayState;
 import states.LoadingState;
@@ -62,6 +69,10 @@ import flixel.tweens.FlxTween;
 import flixel.group.FlxSpriteGroup;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.addons.transition.FlxTransitionableState;
+import flixel.system.FlxAssets.FlxShader;
+import flixel.util.FlxDestroyUtil;
+import flixel.ui.FlxBar;
+import haxe.Exception;
 
 using StringTools;
 #end

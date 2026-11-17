@@ -1,6 +1,5 @@
 package states.stages;
 
-import states.stages.objects.*;
 
 class MallEvil extends BaseStage
 {

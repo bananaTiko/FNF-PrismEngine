@@ -4,6 +4,7 @@ package backend;
 import objects.AchievementPopup;
 import haxe.Exception;
 import haxe.Json;
+import openfl.utils.Assets;
 
 #if LUA_ALLOWED
 import psychlua.FunkinLua;
@@ -206,9 +207,9 @@ class Achievements {
 		_sortID++;
 	}
 
-	#if MODS_ALLOWED
 	public static function reloadList()
 	{
+		#if MODS_ALLOWED
 		// remove modded achievements
 		if((_sortID + 1) > _originalLength)
 			for (key => value in achievements)
@@ -216,71 +217,70 @@ class Achievements {
 					achievements.remove(key);
 
 		_sortID = _originalLength-1;
+		#end
 
 		var modLoaded:String = Mods.currentModDirectory;
+
+		// Engine-level achievements, editable in assets/shared/data/achievements.json without recompiling
 		Mods.currentModDirectory = null;
-		loadAchievementJson(Paths.mods('data/achievements.json'));
+		loadAchievementJson(Paths.getSharedPath('data/achievements.json'), null);
+
+		#if MODS_ALLOWED
+		loadAchievementJson(Paths.mods('data/achievements.json'), null);
 		for (i => mod in Mods.parseList().enabled)
 		{
 			Mods.currentModDirectory = mod;
-			loadAchievementJson(Paths.mods('$mod/data/achievements.json'));
+			loadAchievementJson(Paths.mods('$mod/data/achievements.json'), mod);
 		}
+		#end
+
 		Mods.currentModDirectory = modLoaded;
 	}
 
-	inline static function loadAchievementJson(path:String, addMods:Bool = true)
+	static function loadAchievementJson(path:String, ?mod:String = null)
 	{
 		var retVal:Array<Dynamic> = null;
-		if(FileSystem.exists(path)) {
-			try {
-				var rawJson:String = File.getContent(path).trim();
-				if(rawJson != null && rawJson.length > 0) retVal = tjson.TJSON.parse(rawJson); //Json.parse('{"achievements": $rawJson}').achievements;
-				
-				if(addMods && retVal != null)
-				{
-					for (i in 0...retVal.length)
-					{
-						var achieve:Dynamic = retVal[i];
-						if(achieve == null)
-						{
-							var errorTitle = 'Mod name: ' + Mods.currentModDirectory != null ? Mods.currentModDirectory : "None";
-							var errorMsg = 'Achievement #${i+1} is invalid.';
-							#if windows
-							lime.app.Application.current.window.alert(errorMsg, errorTitle);
-							#end
-							trace('$errorTitle - $errorMsg');
-							continue;
-						}
+		var rawJson:String = null;
 
-						var key:String = achieve.save;
-						if(key == null || key.trim().length < 1)
-						{
-							var errorTitle = 'Error on Achievement: ' + (achieve.name != null ? achieve.name : achieve.save);
-							var errorMsg = 'Missing valid "save" value.';
-							#if windows
-							lime.app.Application.current.window.alert(errorMsg, errorTitle);
-							#end
-							trace('$errorTitle - $errorMsg');
-							continue;
-						}
-						key = key.trim();
-						if(achievements.exists(key)) continue;
+		#if (MODS_ALLOWED && sys)
+		if(FileSystem.exists(path)) rawJson = File.getContent(path);
+		#else
+		if(Assets.exists(path)) rawJson = Assets.getText(path);
+		#end
 
-						createAchievement(key, achieve, Mods.currentModDirectory);
-					}
-				}
-			} catch(e:Dynamic) {
-				var errorTitle = 'Mod name: ' + Mods.currentModDirectory != null ? Mods.currentModDirectory : "None";
-				var errorMsg = 'Error loading achievements.json: $e';
-				#if windows
-				lime.app.Application.current.window.alert(errorMsg, errorTitle);
-				#end
-				trace('$errorTitle - $errorMsg');
+		if(rawJson == null || rawJson.trim().length < 1) return retVal;
+		rawJson = rawJson.trim();
+
+		try {
+			retVal = tjson.TJSON.parse(rawJson);
+		} catch(e:Dynamic) {
+			trace('Error loading achievements.json ($path): $e');
+			return retVal;
+		}
+
+		if(retVal == null) return retVal;
+		for (i in 0...retVal.length)
+		{
+			var achieve:Dynamic = retVal[i];
+			if(achieve == null)
+			{
+				trace('Achievement #${i+1} is invalid ($path)');
+				continue;
 			}
+
+			var key:String = achieve.save;
+			if(key == null || key.trim().length < 1)
+			{
+				trace('Achievement "' + (achieve.name != null ? achieve.name : '#' + (i+1)) + '" is missing a valid "save" value ($path)');
+				continue;
+			}
+			key = key.trim();
+			if(achievements.exists(key)) continue;
+
+			createAchievement(key, achieve, mod);
 		}
 		return retVal;
 	}
-	#end
 
 	#if LUA_ALLOWED
 	public static function addLuaCallbacks(lua:State)
