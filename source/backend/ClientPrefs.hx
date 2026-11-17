@@ -44,6 +44,16 @@ import states.TitleState;
 	public var showNPS:Bool = false;
 	public var showHitTiming:Bool = false;
 	public var killerJudgements:Bool = false;
+
+	// HUD element offsets, edited from Options > Customize HUD
+	public var hudScoreX:Float = 0;
+	public var hudScoreY:Float = 0;
+	public var hudJudgementX:Float = 0;
+	public var hudJudgementY:Float = 0;
+	public var hudNpsX:Float = 0;
+	public var hudNpsY:Float = 0;
+	public var hudTimingX:Float = 0;
+	public var hudTimingY:Float = 0;
 	public var noReset:Bool = false;
 	public var healthBarAlpha:Float = 1;
 	public var hitsoundVolume:Float = 0;

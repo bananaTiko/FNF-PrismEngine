@@ -28,6 +28,7 @@ import states.editors.CharacterEditorState;
 
 import substates.PauseSubState;
 import substates.GameOverSubstate;
+import backend.PlayStats;
 import substates.ResultsSubState;
 
 #if !flash
@@ -594,6 +595,10 @@ class PlayState extends MusicBeatState
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
 		uiGroup.add(scoreTxt);
 
+		// Positions edited from Options > Customize HUD.
+		scoreTxt.x += ClientPrefs.data.hudScoreX;
+		scoreTxt.y += ClientPrefs.data.hudScoreY;
+
 		// Optional HUD extras, inspired by Troll Engine's HUD customization options.
 		if (ClientPrefs.data.showJudgements)
 		{
@@ -602,6 +607,8 @@ class PlayState extends MusicBeatState
 			judgementTxt.scrollFactor.set();
 			judgementTxt.borderSize = 1.25;
 			judgementTxt.visible = !ClientPrefs.data.hideHud;
+			judgementTxt.x += ClientPrefs.data.hudJudgementX;
+			judgementTxt.y += ClientPrefs.data.hudJudgementY;
 			uiGroup.add(judgementTxt);
 		}
 
@@ -612,6 +619,8 @@ class PlayState extends MusicBeatState
 			npsTxt.scrollFactor.set();
 			npsTxt.borderSize = 1.25;
 			npsTxt.visible = !ClientPrefs.data.hideHud;
+			npsTxt.x += ClientPrefs.data.hudNpsX;
+			npsTxt.y += ClientPrefs.data.hudNpsY;
 			uiGroup.add(npsTxt);
 		}
 
@@ -622,6 +631,8 @@ class PlayState extends MusicBeatState
 			hitTimingTxt.scrollFactor.set();
 			hitTimingTxt.borderSize = 1.25;
 			hitTimingTxt.visible = !ClientPrefs.data.hideHud;
+			hitTimingTxt.x += ClientPrefs.data.hudTimingX;
+			hitTimingTxt.y += ClientPrefs.data.hudTimingY;
 			uiGroup.add(hitTimingTxt);
 		}
 
@@ -2587,6 +2598,10 @@ class PlayState extends MusicBeatState
 		var ret:Dynamic = callOnScripts('onEndSong', null, true);
 		if(ret != LuaUtils.Function_Stop && !transitioning)
 		{
+			var playedSeconds:Float = Conductor.songPosition / 1000;
+			if (playedSeconds < 0) playedSeconds = 0;
+			PlayStats.addSong(Std.int(Math.max(totalPlayed - songMisses, 0)), songMisses, playedSeconds);
+
 			var previousBestScore:Int = 0;
 			#if !switch
 			previousBestScore = Highscore.getScore(Song.loadedSongName, storyDifficulty);

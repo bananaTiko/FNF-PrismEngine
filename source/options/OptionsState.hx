@@ -11,7 +11,8 @@ class OptionsState extends MusicBeatState
 		'Adjust Delay and Combo',
 		'Graphics',
 		'Visuals',
-		'Gameplay'
+		'Gameplay',
+		'Customize HUD'
 		#if TRANSLATIONS_ALLOWED , 'Language' #end
 	];
 	private var grpOptions:FlxTypedGroup<Alphabet>;
@@ -34,6 +35,8 @@ class OptionsState extends MusicBeatState
 				openSubState(new options.GameplaySettingsSubState());
 			case 'Adjust Delay and Combo':
 				MusicBeatState.switchState(new options.NoteOffsetState());
+			case 'Customize HUD':
+				MusicBeatState.switchState(new options.HudCustomizeState());
 			case 'Language':
 				openSubState(new options.LanguageSubState());
 		}

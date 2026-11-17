@@ -2,6 +2,7 @@ package substates;
 
 import backend.CoolUtil;
 import backend.Paths;
+import backend.PlayStats;
 import states.PlayState;
 
 import flixel.FlxG;
@@ -78,6 +79,11 @@ class ResultsSubState extends MusicBeatSubstate
 			addText(line, y, 28, FlxColor.WHITE);
 			y += 44;
 		}
+
+		var lifetime:String = 'Lifetime: ${PlayStats.notesHit} notes hit over ${PlayStats.songsPlayed} songs';
+		if (PlayStats.songsPlayed > 0)
+			lifetime += ' | ${PlayStats.playTimeString()} played | ${CoolUtil.floorDecimal(PlayStats.lifetimeAccuracy(), 1)}% average';
+		addText(lifetime, 560, 18, 0xFF888888);
 
 		addText('Press ACCEPT to continue', FlxG.height - 80, 24, 0xFFAAAAAA);
 
