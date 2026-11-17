@@ -91,6 +91,29 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Hide Score Text',
+			'Hides the score/misses/rating line without hiding the rest of the HUD.',
+			'hideScoreText',
+			BOOL);
+		addOption(option);
+
+		var option:Option = new Option('Lane Underlay',
+			'If checked, a faint panel sits behind each strumline to make the lanes easier to read.',
+			'laneUnderlay',
+			BOOL);
+		addOption(option);
+
+		var option:Option = new Option('Sustain Opacity',
+			'How transparent the hold note bodies are.',
+			'sustainAlpha',
+			PERCENT);
+		option.scrollSpeed = 1.6;
+		option.minValue = 0.0;
+		option.maxValue = 1;
+		option.changeValue = 0.1;
+		option.decimals = 1;
+		addOption(option);
+
 		var option:Option = new Option('Judgement Counters',
 			'If checked, shows how many Sick/Good/Bad/Shit/Miss you got under the score.',
 			'showJudgements',

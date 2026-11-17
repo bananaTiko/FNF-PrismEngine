@@ -48,6 +48,9 @@ import states.TitleState;
 	public var abbreviateScore:Bool = false;
 	public var judgementPreset:String = 'Custom';
 	public var sekaiScoring:Bool = false;
+	public var hideScoreText:Bool = false;
+	public var laneUnderlay:Bool = false;
+	public var sustainAlpha:Float = 0.6;
 
 	// HUD element offsets, edited from Options > Customize HUD
 	public var hudScoreX:Float = 0;

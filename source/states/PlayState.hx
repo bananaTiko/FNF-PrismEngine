@@ -544,6 +544,22 @@ class PlayState extends MusicBeatState
 		uiGroup.add(timeBar);
 		uiGroup.add(timeTxt);
 
+		// Faint lane panels behind each strumline, from OSEngine's Lane Underlay option.
+		if (ClientPrefs.data.laneUnderlay && strumLineNotes.members.length >= 8)
+		{
+			var laneWidth:Int = Math.ceil(Note.swagWidth * 4);
+			for (i in 0...2)
+			{
+				var firstStrum:StrumNote = cast strumLineNotes.members[i * 4];
+				if (firstStrum == null) continue;
+
+				var lane:FlxSprite = new FlxSprite(firstStrum.x, 0).makeGraphic(laneWidth, Std.int(FlxG.height), FlxColor.WHITE);
+				lane.alpha = 0.08;
+				lane.scrollFactor.set();
+				noteGroup.add(lane);
+			}
+		}
+
 		noteGroup.add(strumLineNotes);
 
 		if(ClientPrefs.data.timeBarType == 'Song Name')
@@ -602,7 +618,7 @@ class PlayState extends MusicBeatState
 		scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		scoreTxt.scrollFactor.set();
 		scoreTxt.borderSize = 1.25;
-		scoreTxt.visible = !ClientPrefs.data.hideHud;
+		scoreTxt.visible = !ClientPrefs.data.hideHud && !ClientPrefs.data.hideScoreText;
 		uiGroup.add(scoreTxt);
 
 		// Positions edited from Options > Customize HUD.
