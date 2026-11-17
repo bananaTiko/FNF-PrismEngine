@@ -326,7 +326,7 @@ if (_song.gameOverChar == null || _song.gameOverChar.trim().length < 1)
 			{
 				var neneKnife:FlxSprite = new FlxSprite(state.boyfriend.x - 450, state.boyfriend.y - 250);
 				if(PlayState.isPixelStage){
-					neneKnife.frames = Paths.getSparrowAtlas('NenePixelKnifeToss');
+					neneKnife.frames = Paths.getSparrowAtlas('nenePixelKnifeToss');
 					neneKnife.antialiasing = false;
 					neneKnife.animation.addByPrefix('anim', 'knifetosscolor', 24, false);
 				}
