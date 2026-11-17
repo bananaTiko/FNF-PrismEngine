@@ -28,6 +28,7 @@ import states.editors.CharacterEditorState;
 
 import substates.PauseSubState;
 import substates.GameOverSubstate;
+import substates.ResultsSubState;
 
 #if !flash
 import openfl.filters.ShaderFilter;
@@ -223,7 +224,16 @@ class PlayState extends MusicBeatState
 	public var songScore:Int = 0;
 	public var songHits:Int = 0;
 	public var songMisses:Int = 0;
+	public var maxCombo:Int = 0;
 	public var scoreTxt:FlxText;
+	public var judgementTxt:FlxText;
+	public var npsTxt:FlxText;
+	public var hitTimingTxt:FlxText;
+
+	/** Signed offset of the last hit note, in ms (negative = early). Used by the hit timing readout. */
+	public var lastHitDiff:Float = 0;
+	public var currentNPS:Float = 0;
+	private var npsHitTimes:Array<Float> = [];
 	var timeTxt:FlxText;
 	var scoreTxtTween:FlxTween;
 
@@ -583,6 +593,37 @@ class PlayState extends MusicBeatState
 		scoreTxt.borderSize = 1.25;
 		scoreTxt.visible = !ClientPrefs.data.hideHud;
 		uiGroup.add(scoreTxt);
+
+		// Optional HUD extras, inspired by Troll Engine's HUD customization options.
+		if (ClientPrefs.data.showJudgements)
+		{
+			judgementTxt = new FlxText(0, scoreTxt.y + 24, FlxG.width, "", 18);
+			judgementTxt.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			judgementTxt.scrollFactor.set();
+			judgementTxt.borderSize = 1.25;
+			judgementTxt.visible = !ClientPrefs.data.hideHud;
+			uiGroup.add(judgementTxt);
+		}
+
+		if (ClientPrefs.data.showNPS)
+		{
+			npsTxt = new FlxText(10, 10, 160, "", 18);
+			npsTxt.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			npsTxt.scrollFactor.set();
+			npsTxt.borderSize = 1.25;
+			npsTxt.visible = !ClientPrefs.data.hideHud;
+			uiGroup.add(npsTxt);
+		}
+
+		if (ClientPrefs.data.showHitTiming)
+		{
+			hitTimingTxt = new FlxText(FlxG.width - 130, 10, 120, "", 18);
+			hitTimingTxt.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			hitTimingTxt.scrollFactor.set();
+			hitTimingTxt.borderSize = 1.25;
+			hitTimingTxt.visible = !ClientPrefs.data.hideHud;
+			uiGroup.add(hitTimingTxt);
+		}
 
 		botplayTxt = new FlxText(400, healthBar.y - 90, FlxG.width - 800, Language.getPhrase("Botplay").toUpperCase(), 32);
 		botplayTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -1190,6 +1231,41 @@ class PlayState extends MusicBeatState
 		if(!instakillOnMiss) tempScore = Language.getPhrase('score_text', 'Score: {1} | Misses: {2} | Rating: {3}', [songScore, songMisses, str]);
 		else tempScore = Language.getPhrase('score_text_instakill', 'Score: {1} | Rating: {2}', [songScore, str]);
 		scoreTxt.text = tempScore;
+
+		updateHudStats();
+	}
+
+	/** Refreshes the optional judgement counters, NPS and hit timing readouts. */
+	public function updateHudStats():Void
+	{
+		if (judgementTxt != null)
+		{
+			judgementTxt.text = 'SICK: ${ratingsData[0].hits} | GOOD: ${ratingsData[1].hits} | BAD: ${ratingsData[2].hits} | SHIT: ${ratingsData[3].hits} | MISS: $songMisses';
+		}
+
+		if (npsTxt != null)
+			npsTxt.text = 'NPS: ${CoolUtil.floorDecimal(currentNPS, 1)}';
+
+		if (hitTimingTxt != null && totalPlayed > 0)
+		{
+			var rounded:Int = Math.round(lastHitDiff);
+			hitTimingTxt.text = (rounded > 0 ? '+' : '') + rounded + 'ms';
+			hitTimingTxt.color = switch (noteHitRating()) {
+				case 'sick': 0xFF66FF99;
+				case 'good': 0xFF99CCFF;
+				case 'bad': 0xFFFFCC66;
+				default: 0xFFFF8888;
+			}
+		}
+	}
+
+	inline function noteHitRating():String
+	{
+		var absDiff:Float = Math.abs(lastHitDiff);
+		if (absDiff <= ClientPrefs.data.sickWindow) return 'sick';
+		if (absDiff <= ClientPrefs.data.goodWindow) return 'good';
+		if (absDiff <= ClientPrefs.data.badWindow) return 'bad';
+		return 'shit';
 	}
 
 	public dynamic function fullComboFunction()
@@ -2511,7 +2587,9 @@ class PlayState extends MusicBeatState
 		var ret:Dynamic = callOnScripts('onEndSong', null, true);
 		if(ret != LuaUtils.Function_Stop && !transitioning)
 		{
+			var previousBestScore:Int = 0;
 			#if !switch
+			previousBestScore = Highscore.getScore(Song.loadedSongName, storyDifficulty);
 			var percent:Float = ratingPercent;
 			if(Math.isNaN(percent)) percent = 0;
 			Highscore.saveScore(Song.loadedSongName, songScore, storyDifficulty, percent);
@@ -2524,65 +2602,91 @@ class PlayState extends MusicBeatState
 				return false;
 			}
 
-			if (isStoryMode)
+			if (ClientPrefs.data.resultsScreen)
 			{
-				campaignScore += songScore;
-				campaignMisses += songMisses;
-
-				storyPlaylist.remove(storyPlaylist[0]);
-
-				if (storyPlaylist.length <= 0)
-				{
-					Mods.loadTopMod();
-					FlxG.sound.playMusic(Paths.music('freakyMenu'));
-					#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
-
-					canResync = false;
-					MusicBeatState.switchState(new StoryMenuState());
-
-					// if ()
-					if(!ClientPrefs.getGameplaySetting('practice') && !ClientPrefs.getGameplaySetting('botplay')) {
-						StoryMenuState.weekCompleted.set(WeekData.weeksList[storyWeek], true);
-						Highscore.saveWeekScore(WeekData.getWeekFileName(), campaignScore, storyDifficulty);
-
-						FlxG.save.data.weekCompleted = StoryMenuState.weekCompleted;
-						FlxG.save.flush();
-					}
-					changedDifficulty = false;
-				}
-				else
-				{
-					var difficulty:String = Difficulty.getFilePath();
-
-					trace('LOADING NEXT SONG');
-					trace(Paths.formatToSongPath(PlayState.storyPlaylist[0]) + difficulty);
-
-					FlxTransitionableState.skipNextTransIn = true;
-					FlxTransitionableState.skipNextTransOut = true;
-					prevCamFollow = camFollow;
-
-					Song.loadFromJson(PlayState.storyPlaylist[0] + difficulty, PlayState.storyPlaylist[0]);
-					FlxG.sound.music.stop();
-
-					canResync = false;
-					LoadingState.prepareToSong();
-					LoadingState.loadAndSwitchState(new PlayState(), false, false);
-				}
+				transitioning = true;
+				if (FlxG.sound.music != null) FlxG.sound.music.stop();
+				openSubState(new ResultsSubState({
+					song: SONG.song,
+					score: songScore,
+					accuracy: ratingPercent,
+					rank: ratingName,
+					maxCombo: maxCombo,
+					newBest: songScore > previousBestScore,
+					misses: songMisses,
+					sicks: ratingsData[0].hits,
+					goods: ratingsData[1].hits,
+					bads: ratingsData[2].hits,
+					shits: ratingsData[3].hits
+				}));
+				return true;
 			}
-			else
+
+			continueAfterSong();
+		}
+		return true;
+	}
+
+	/** Story mode progression, or back to freeplay. Runs after the results screen is dismissed. */
+	public function continueAfterSong():Void
+	{
+		if (isStoryMode)
+		{
+			campaignScore += songScore;
+			campaignMisses += songMisses;
+
+			storyPlaylist.remove(storyPlaylist[0]);
+
+			if (storyPlaylist.length <= 0)
 			{
-				trace('WENT BACK TO FREEPLAY??');
 				Mods.loadTopMod();
+				FlxG.sound.playMusic(Paths.music('freakyMenu'));
 				#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
 
 				canResync = false;
-				MusicBeatState.switchState(new FreeplayState());
-				FlxG.sound.playMusic(Paths.music('freakyMenu'));
+				MusicBeatState.switchState(new StoryMenuState());
+
+				// if ()
+				if(!ClientPrefs.getGameplaySetting('practice') && !ClientPrefs.getGameplaySetting('botplay')) {
+					StoryMenuState.weekCompleted.set(WeekData.weeksList[storyWeek], true);
+					Highscore.saveWeekScore(WeekData.getWeekFileName(), campaignScore, storyDifficulty);
+
+					FlxG.save.data.weekCompleted = StoryMenuState.weekCompleted;
+					FlxG.save.flush();
+				}
 				changedDifficulty = false;
 			}
-			transitioning = true;
+			else
+			{
+				var difficulty:String = Difficulty.getFilePath();
+
+				trace('LOADING NEXT SONG');
+				trace(Paths.formatToSongPath(PlayState.storyPlaylist[0]) + difficulty);
+
+				FlxTransitionableState.skipNextTransIn = true;
+				FlxTransitionableState.skipNextTransOut = true;
+				prevCamFollow = camFollow;
+
+				Song.loadFromJson(PlayState.storyPlaylist[0] + difficulty, PlayState.storyPlaylist[0]);
+				FlxG.sound.music.stop();
+
+				canResync = false;
+				LoadingState.prepareToSong();
+				LoadingState.loadAndSwitchState(new PlayState(), false, false);
+			}
 		}
-		return true;
+		else
+		{
+			trace('WENT BACK TO FREEPLAY??');
+			Mods.loadTopMod();
+			#if DISCORD_ALLOWED DiscordClient.resetClientID(); #end
+
+			canResync = false;
+			MusicBeatState.switchState(new FreeplayState());
+			FlxG.sound.playMusic(Paths.music('freakyMenu'));
+			changedDifficulty = false;
+		}
+		transitioning = true;
 	}
 
 	public function KillNotes() {
@@ -2624,8 +2728,18 @@ class PlayState extends MusicBeatState
 
 	private function popUpScore(note:Note = null):Void
 	{
-		var noteDiff:Float = Math.abs(note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset);
+		lastHitDiff = note.strumTime - Conductor.songPosition + ClientPrefs.data.ratingOffset;
+		var noteDiff:Float = Math.abs(lastHitDiff);
 		vocals.volume = 1;
+
+		if (npsTxt != null)
+		{
+			npsHitTimes.push(Conductor.songPosition);
+			var cutoff:Float = Conductor.songPosition - 1000;
+			while (npsHitTimes.length > 0 && npsHitTimes[0] < cutoff)
+				npsHitTimes.shift();
+			currentNPS = npsHitTimes.length;
+		}
 
 		if (!ClientPrefs.data.comboStacking && comboGroup.members.length > 0)
 		{
@@ -3167,7 +3281,11 @@ class PlayState extends MusicBeatState
 			{
 				combo++;
 				if(combo > 9999) combo = 9999;
+				if(combo > maxCombo) maxCombo = combo;
 				popUpScore(note);
+			// Killer judgements: a hit this bad ends the run, like gbPsych's opt-in strict mode.
+			if (ClientPrefs.data.killerJudgements && !cpuControlled && note.rating == 'shit')
+				health = 0;
 			}
 			var gainHealth:Bool = true; // prevent health gain, *if* sustains are treated as a singular note
 			if (guitarHeroSustains && note.isSustainNote) gainHealth = false;

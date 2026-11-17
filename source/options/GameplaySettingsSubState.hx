@@ -26,6 +26,18 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Killer Judgements',
+			'If checked, hitting a note that badly ends the song immediately.',
+			'killerJudgements',
+			BOOL);
+		addOption(option);
+
+		var option:Option = new Option('Results Screen',
+			'If checked, a score breakdown shows up after you finish a song.',
+			'resultsScreen',
+			BOOL);
+		addOption(option);
+
 		var option:Option = new Option('Ghost Tapping',
 			"If checked, you won't get misses from pressing keys\nwhile there are no notes able to be hit.",
 			'ghostTapping',

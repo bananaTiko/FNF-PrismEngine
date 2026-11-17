@@ -84,6 +84,24 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			'hideHud',
 			BOOL);
 		addOption(option);
+
+		var option:Option = new Option('Judgement Counters',
+			'If checked, shows how many Sick/Good/Bad/Shit/Miss you got under the score.',
+			'showJudgements',
+			BOOL);
+		addOption(option);
+
+		var option:Option = new Option('NPS Counter',
+			'If checked, shows your notes per second in the top left corner.',
+			'showNPS',
+			BOOL);
+		addOption(option);
+
+		var option:Option = new Option('Hit Timing Readout',
+			'If checked, shows how early/late your last note was in the top right corner.',
+			'showHitTiming',
+			BOOL);
+		addOption(option);
 		
 		var option:Option = new Option('Time Bar:',
 			"What should the Time Bar display?",
