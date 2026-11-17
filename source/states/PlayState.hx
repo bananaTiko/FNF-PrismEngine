@@ -596,6 +596,7 @@ class PlayState extends MusicBeatState
 		uiGroup.add(iconP2);
 
 		applyJudgementPreset();
+		applySekaiScoring();
 
 		scoreTxt = new FlxText(0, healthBar.y + 40, FlxG.width, "", 20);
 		scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -1247,6 +1248,15 @@ class PlayState extends MusicBeatState
 
 	public dynamic function updateScoreText()
 	{
+		if (ClientPrefs.data.sekaiScoring)
+		{
+			var counts:String = '${sekaiLabel('sick')}: ${ratingsData[0].hits} | GREAT: ${ratingsData[1].hits}'
+				+ ' | GOOD: ${ratingsData[2].hits} | BAD: ${ratingsData[3].hits} | MISS: $songMisses';
+			scoreTxt.text = 'Score: ${formatScore(songScore)} | $counts';
+			updateHudStats();
+			return;
+		}
+
 		var str:String = Language.getPhrase('rating_$ratingName', ratingName);
 		if(totalPlayed != 0)
 		{
@@ -1358,6 +1368,56 @@ class PlayState extends MusicBeatState
 		for (i in 0...ratingsData.length)
 		{
 			if (i < windows.length) ratingsData[i].hitWindow = windows[i];
+		}
+	}
+
+	/**
+	 * Project SEKAI's judgement table, from the Rhythm game mechanics page:
+	 * PERFECT +-41.7ms at 100%, GREAT to 83.3ms at 70%, GOOD to 108.3ms at 50%,
+	 * BAD to 125ms at 0%. Rating art is reused from Prism's own set.
+	 */
+	function applySekaiScoring():Void
+	{
+		if (!ClientPrefs.data.sekaiScoring) return;
+
+		ratingsData = [
+			sekaiRating('sick', 41.7, 1.0, 1000, true),
+			sekaiRating('good', 83.3, 0.7, 700, false),
+			sekaiRating('bad', 108.3, 0.5, 500, false),
+			sekaiRating('shit', 125.0, 0.0, 0, false)
+		];
+	}
+
+	function sekaiRating(name:String, window:Float, mod:Float, scoreValue:Int, splash:Bool):Rating
+	{
+		var rating:Rating = new Rating(name);
+		rating.hitWindow = window;
+		rating.ratingMod = mod;
+		rating.score = scoreValue;
+		rating.noteSplash = splash;
+		rating.hits = 0;
+		return rating;
+	}
+
+	/** SEKAI's combo bonus: 1.0, plus 0.01 per 100 combo, capped at 1.1. */
+	function sekaiComboMultiplier(currentCombo:Int):Float
+	{
+		var bonus:Float = Math.floor(currentCombo / 100) * 0.01;
+		if (bonus > 0.1) bonus = 0.1;
+		return 1 + bonus;
+	}
+
+	/** SEKAI calls Prism's four judgements PERFECT/GREAT/GOOD/BAD. */
+	public static function sekaiLabel(rating:String):String
+	{
+		return switch (rating)
+		{
+			case 'sick', 'perfect': 'PERFECT';
+			case 'good', 'great': 'GREAT';
+			case 'bad', 'good2': 'GOOD';
+			case 'shit', 'bad2': 'BAD';
+			case 'miss': 'MISS';
+			default: rating.toUpperCase();
 		}
 	}
 
@@ -2882,14 +2942,16 @@ class PlayState extends MusicBeatState
 		score = daRating.score;
 
 		// Psych Plus lets bad and worse hits break the combo; a miss still breaks it via noteMiss.
-		if (ClientPrefs.data.badShitBreakCombo && (daRating.name == 'bad' || daRating.name == 'shit'))
+		// Project SEKAI breaks on GOOD and BAD too, but never on GREAT.
+		if ((ClientPrefs.data.badShitBreakCombo || ClientPrefs.data.sekaiScoring)
+			&& (daRating.name == 'bad' || daRating.name == 'shit'))
 			combo = 0;
 
 		if(daRating.noteSplash && !note.noteSplashData.disabled)
 			spawnNoteSplashOnNote(note);
 
 		if(!cpuControlled) {
-			songScore += score;
+			songScore += ClientPrefs.data.sekaiScoring ? Math.floor(score * sekaiComboMultiplier(combo)) : score;
 			if(!note.ratingDisabled)
 			{
 				songHits++;

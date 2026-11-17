@@ -66,12 +66,20 @@ class ResultsSubState extends MusicBeatSubstate
 		var rankText:FlxText = addText(data.rank, 150, 88, rankColor(data.rank));
 		FlxTween.tween(rankText.scale, {x: 1.05, y: 1.05}, 1.2, {type: FlxTween.PINGPONG});
 
+		var judgeLabels:Array<String> = ClientPrefs.data.sekaiScoring
+			? ['PERFECT', 'GREAT', 'GOOD', 'BAD']
+			: ['Sick', 'Good', 'Bad', 'Shit'];
+		var judgeCounts:Array<Int> = [data.sicks, data.goods, data.bads, data.shits];
+		var judgeLine:String = '';
+		for (i in 0...judgeLabels.length)
+			judgeLine += (i > 0 ? '  |  ' : '') + '${judgeLabels[i]}: ${judgeCounts[i]}';
+
 		var lines:Array<String> = [
 			'Score: ${data.score}',
 			'Accuracy: $accuracy%',
 			'Max Combo: ${data.maxCombo}',
 			'Misses: ${data.misses}',
-			'Sick: ${data.sicks}  |  Good: ${data.goods}  |  Bad: ${data.bads}  |  Shit: ${data.shits}'
+			judgeLine
 		];
 		var y:Float = 300;
 		for (line in lines)
@@ -86,6 +94,14 @@ class ResultsSubState extends MusicBeatSubstate
 		addText(lifetime, 560, 18, 0xFF888888);
 
 		addText('Press ACCEPT to continue', FlxG.height - 80, 24, 0xFFAAAAAA);
+
+		if (ClientPrefs.data.sekaiScoring)
+		{
+			var clearType:String = null;
+			if (data.misses == 0 && data.bads == 0 && data.shits == 0)
+				clearType = (data.goods == 0) ? 'ALL PERFECT' : 'FULL COMBO';
+			if (clearType != null) addText(clearType, 232, 20, 0xFF9BE7FF);
+		}
 
 		if (data.newBest)
 		{

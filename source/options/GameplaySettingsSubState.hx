@@ -26,6 +26,12 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Colorful Stage Scoring',
+			'If checked, uses Project SEKAI judgements (PERFECT/GREAT/GOOD/BAD), its 41.7/83.3/108.3/125ms windows and its combo-based score multiplier.',
+			'sekaiScoring',
+			BOOL);
+		addOption(option);
+
 		var option:Option = new Option('Judgement Preset:',
 			'Overrides the hit window sliders with a preset. Custom uses your own windows.',
 			'judgementPreset',

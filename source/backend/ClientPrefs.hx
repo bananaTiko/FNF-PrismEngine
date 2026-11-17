@@ -47,6 +47,7 @@ import states.TitleState;
 	public var badShitBreakCombo:Bool = false;
 	public var abbreviateScore:Bool = false;
 	public var judgementPreset:String = 'Custom';
+	public var sekaiScoring:Bool = false;
 
 	// HUD element offsets, edited from Options > Customize HUD
 	public var hudScoreX:Float = 0;
