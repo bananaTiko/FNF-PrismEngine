@@ -595,6 +595,8 @@ class PlayState extends MusicBeatState
 		iconP2.alpha = ClientPrefs.data.healthBarAlpha;
 		uiGroup.add(iconP2);
 
+		applyJudgementPreset();
+
 		scoreTxt = new FlxText(0, healthBar.y + 40, FlxG.width, "", 20);
 		scoreTxt.setFormat(Paths.font("vcr.ttf"), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		scoreTxt.scrollFactor.set();
@@ -1253,8 +1255,8 @@ class PlayState extends MusicBeatState
 		}
 
 		var tempScore:String;
-		if(!instakillOnMiss) tempScore = Language.getPhrase('score_text', 'Score: {1} | Misses: {2} | Rating: {3}', [songScore, songMisses, str]);
-		else tempScore = Language.getPhrase('score_text_instakill', 'Score: {1} | Rating: {2}', [songScore, str]);
+		if(!instakillOnMiss) tempScore = Language.getPhrase('score_text', 'Score: {1} | Misses: {2} | Rating: {3}', [formatScore(songScore), songMisses, str]);
+		else tempScore = Language.getPhrase('score_text_instakill', 'Score: {1} | Rating: {2}', [formatScore(songScore), str]);
 		scoreTxt.text = tempScore;
 
 		updateHudStats();
@@ -1287,6 +1289,13 @@ class PlayState extends MusicBeatState
 	inline function noteHitRating():String
 	{
 		var absDiff:Float = Math.abs(lastHitDiff);
+		if (ratingsData.length >= 3)
+		{
+			if (absDiff <= ratingsData[0].hitWindow) return 'sick';
+			if (absDiff <= ratingsData[1].hitWindow) return 'good';
+			if (absDiff <= ratingsData[2].hitWindow) return 'bad';
+			return 'shit';
+		}
 		if (absDiff <= ClientPrefs.data.sickWindow) return 'sick';
 		if (absDiff <= ClientPrefs.data.goodWindow) return 'good';
 		if (absDiff <= ClientPrefs.data.badWindow) return 'bad';
@@ -1331,6 +1340,34 @@ class PlayState extends MusicBeatState
 			+ 'Time: ${formatTime(position)} / ${formatTime(length)} | BPM: ${Conductor.bpm}\n'
 			+ 'Notes: ${notes.length} | Combo: $combo / $maxCombo | Acc: ${CoolUtil.floorDecimal(ratingPercent * 100, 2)}%'
 			+ ' | NPS: ${CoolUtil.floorDecimal(currentNPS, 1)}' + flags;
+	}
+
+	/** Andromeda-style judgement presets: override the rating windows without touching the saved sliders. */
+	function applyJudgementPreset():Void
+	{
+		var windows:Array<Float> = switch (ClientPrefs.data.judgementPreset)
+		{
+			case 'Lenient': [50, 100, 150];
+			case 'Kade': [45, 90, 135];
+			case 'Strict': [30, 60, 90];
+			case 'ITG': [22.5, 45, 90];
+			default: null;
+		}
+		if (windows == null) return;
+
+		for (i in 0...ratingsData.length)
+		{
+			if (i < windows.length) ratingsData[i].hitWindow = windows[i];
+		}
+	}
+
+	/** Psych Plus' abbreviated score readout. */
+	function formatScore(value:Int):String
+	{
+		if (!ClientPrefs.data.abbreviateScore || value < 1000) return Std.string(value);
+		if (value >= 1000000000) return CoolUtil.floorDecimal(value / 1000000000, 1) + 'B';
+		if (value >= 1000000) return CoolUtil.floorDecimal(value / 1000000, 1) + 'M';
+		return CoolUtil.floorDecimal(value / 1000, 1) + 'K';
 	}
 
 	inline function formatTime(seconds:Float):String
@@ -2843,6 +2880,10 @@ class PlayState extends MusicBeatState
 		if(!note.ratingDisabled) daRating.hits++;
 		note.rating = daRating.name;
 		score = daRating.score;
+
+		// Psych Plus lets bad and worse hits break the combo; a miss still breaks it via noteMiss.
+		if (ClientPrefs.data.badShitBreakCombo && (daRating.name == 'bad' || daRating.name == 'shit'))
+			combo = 0;
 
 		if(daRating.noteSplash && !note.noteSplashData.disabled)
 			spawnNoteSplashOnNote(note);

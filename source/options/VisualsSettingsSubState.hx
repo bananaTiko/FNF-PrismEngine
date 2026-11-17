@@ -85,6 +85,12 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Abbreviate Score',
+			'If checked, large scores show as 1.2M instead of the full number.',
+			'abbreviateScore',
+			BOOL);
+		addOption(option);
+
 		var option:Option = new Option('Judgement Counters',
 			'If checked, shows how many Sick/Good/Bad/Shit/Miss you got under the score.',
 			'showJudgements',

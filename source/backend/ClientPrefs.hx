@@ -44,6 +44,9 @@ import states.TitleState;
 	public var showNPS:Bool = false;
 	public var showHitTiming:Bool = false;
 	public var killerJudgements:Bool = false;
+	public var badShitBreakCombo:Bool = false;
+	public var abbreviateScore:Bool = false;
+	public var judgementPreset:String = 'Custom';
 
 	// HUD element offsets, edited from Options > Customize HUD
 	public var hudScoreX:Float = 0;

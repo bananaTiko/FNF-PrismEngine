@@ -26,6 +26,19 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Judgement Preset:',
+			'Overrides the hit window sliders with a preset. Custom uses your own windows.',
+			'judgementPreset',
+			STRING,
+			['Custom', 'Lenient', 'Kade', 'Strict', 'ITG']);
+		addOption(option);
+
+		var option:Option = new Option('Bad and Shit Break Combo',
+			'If checked, hitting a note badly or worse resets your combo, like Psych Plus does.',
+			'badShitBreakCombo',
+			BOOL);
+		addOption(option);
+
 		var option:Option = new Option('Killer Judgements',
 			'If checked, hitting a note that badly ends the song immediately.',
 			'killerJudgements',
