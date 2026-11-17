@@ -235,6 +235,13 @@ class PlayState extends MusicBeatState
 	public var lastHitDiff:Float = 0;
 	public var currentNPS:Float = 0;
 	private var npsHitTimes:Array<Float> = [];
+
+	// F3 debug overlay, in the spirit of Codename Engine's advanced F3 info panel
+	var debugOverlay:FlxText;
+	var debugOverlayOn:Bool = false;
+	var fpsCounter:Int = 0;
+	var fpsTimer:Float = 0;
+	var currentFPS:Int = 0;
 	var timeTxt:FlxText;
 	var scoreTxtTween:FlxTween;
 
@@ -635,6 +642,13 @@ class PlayState extends MusicBeatState
 			hitTimingTxt.y += ClientPrefs.data.hudTimingY;
 			uiGroup.add(hitTimingTxt);
 		}
+
+		debugOverlay = new FlxText(10, FlxG.height * 0.25, 560, '', 14);
+		debugOverlay.setFormat(Paths.font('vcr.ttf'), 14, 0xFF7CFF7C, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		debugOverlay.borderSize = 1;
+		debugOverlay.scrollFactor.set();
+		debugOverlay.visible = false;
+		uiGroup.add(debugOverlay);
 
 		botplayTxt = new FlxText(400, healthBar.y - 90, FlxG.width - 800, Language.getPhrase("Botplay").toUpperCase(), 32);
 		botplayTxt.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
@@ -1279,6 +1293,54 @@ class PlayState extends MusicBeatState
 		return 'shit';
 	}
 
+	/** F3 toggles a readout of FPS, memory, song progress and play state. */
+	function handleDebugOverlay(elapsed:Float):Void
+	{
+		fpsCounter++;
+		fpsTimer += elapsed;
+		if (fpsTimer >= 1)
+		{
+			currentFPS = Math.round(fpsCounter / fpsTimer);
+			fpsCounter = 0;
+			fpsTimer = 0;
+		}
+
+		if (debugOverlay != null && FlxG.keys.justPressed.F3)
+		{
+			debugOverlayOn = !debugOverlayOn;
+			debugOverlay.visible = debugOverlayOn;
+		}
+
+		if (!debugOverlayOn || debugOverlay == null) return;
+
+		var mem:String = 'n/a';
+		#if cpp
+		mem = CoolUtil.floorDecimal(openfl.system.System.totalMemory / (1024 * 1024), 1) + ' MB';
+		#end
+
+		var length:Float = (FlxG.sound.music != null) ? FlxG.sound.music.length / 1000 : 0;
+		var position:Float = Conductor.songPosition / 1000;
+		var flags:String = '';
+		if (practiceMode) flags += ' | PRACTICE';
+		if (cpuControlled) flags += ' | BOTPLAY';
+		if (instakillOnMiss) flags += ' | INSTAKILL';
+		if (endingSong) flags += ' | ENDING';
+
+		debugOverlay.text = 'FPS: $currentFPS | MEM: $mem\n'
+			+ 'Song: ${SONG.song} (${Difficulty.getString()})\n'
+			+ 'Time: ${formatTime(position)} / ${formatTime(length)} | BPM: ${Conductor.bpm}\n'
+			+ 'Notes: ${notes.length} | Combo: $combo / $maxCombo | Acc: ${CoolUtil.floorDecimal(ratingPercent * 100, 2)}%'
+			+ ' | NPS: ${CoolUtil.floorDecimal(currentNPS, 1)}' + flags;
+	}
+
+	inline function formatTime(seconds:Float):String
+	{
+		var total:Int = Std.int(Math.max(seconds, 0));
+		var mins:Int = Std.int(total / 60);
+		var secs:Int = total % 60;
+		return (mins < 10 ? '0' : '') + mins + ':' + (secs < 10 ? '0' : '') + secs;
+	}
+
 	public dynamic function fullComboFunction()
 	{
 		var sicks:Int = ratingsData[0].hits;
@@ -1825,6 +1887,8 @@ class PlayState extends MusicBeatState
 
 	override public function update(elapsed:Float)
 	{
+		handleDebugOverlay(elapsed);
+
 		if(!inCutscene && !paused && !freezeCamera) {
 			FlxG.camera.followLerp = 0.04 * cameraSpeed * playbackRate;
 			var idleAnim:Bool = (boyfriend.getAnimationName().startsWith('idle') || boyfriend.getAnimationName().startsWith('danceLeft') || boyfriend.getAnimationName().startsWith('danceRight'));
