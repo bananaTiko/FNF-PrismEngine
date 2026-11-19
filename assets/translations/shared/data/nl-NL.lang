@@ -5,6 +5,17 @@ Nederlands
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
+// Verhaalmenu: eigen weekborden
+images/storymenu/tutorial: "images/nl-NL/storymenu/tutorial"
+images/storymenu/week1: "images/nl-NL/storymenu/week1"
+images/storymenu/week2: "images/nl-NL/storymenu/week2"
+images/storymenu/week3: "images/nl-NL/storymenu/week3"
+images/storymenu/week4: "images/nl-NL/storymenu/week4"
+images/storymenu/week5: "images/nl-NL/storymenu/week5"
+images/storymenu/week6: "images/nl-NL/storymenu/week6"
+images/storymenu/week7: "images/nl-NL/storymenu/week7"
+images/storymenu/weekend1: "images/nl-NL/storymenu/weekend1"
+
 // Gameplay
 score_text: "Score: {1} | Missers: {2} | Beoordeling: {3}"
 score_text_instakill: "Score: {1} | Beoordeling: {2}"

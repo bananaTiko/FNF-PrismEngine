@@ -6,6 +6,17 @@ fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/vi-VN/alphabet_vi"
 
+// Menu cốt truyện: bảng tuần riêng
+images/storymenu/tutorial: "images/vi-VN/storymenu/tutorial"
+images/storymenu/week1: "images/vi-VN/storymenu/week1"
+images/storymenu/week2: "images/vi-VN/storymenu/week2"
+images/storymenu/week3: "images/vi-VN/storymenu/week3"
+images/storymenu/week4: "images/vi-VN/storymenu/week4"
+images/storymenu/week5: "images/vi-VN/storymenu/week5"
+images/storymenu/week6: "images/vi-VN/storymenu/week6"
+images/storymenu/week7: "images/vi-VN/storymenu/week7"
+images/storymenu/weekend1: "images/vi-VN/storymenu/weekend1"
+
 // Lối chơi
 score_text: "Điểm: {1} | Trượt: {2} | Xếp loại: {3}"
 score_text_instakill: "Điểm: {1} | Xếp loại: {2}"

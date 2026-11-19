@@ -5,6 +5,17 @@ Italiano
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
+// Menu storia: cartelli delle settimane
+images/storymenu/tutorial: "images/it-IT/storymenu/tutorial"
+images/storymenu/week1: "images/it-IT/storymenu/week1"
+images/storymenu/week2: "images/it-IT/storymenu/week2"
+images/storymenu/week3: "images/it-IT/storymenu/week3"
+images/storymenu/week4: "images/it-IT/storymenu/week4"
+images/storymenu/week5: "images/it-IT/storymenu/week5"
+images/storymenu/week6: "images/it-IT/storymenu/week6"
+images/storymenu/week7: "images/it-IT/storymenu/week7"
+images/storymenu/weekend1: "images/it-IT/storymenu/weekend1"
+
 // Gameplay
 score_text: "Punteggio: {1} | Errori: {2} | Valutazione: {3}"
 score_text_instakill: "Punteggio: {1} | Valutazione: {2}"

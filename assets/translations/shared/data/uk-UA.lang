@@ -6,6 +6,17 @@ fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/uk-UA/alphabet_uk"
 
+// Сюжетне меню: власні банери тижнів
+images/storymenu/tutorial: "images/uk-UA/storymenu/tutorial"
+images/storymenu/week1: "images/uk-UA/storymenu/week1"
+images/storymenu/week2: "images/uk-UA/storymenu/week2"
+images/storymenu/week3: "images/uk-UA/storymenu/week3"
+images/storymenu/week4: "images/uk-UA/storymenu/week4"
+images/storymenu/week5: "images/uk-UA/storymenu/week5"
+images/storymenu/week6: "images/uk-UA/storymenu/week6"
+images/storymenu/week7: "images/uk-UA/storymenu/week7"
+images/storymenu/weekend1: "images/uk-UA/storymenu/weekend1"
+
 // Геймплей
 score_text: "Рахунок: {1} | Промахи: {2} | Оцінка: {3}"
 score_text_instakill: "Рахунок: {1} | Оцінка: {2}"

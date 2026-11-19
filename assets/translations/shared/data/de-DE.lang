@@ -5,6 +5,17 @@ Deutsch
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
+// Story-Menü: eigene Wochen-Banner
+images/storymenu/tutorial: "images/de-DE/storymenu/tutorial"
+images/storymenu/week1: "images/de-DE/storymenu/week1"
+images/storymenu/week2: "images/de-DE/storymenu/week2"
+images/storymenu/week3: "images/de-DE/storymenu/week3"
+images/storymenu/week4: "images/de-DE/storymenu/week4"
+images/storymenu/week5: "images/de-DE/storymenu/week5"
+images/storymenu/week6: "images/de-DE/storymenu/week6"
+images/storymenu/week7: "images/de-DE/storymenu/week7"
+images/storymenu/weekend1: "images/de-DE/storymenu/weekend1"
+
 // Gameplay
 score_text: "Punktzahl: {1} | Fehler: {2} | Bewertung: {3}"
 score_text_instakill: "Punktzahl: {1} | Bewertung: {2}"

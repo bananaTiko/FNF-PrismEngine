@@ -5,6 +5,17 @@ Bahasa Indonesia
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
+// Menu cerita: spanduk minggu sendiri
+images/storymenu/tutorial: "images/id-ID/storymenu/tutorial"
+images/storymenu/week1: "images/id-ID/storymenu/week1"
+images/storymenu/week2: "images/id-ID/storymenu/week2"
+images/storymenu/week3: "images/id-ID/storymenu/week3"
+images/storymenu/week4: "images/id-ID/storymenu/week4"
+images/storymenu/week5: "images/id-ID/storymenu/week5"
+images/storymenu/week6: "images/id-ID/storymenu/week6"
+images/storymenu/week7: "images/id-ID/storymenu/week7"
+images/storymenu/weekend1: "images/id-ID/storymenu/weekend1"
+
 // Gameplay
 score_text: "Skor: {1} | Meleset: {2} | Nilai: {3}"
 score_text_instakill: "Skor: {1} | Nilai: {2}"

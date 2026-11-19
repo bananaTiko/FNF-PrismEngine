@@ -6,6 +6,17 @@ fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/tr-TR/alphabet_tr"
 
+// Hikaye menüsü: kendi hafta afişleri
+images/storymenu/tutorial: "images/tr-TR/storymenu/tutorial"
+images/storymenu/week1: "images/tr-TR/storymenu/week1"
+images/storymenu/week2: "images/tr-TR/storymenu/week2"
+images/storymenu/week3: "images/tr-TR/storymenu/week3"
+images/storymenu/week4: "images/tr-TR/storymenu/week4"
+images/storymenu/week5: "images/tr-TR/storymenu/week5"
+images/storymenu/week6: "images/tr-TR/storymenu/week6"
+images/storymenu/week7: "images/tr-TR/storymenu/week7"
+images/storymenu/weekend1: "images/tr-TR/storymenu/weekend1"
+
 // Oynanış
 score_text: "Puan: {1} | Kaçırma: {2} | Derece: {3}"
 score_text_instakill: "Puan: {1} | Derece: {2}"

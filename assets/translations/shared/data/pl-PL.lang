@@ -6,6 +6,17 @@ fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/pl-PL/alphabet_pl"
 
+// Menu fabularne: własne plakaty tygodni
+images/storymenu/tutorial: "images/pl-PL/storymenu/tutorial"
+images/storymenu/week1: "images/pl-PL/storymenu/week1"
+images/storymenu/week2: "images/pl-PL/storymenu/week2"
+images/storymenu/week3: "images/pl-PL/storymenu/week3"
+images/storymenu/week4: "images/pl-PL/storymenu/week4"
+images/storymenu/week5: "images/pl-PL/storymenu/week5"
+images/storymenu/week6: "images/pl-PL/storymenu/week6"
+images/storymenu/week7: "images/pl-PL/storymenu/week7"
+images/storymenu/weekend1: "images/pl-PL/storymenu/weekend1"
+
 // Rozgrywka
 score_text: "Wynik: {1} | Błędy: {2} | Ocena: {3}"
 score_text_instakill: "Wynik: {1} | Ocena: {2}"
