@@ -1,7 +1,19 @@
 Español (España)
 
-// El español usa las fuentes y las imágenes base del juego, así que aquí no
-// hace falta cambiar de tipografía ni redirigir imágenes.
+// El español usa las fuentes y el alfabeto base del juego, así que aquí no
+// hace falta cambiar de tipografía.
+
+// Imágenes: los carteles de las semanas están en
+// assets/translations/shared/images/es-ES
+images/storymenu/tutorial: "images/es-ES/storymenu/tutorial"
+images/storymenu/week1: "images/es-ES/storymenu/week1"
+images/storymenu/week2: "images/es-ES/storymenu/week2"
+images/storymenu/week3: "images/es-ES/storymenu/week3"
+images/storymenu/week4: "images/es-ES/storymenu/week4"
+images/storymenu/week5: "images/es-ES/storymenu/week5"
+images/storymenu/week6: "images/es-ES/storymenu/week6"
+images/storymenu/week7: "images/es-ES/storymenu/week7"
+images/storymenu/weekend1: "images/es-ES/storymenu/weekend1"
 
 // Gameplay
 score_text: "Puntuación: {1} | Fallos: {2} | Nota: {3}"
