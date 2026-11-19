@@ -7,18 +7,19 @@ Commit: 1797e3f766abd3a4b27aa02f4e47b3690ae2c083
 This repository is licensed under the Apache License, Version 2.0
 (see LICENSE in that repository). The files below were taken from it:
 
-  images/alphabet_ru.png / .xml / .json
+  alphabet_ru.png / .xml / .json
       Prism Engine's own alphabet atlas with the Cyrillic letters of that
       project's alphabet_rus atlas merged in, so menus can draw both scripts.
       The JSON is Prism's alphabet metadata plus the Cyrillic characters.
-  images/ru/sick.png, good.png, bad.png, shit.png (judgement popups)
-  images/ru/ready.png, set.png, go.png (countdown)
-  images/mainmenu/ru/menu_*.png / .xml (main menu buttons)
-  images/storymenu/ru/*.png (story mode week banners)
+  sick.png, good.png, bad.png, shit.png (judgement popups)
+  ready.png, set.png, go.png (countdown)
+  mainmenu/menu_*.png / .xml (main menu buttons)
+  storymenu/*.png (story mode week banners)
 
 Modifications: the alphabet atlas was merged and re-packed as described,
 and the main menu atlases had their "basic"/"white" animations renamed to
-"idle"/"selected" to match Prism's naming. Everything else is unchanged. Prism Engine redistributes them under
-the Apache License, Version 2.0, with this notice.
+"idle"/"selected" to match Prism's naming. Everything else is unchanged.
+Prism Engine redistributes them under the Apache License, Version 2.0, with
+this notice.
 
 Translations by NC-devC; Prism's Russian .lang text is Prism's own.
