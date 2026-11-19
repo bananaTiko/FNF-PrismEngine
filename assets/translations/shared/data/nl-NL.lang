@@ -1,10 +1,9 @@
 Nederlands
 
-// De standaardlettertypen hebben geen trema's en accenten, dus tekst en het
-// menu-alfabet worden met Noto Sans getekend.
+// Het menu-alfabet van het spel heeft de trema's en accenten die hier nodig zijn,
+// dus wordt alleen de lopende tekst met Noto Sans getekend.
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
 
 // Gameplay
 score_text: "Score: {1} | Missers: {2} | Beoordeling: {3}"

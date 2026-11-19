@@ -1,10 +1,9 @@
 Deutsch
 
-// Die Vanilla-Schriften haben keine Umlaute und kein ß, deshalb werden Text
-// und Menü-Alphabet mit Noto Sans gezeichnet.
+// Der Alphabet-Atlas des Spiels hat Umlaute und ß, deshalb läuft das Menü
+// wieder mit der Originalschrift; nur der Fließtext wird mit Noto Sans gezeichnet.
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
 
 // Gameplay
 score_text: "Punktzahl: {1} | Fehler: {2} | Bewertung: {3}"

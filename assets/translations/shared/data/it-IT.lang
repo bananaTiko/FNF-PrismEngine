@@ -1,10 +1,9 @@
 Italiano
 
-// I font originali non hanno le lettere accentate usate qui, quindi testo e
-// alfabeto dei menu vengono disegnati con Noto Sans.
+// L'alfabeto dei menu del gioco ha già le lettere accentate usate qui, quindi
+// solo il testo normale viene disegnato con Noto Sans.
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
 
 // Gameplay
 score_text: "Punteggio: {1} | Errori: {2} | Valutazione: {3}"

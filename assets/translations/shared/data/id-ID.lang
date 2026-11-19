@@ -1,10 +1,9 @@
 Bahasa Indonesia
 
-// Font bawaan tidak punya semua huruf yang dipakai di sini, jadi teks dan
-// alfabet menu digambar dengan Noto Sans.
+// Alfabet menu bawaan sudah punya semua huruf yang dipakai di sini, jadi hanya
+// teks biasa yang digambar dengan Noto Sans.
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
 
 // Gameplay
 score_text: "Skor: {1} | Meleset: {2} | Nilai: {3}"
