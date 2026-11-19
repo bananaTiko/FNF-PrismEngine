@@ -1,10 +1,10 @@
 Українська
 
-// Ванильні шрифти не мають кирилиці, тому текст і алфавіт меню малюються
-// шрифтом Noto Sans.
+// Текст малюється Noto Sans, а меню — власним алфавітом Prism із кирилицею
+// (і ї є ґ та решта українських літер). Атлас лежить в images/uk-UA.
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
+images/alphabet: "images/uk-UA/alphabet_uk"
 
 // Геймплей
 score_text: "Рахунок: {1} | Промахи: {2} | Оцінка: {3}"
@@ -41,7 +41,7 @@ blueballed: "Blueballs: {1}"
 
 week_score: "Рахунок: {1}"
 personal_best: "Найкращий: {1} ({2}%)"
-freeplay_tip: "SPACE – прослухати / CTRL – модифікатори / RESET – скинути рахунок"
+freeplay_tip: "SPACE - прослухати / CTRL - модифікатори / RESET - скинути рахунок"
 musicplayer_playing: "Пісня: {1}"
 musicplayer_paused: "Пісня: {1} (пауза)"
 

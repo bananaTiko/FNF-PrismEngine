@@ -1,10 +1,10 @@
 Tiếng Việt
 
-// Phông chữ mặc định không có dấu tiếng Việt, nên chữ và bảng chữ của menu
-// được vẽ bằng Noto Sans.
+// Chữ thường vẽ bằng Noto Sans, còn menu dùng bảng chữ riêng của Prism đã có đủ
+// dấu tiếng Việt. Atlas nằm trong images/vi-VN.
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
+images/alphabet: "images/vi-VN/alphabet_vi"
 
 // Lối chơi
 score_text: "Điểm: {1} | Trượt: {2} | Xếp loại: {3}"

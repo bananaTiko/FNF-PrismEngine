@@ -1,10 +1,10 @@
 Türkçe
 
-// Varsayılan yazı tiplerinde Türkçe karakterler yok, bu yüzden metin ve menü
-// alfabesi Noto Sans ile çiziliyor.
+// Metin Noto Sans ile, menü ise Prism'in Türkçe harflerle (ğ ı ş) tamamlanmış
+// kendi alfabesiyle çiziliyor. Atlas images/tr-TR içinde.
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
+images/alphabet: "images/tr-TR/alphabet_tr"
 
 // Oynanış
 score_text: "Puan: {1} | Kaçırma: {2} | Derece: {3}"

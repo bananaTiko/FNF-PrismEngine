@@ -1,0 +1,22 @@
+Ukrainian alphabet atlas
+========================
+
+Source of the Cyrillic lettering: https://github.com/NC-devC/FNF-PsychEngine-RUS
+Commit: 1797e3f766abd3a4b27aa02f4e47b3690ae2c083, licensed under the Apache
+License, Version 2.0.
+
+alphabet_uk.png / .xml / .json start from Prism's own alphabet_ru atlas (see
+assets/translations/shared/images/ru-RU/NOTICE.txt) and were extended for
+Ukrainian:
+
+  - added і ї є ґ (і reuses the atlas' Latin I, ї adds its diaeresis, є is the
+    mirrored Э, ґ is Г with the upright stroke);
+  - added the bold frames the Russian atlas was missing for е к м н о р с т х
+    (the shapes that match Latin letters take Prism's Latin bold lettering,
+    Н is drawn to match);
+  - added a thin ("normal") frame for every Cyrillic letter, which the Russian
+    atlas did not carry;
+  - added > bold / > normal from the base atlas.
+
+Everything else is unchanged. Distributed by Prism Engine under the Apache
+License, Version 2.0, with this notice.

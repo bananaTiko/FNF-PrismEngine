@@ -1,10 +1,10 @@
 Polski
 
-// Domyślne czcionki nie mają polskich znaków, więc tekst i alfabet menu są
-// rysowane krojem Noto Sans.
+// Tekst rysuje Noto Sans, a menu korzysta z własnego alfabetu Prism, uzupełnionego
+// o polskie litery (ą ć ę ł ń ś ź ż). Atlas leży w images/pl-PL.
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
+images/alphabet: "images/pl-PL/alphabet_pl"
 
 // Rozgrywka
 score_text: "Wynik: {1} | Błędy: {2} | Ocena: {3}"
@@ -41,7 +41,7 @@ blueballed: "Blueballs: {1}"
 
 week_score: "Wynik: {1}"
 personal_best: "Najlepszy wynik: {1} ({2}%)"
-freeplay_tip: "SPACE – odsłuch / CTRL – modyfikatory / RESET – wyczyść wynik"
+freeplay_tip: "SPACE - odsłuch / CTRL - modyfikatory / RESET - wyczyść wynik"
 musicplayer_playing: "Utwór: {1}"
 musicplayer_paused: "Utwór: {1} (wstrzymany)"
 
