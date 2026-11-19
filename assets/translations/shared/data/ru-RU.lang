@@ -33,6 +33,7 @@ images/storymenu/week4: "images/ru-RU/storymenu/week4"
 images/storymenu/week5: "images/ru-RU/storymenu/week5"
 images/storymenu/week6: "images/ru-RU/storymenu/week6"
 images/storymenu/week7: "images/ru-RU/storymenu/week7"
+images/storymenu/weekend1: "images/ru-RU/storymenu/weekend1"
 
 // Gameplay
 score_text: "Очки: {1} | Промахи: {2} | Оценка: {3}"
