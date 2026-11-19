@@ -242,10 +242,10 @@ class PauseSubState extends MusicBeatSubstate
 					trace('ERROR! ${e.message}');
 	
 					var errorStr:String = e.message;
-					if(errorStr.startsWith('[lime.utils.Assets] ERROR:')) errorStr = 'Missing file: ' + errorStr.substring(errorStr.indexOf(songLowercase), errorStr.length-1); //Missing chart
+					if(errorStr.startsWith('[lime.utils.Assets] ERROR:')) errorStr = Language.getPhrase('chart_error_missing', 'Missing file: {1}', [errorStr.substring(errorStr.indexOf(songLowercase), errorStr.length-1)]); //Missing chart
 					else errorStr += '\n\n' + e.stack;
 
-					missingText.text = 'ERROR WHILE LOADING CHART:\n$errorStr';
+					missingText.text = Language.getPhrase('chart_error', 'ERROR WHILE LOADING CHART:\n{1}', [errorStr]);
 					missingText.screenCenter(Y);
 					missingText.visible = true;
 					missingTextBG.visible = true;

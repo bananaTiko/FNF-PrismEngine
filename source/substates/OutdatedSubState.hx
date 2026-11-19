@@ -1,5 +1,7 @@
 package substates;
 
+import backend.Language;
+
 import flixel.tweens.FlxTween;
 import flixel.tweens.FlxEase;
 
@@ -27,14 +29,9 @@ class OutdatedSubState extends MusicBeatSubstate
 		add(bg);
 
 		warnText = new FlxText(0, 0, FlxG.width,
-			'Sup bro, looks like you\'re running an outdated version of\nPrism Engine (${MainMenuState.prismEngineVersion})\n
-			-----------------------------------------------\n
-			Press ENTER to update to the latest version ${updateVersion}\n
-			Press ESCAPE to proceed anyway.\n
-			You can disable this warning by unchecking the
-			"Check for Updates" setting in the Options Menu\n
-			-----------------------------------------------\n
-			Thank you for using the Engine!',
+			Language.getPhrase('outdated_warning',
+				'Sup bro, looks like you\'re running an outdated version of\nPrism Engine ({1})\n\n-----------------------------------------------\n\nPress ENTER to update to the latest version {2}\n\nPress ESCAPE to proceed anyway.\nYou can disable this warning by unchecking the\n"Check for Updates" setting in the Options Menu\n\n-----------------------------------------------\n\nThank you for using the Engine!',
+				[MainMenuState.prismEngineVersion, updateVersion]),
 			32);
 		warnText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER);
 		warnText.scrollFactor.set();

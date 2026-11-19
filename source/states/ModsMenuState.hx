@@ -801,8 +801,8 @@ class ModItem extends FlxSpriteGroup
 	public var totalFrames:Int = 0;
 
 	// options
-	public var name:String = 'Unknown Mod';
-	public var desc:String = 'No description provided.';
+	public var name:String = Language.getPhrase('mods_unknown_name', 'Unknown Mod');
+	public var desc:String = Language.getPhrase('mods_no_description', 'No description provided.');
 	public var iconFps:Int = 10;
 	public var bgColor:FlxColor = 0xFF665AFF;
 	public var pack:Dynamic = null;
@@ -827,8 +827,8 @@ class ModItem extends FlxSpriteGroup
 			}
 			catch(e:Dynamic)
 			{
-				var errorTitle = 'Mod name: ' + Mods.currentModDirectory;
-				var errorMsg = 'An error occurred: $e';
+				var errorTitle = Language.getPhrase('mods_error_title', 'Mod name: {1}', [Mods.currentModDirectory]);
+				var errorMsg = Language.getPhrase('mods_error_msg', 'An error occurred: {1}', [Std.string(e)]);
 				#if windows
 				lime.app.Application.current.window.alert(errorMsg, errorTitle);
 				#end

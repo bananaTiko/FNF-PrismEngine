@@ -357,12 +357,12 @@ class PlayState extends MusicBeatState
 		storyDifficultyText = Difficulty.getString();
 
 		if (isStoryMode)
-			detailsText = "Story Mode: " + WeekData.getCurrentWeek().weekName;
+			detailsText = Language.getPhrase('rpc_story_mode', 'Story Mode: {1}', [WeekData.getCurrentWeek().weekName]);
 		else
-			detailsText = "Freeplay";
+			detailsText = Language.getPhrase('rpc_freeplay', 'Freeplay');
 
 		// String for when the game is paused
-		detailsPausedText = "Paused - " + detailsText;
+		detailsPausedText = Language.getPhrase('rpc_paused', 'Paused - {1}', [detailsText]);
 		#end
 
 		GameOverSubstate.resetVariables();
@@ -993,9 +993,9 @@ class PlayState extends MusicBeatState
 			return videoCutscene;
 		}
 		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
-		else addTextToDebug("Video not found: " + fileName, FlxColor.RED);
+		else addTextToDebug(Language.getPhrase('debug_video_not_found', 'Video not found: {1}', [fileName]), FlxColor.RED);
 		#else
-		else FlxG.log.error("Video not found: " + fileName);
+		else FlxG.log.error(Language.getPhrase('debug_video_not_found', 'Video not found: {1}', [fileName]));
 		#end
 		#else
 		FlxG.log.warn('Platform not supported!');

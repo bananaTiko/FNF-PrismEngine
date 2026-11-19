@@ -54,8 +54,8 @@ class AchievementPopup extends openfl.display.Sprite {
 		graphics.drawRect(imgX, imgY, sizeX + 10, sizeY + 10);
 
 		// achievement name/description
-		var name:String = 'Unknown';
-		var desc:String = 'Description not found';
+		var name:String = Language.getPhrase('achievement_unknown', 'Unknown');
+		var desc:String = Language.getPhrase('achievement_no_description', 'Description not found');
 		if(achievement != null)
 		{
 			if(achievement.name != null) name = Language.getPhrase('achievement_$achieve', achievement.name);
