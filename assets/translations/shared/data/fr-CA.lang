@@ -1,6 +1,6 @@
 Français (Canada)
 
-// Français du Canada — seuls quelques termes diffèrent de la version européenne
+// Français du Canada — seuls quelques termes diffèrent du français standard (fr.lang)
 // L'art de la traduction française vit dans assets/translations/shared/images/french
 // Les touches ci-dessous remplacent les images de l'anglais par les nôtres.
 images/sick: "images/french/sick"
