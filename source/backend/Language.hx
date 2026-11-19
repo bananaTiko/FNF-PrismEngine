@@ -3,6 +3,10 @@ package backend;
 class Language
 {
 	public static var defaultLangName:String = 'English (US)'; //en-US
+
+	//Set by a language file when the bitmap alphabet can't draw its script (Cyrillic, Japanese, Korean...)
+	//Alphabet switches to rendering with this TTF instead of the alphabet atlas
+	public static var alphabetFont:String = null;
 	#if TRANSLATIONS_ALLOWED
 	private static var phrases:Map<String, String> = [];
 	#end
@@ -43,6 +47,8 @@ class Language
 		}
 
 		if(!hasPhrases) ClientPrefs.data.language = ClientPrefs.defaultData.language;
+
+		alphabetFont = phrases.get('alphabet_font');
 		
 		var alphaPath:String = getFileTranslation('images/alphabet');
 		if(alphaPath.startsWith('images/')) alphaPath = alphaPath.substr('images/'.length);

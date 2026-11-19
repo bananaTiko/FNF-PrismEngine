@@ -2,6 +2,7 @@ package objects;
 
 import haxe.Json;
 import openfl.utils.Assets;
+import flixel.text.FlxText.FlxTextAlign;
 
 enum Alignment
 {
@@ -29,6 +30,14 @@ class Alphabet extends FlxSpriteGroup
 
 	public var distancePerItem:FlxPoint = new FlxPoint(20, 120);
 	public var startPosition:FlxPoint = new FlxPoint(0, 0); //for the calculations
+
+	//Languages whose script the bitmap alphabet can't draw (Cyrillic, Japanese, Korean...) set
+	//Language.alphabetFont, and then the text is drawn with that font instead of the atlas
+	public var fontText:FlxText = null;
+	public static function usesFont():Bool
+	{
+		return Language.alphabetFont != null && Language.alphabetFont.length > 0;
+	}
 
 	public function new(x:Float, y:Float, text:String = "", ?bold:Bool = true)
 	{
@@ -62,6 +71,19 @@ class Alphabet extends FlxSpriteGroup
 
 	private function updateAlignment()
 	{
+		if(fontText != null)
+		{
+			switch(alignment)
+			{
+				case CENTERED:
+					fontText.alignment = FlxTextAlign.CENTER;
+				case RIGHT:
+					fontText.alignment = FlxTextAlign.RIGHT;
+				default:
+					fontText.alignment = FlxTextAlign.LEFT;
+			}
+		}
+
 		for (letter in letters)
 		{
 			var newOffset:Float = 0;
@@ -85,10 +107,27 @@ class Alphabet extends FlxSpriteGroup
 	{
 		newText = newText.replace('\\n', '\n');
 		clearLetters();
-		createLetters(newText);
+		if(usesFont())
+			buildFontText(newText);
+		else
+			createLetters(newText);
 		updateAlignment();
 		this.text = newText;
 		return newText;
+	}
+
+	function buildFontText(newText:String)
+	{
+		if(fontText == null)
+		{
+			fontText = new FlxText(0, 0, 0, '', 40);
+			fontText.setFormat(Paths.font(Language.alphabetFont), 40, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			fontText.borderSize = 2;
+			add(fontText);
+		}
+		fontText.text = newText;
+		fontText.scale.set(scaleX, scaleY);
+		fontText.visible = newText.length > 0;
 	}
 
 	public function clearLetters()
@@ -107,6 +146,7 @@ class Alphabet extends FlxSpriteGroup
 		}
 		letters = [];
 		rows = 0;
+		if(fontText != null) fontText.text = '';
 	}
 
 	public function setScale(newX:Float, newY:Null<Float> = null)
@@ -149,6 +189,8 @@ class Alphabet extends FlxSpriteGroup
 	public function softReloadLetters(ratioX:Float = 1, ratioY:Null<Float> = null)
 	{
 		if(ratioY == null) ratioY = ratioX;
+
+		if(fontText != null) fontText.scale.set(scaleX, scaleY);
 
 		for (letter in letters)
 		{

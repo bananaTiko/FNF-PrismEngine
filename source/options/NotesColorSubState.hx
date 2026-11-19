@@ -518,6 +518,7 @@ class NotesColorSubState extends MusicBeatSubstate
 
 	function centerHexTypeLine()
 	{
+		if(alphabetHex.letters.length < 1) return; //Languages drawn with a TTF have no atlas letters
 		//trace(hexTypeNum);
 		if(hexTypeNum > 0)
 		{

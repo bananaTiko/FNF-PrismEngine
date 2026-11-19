@@ -430,6 +430,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		var gamepad:FlxGamepad = FlxG.gamepads.firstActive;
 		var model:FlxGamepadModel = gamepad != null ? gamepad.detectedModel : UNKNOWN;
 		var letter = alpha.letters[0];
+		if(letter == null) return; //Languages drawn with a TTF have no atlas letters
 		if(model == PS4)
 		{
 			switch(alpha.text)
