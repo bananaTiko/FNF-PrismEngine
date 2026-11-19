@@ -14,6 +14,13 @@ images/bad: "images/el-GR/bad"
 images/shit: "images/el-GR/shit"
 images/ready: "images/el-GR/ready"
 images/set: "images/el-GR/set"
+// γραφικά λειτουργίας pixel (pixelUI)
+images/pixelUI/sick-pixel: "images/el-GR/pixelUI/sick-pixel"
+images/pixelUI/good-pixel: "images/el-GR/pixelUI/good-pixel"
+images/pixelUI/bad-pixel: "images/el-GR/pixelUI/bad-pixel"
+images/pixelUI/shit-pixel: "images/el-GR/pixelUI/shit-pixel"
+images/pixelUI/ready-pixel: "images/el-GR/pixelUI/ready-pixel"
+images/pixelUI/set-pixel: "images/el-GR/pixelUI/set-pixel"
 images/go: "images/el-GR/go"
 
 // Κύριο μενού: οι ελληνικές εικόνες βρίσκονται στο assets/translations/shared/images/el-GR

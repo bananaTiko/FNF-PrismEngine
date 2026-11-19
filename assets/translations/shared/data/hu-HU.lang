@@ -14,6 +14,13 @@ images/bad: "images/hu-HU/bad"
 images/shit: "images/hu-HU/shit"
 images/ready: "images/hu-HU/ready"
 images/set: "images/hu-HU/set"
+// pixel-stádium arcai (pixelUI)
+images/pixelUI/sick-pixel: "images/hu-HU/pixelUI/sick-pixel"
+images/pixelUI/good-pixel: "images/hu-HU/pixelUI/good-pixel"
+images/pixelUI/bad-pixel: "images/hu-HU/pixelUI/bad-pixel"
+images/pixelUI/shit-pixel: "images/hu-HU/pixelUI/shit-pixel"
+images/pixelUI/ready-pixel: "images/hu-HU/pixelUI/ready-pixel"
+images/pixelUI/set-pixel: "images/hu-HU/pixelUI/set-pixel"
 images/go: "images/hu-HU/go"
 
 // Főmenü: a magyar képek a assets/translations/shared/images/hu-HU mappában vannak

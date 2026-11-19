@@ -14,6 +14,13 @@ images/bad: "images/ro-RO/bad"
 images/shit: "images/ro-RO/shit"
 images/ready: "images/ro-RO/ready"
 images/set: "images/ro-RO/set"
+// grafica modului pixel (pixelUI)
+images/pixelUI/sick-pixel: "images/ro-RO/pixelUI/sick-pixel"
+images/pixelUI/good-pixel: "images/ro-RO/pixelUI/good-pixel"
+images/pixelUI/bad-pixel: "images/ro-RO/pixelUI/bad-pixel"
+images/pixelUI/shit-pixel: "images/ro-RO/pixelUI/shit-pixel"
+images/pixelUI/ready-pixel: "images/ro-RO/pixelUI/ready-pixel"
+images/pixelUI/set-pixel: "images/ro-RO/pixelUI/set-pixel"
 images/go: "images/ro-RO/go"
 
 // Meniu principal: imaginile în română sunt în assets/translations/shared/images/ro-RO

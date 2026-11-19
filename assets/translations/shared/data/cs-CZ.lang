@@ -14,6 +14,13 @@ images/bad: "images/cs-CZ/bad"
 images/shit: "images/cs-CZ/shit"
 images/ready: "images/cs-CZ/ready"
 images/set: "images/cs-CZ/set"
+// grafika pro pixelový režim (pixelUI)
+images/pixelUI/sick-pixel: "images/cs-CZ/pixelUI/sick-pixel"
+images/pixelUI/good-pixel: "images/cs-CZ/pixelUI/good-pixel"
+images/pixelUI/bad-pixel: "images/cs-CZ/pixelUI/bad-pixel"
+images/pixelUI/shit-pixel: "images/cs-CZ/pixelUI/shit-pixel"
+images/pixelUI/ready-pixel: "images/cs-CZ/pixelUI/ready-pixel"
+images/pixelUI/set-pixel: "images/cs-CZ/pixelUI/set-pixel"
 images/go: "images/cs-CZ/go"
 
 // Hlavní menu: české obrázky jsou v assets/translations/shared/images/cs-CZ
