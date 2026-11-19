@@ -6,6 +6,30 @@ fonts/vcr.ttf: "fonts/NotoSansJP.otf"
 fonts/pixel-latin.ttf: "fonts/NotoSansJP.otf"
 alphabet_font: "NotoSansJP.otf"
 
+// 画像は assets/translations/shared/images/ja-JP にあります
+// 立ち絵の差し替え: このフォルダの画像を参照します
+images/sick: "images/ja-JP/sick"
+images/good: "images/ja-JP/good"
+images/bad: "images/ja-JP/bad"
+images/shit: "images/ja-JP/shit"
+images/ready: "images/ja-JP/ready"
+images/set: "images/ja-JP/set"
+images/go: "images/ja-JP/go"
+
+// images/mainmenu/menu_story_mode: "images/ja-JP/mainmenu/menu_story_mode"
+// images/mainmenu/menu_freeplay: "images/ja-JP/mainmenu/menu_freeplay"
+// images/mainmenu/menu_options: "images/ja-JP/mainmenu/menu_options"
+// images/mainmenu/menu_credits: "images/ja-JP/mainmenu/menu_credits"
+// images/mainmenu/menu_mods: "images/ja-JP/mainmenu/menu_mods"
+// images/storymenu/tutorial: "images/ja-JP/storymenu/tutorial"
+// images/storymenu/week1: "images/ja-JP/storymenu/week1"
+// images/storymenu/week2: "images/ja-JP/storymenu/week2"
+// images/storymenu/week3: "images/ja-JP/storymenu/week3"
+// images/storymenu/week4: "images/ja-JP/storymenu/week4"
+// images/storymenu/week5: "images/ja-JP/storymenu/week5"
+// images/storymenu/week6: "images/ja-JP/storymenu/week6"
+// images/storymenu/week7: "images/ja-JP/storymenu/week7"
+
 // Gameplay
 score_text: "スコア: {1} | ミス: {2} | 評価: {3}"
 score_text_instakill: "スコア: {1} | 評価: {2}"
