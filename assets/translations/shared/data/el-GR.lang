@@ -21,6 +21,8 @@ images/pixelUI/bad-pixel: "images/el-GR/pixelUI/bad-pixel"
 images/pixelUI/shit-pixel: "images/el-GR/pixelUI/shit-pixel"
 images/pixelUI/ready-pixel: "images/el-GR/pixelUI/ready-pixel"
 images/pixelUI/set-pixel: "images/el-GR/pixelUI/set-pixel"
+images/pixelUI/date-pixel: "images/el-GR/pixelUI/date-pixel"
+images/pixelUI/combo-pixel: "images/el-GR/pixelUI/combo-pixel"
 images/go: "images/el-GR/go"
 
 // Κύριο μενού: οι ελληνικές εικόνες βρίσκονται στο assets/translations/shared/images/el-GR

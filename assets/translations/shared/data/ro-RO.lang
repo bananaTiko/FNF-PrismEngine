@@ -21,6 +21,8 @@ images/pixelUI/bad-pixel: "images/ro-RO/pixelUI/bad-pixel"
 images/pixelUI/shit-pixel: "images/ro-RO/pixelUI/shit-pixel"
 images/pixelUI/ready-pixel: "images/ro-RO/pixelUI/ready-pixel"
 images/pixelUI/set-pixel: "images/ro-RO/pixelUI/set-pixel"
+images/pixelUI/date-pixel: "images/ro-RO/pixelUI/date-pixel"
+images/pixelUI/combo-pixel: "images/ro-RO/pixelUI/combo-pixel"
 images/go: "images/ro-RO/go"
 
 // Meniu principal: imaginile în română sunt în assets/translations/shared/images/ro-RO

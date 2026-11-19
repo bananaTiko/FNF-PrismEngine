@@ -21,6 +21,8 @@ images/pixelUI/bad-pixel: "images/cs-CZ/pixelUI/bad-pixel"
 images/pixelUI/shit-pixel: "images/cs-CZ/pixelUI/shit-pixel"
 images/pixelUI/ready-pixel: "images/cs-CZ/pixelUI/ready-pixel"
 images/pixelUI/set-pixel: "images/cs-CZ/pixelUI/set-pixel"
+images/pixelUI/date-pixel: "images/cs-CZ/pixelUI/date-pixel"
+images/pixelUI/combo-pixel: "images/cs-CZ/pixelUI/combo-pixel"
 images/go: "images/cs-CZ/go"
 
 // Hlavní menu: české obrázky jsou v assets/translations/shared/images/cs-CZ

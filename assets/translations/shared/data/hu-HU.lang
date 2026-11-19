@@ -21,6 +21,8 @@ images/pixelUI/bad-pixel: "images/hu-HU/pixelUI/bad-pixel"
 images/pixelUI/shit-pixel: "images/hu-HU/pixelUI/shit-pixel"
 images/pixelUI/ready-pixel: "images/hu-HU/pixelUI/ready-pixel"
 images/pixelUI/set-pixel: "images/hu-HU/pixelUI/set-pixel"
+images/pixelUI/date-pixel: "images/hu-HU/pixelUI/date-pixel"
+images/pixelUI/combo-pixel: "images/hu-HU/pixelUI/combo-pixel"
 images/go: "images/hu-HU/go"
 
 // Főmenü: a magyar képek a assets/translations/shared/images/hu-HU mappában vannak
