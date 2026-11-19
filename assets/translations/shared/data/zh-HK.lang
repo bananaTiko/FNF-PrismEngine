@@ -1,9 +1,11 @@
 繁體中文（香港）
 
-// 字體：默認字體與位圖字母表都沒有漢字，所以文字改用 Noto Sans 繪製
+// 字體：其餘以字型繪製的文字（對話、字幕）使用 Noto Sans HK
 fonts/vcr.ttf: "fonts/NotoSansHK.otf"
 fonts/pixel-latin.ttf: "fonts/NotoSansHK.otf"
-alphabet_font: "NotoSansHK.otf"
+
+// 文字改用遊戲原本的手寫字母表繪製
+images/alphabet: "images/zh-HK/alphabet_zhhk"
 
 // 圖片替換：中文版本的圖片都放在 assets/translations/shared/images/zh-HK 裏
 images/sick: "images/zh-HK/sick"

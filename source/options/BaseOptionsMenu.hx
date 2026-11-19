@@ -8,6 +8,7 @@ import flixel.input.gamepad.FlxGamepadManager;
 import objects.CheckboxThingie;
 import objects.AttachedText;
 import options.Option;
+import backend.GamepadIcons;
 import backend.InputFormatter;
 
 class BaseOptionsMenu extends MusicBeatSubstate
@@ -412,7 +413,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		attach.sprTracker = bind.sprTracker;
 		attach.copyAlpha = true;
 		attach.ID = bind.ID;
-		playstationCheck(attach);
+		gamepadIconCheck(attach);
 		attach.scaleX = Math.min(1, MAX_KEYBIND_WIDTH / attach.width);
 		attach.x = bind.x;
 		attach.y = bind.y;
@@ -423,26 +424,10 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		bind.destroy();
 	}
 
-	function playstationCheck(alpha:Alphabet)
+	function gamepadIconCheck(alpha:Alphabet)
 	{
 		if(!controls.controllerMode) return;
-
-		var gamepad:FlxGamepad = FlxG.gamepads.firstActive;
-		var model:FlxGamepadModel = gamepad != null ? gamepad.detectedModel : UNKNOWN;
-		var letter = alpha.letters[0];
-		if(letter == null) return; //Languages drawn with a TTF have no atlas letters
-		if(model == PS4)
-		{
-			switch(alpha.text)
-			{
-				case '[', ']': //Square and Triangle respectively
-					letter.image = 'alphabet_playstation';
-					letter.updateHitbox();
-					
-					letter.offset.x += 4;
-					letter.offset.y -= 5;
-			}
-		}
+		GamepadIcons.apply(alpha); //draws the symbol the connected pad has for this bind
 	}
 
 	function closeBinding()

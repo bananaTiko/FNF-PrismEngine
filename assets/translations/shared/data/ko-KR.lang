@@ -1,10 +1,11 @@
 한국어
 
-// 글꼴: 기본 글꼴과 비트맵 알파벳에는 한글이 없으므로
-// 텍스트는 Noto Sans로 그립니다
+// 폰트: 그 외 글자(대사, 자막)는 Noto Sans KR로 그립니다
 fonts/vcr.ttf: "fonts/NotoSansKR.otf"
 fonts/pixel-latin.ttf: "fonts/NotoSansKR.otf"
-alphabet_font: "NotoSansKR.otf"
+
+// 글자는 게임 원래의 손글씨 비트맵 알파벳으로 그립니다
+images/alphabet: "images/ko-KR/alphabet_kokr"
 
 // 이미지는 assets/translations/shared/images/ko-KR 에 있습니다
 // 이 폴더의 이미지를 사용합니다

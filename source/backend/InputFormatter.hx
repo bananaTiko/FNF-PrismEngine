@@ -119,7 +119,7 @@ class InputFormatter {
 			case LEFT_STICK_CLICK:
 				switch (model) {
 					case PS4: return "L3";
-					case XINPUT: return "LS";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "LS";
 					default: return "Analog Click";
 				}
 
@@ -134,7 +134,7 @@ class InputFormatter {
 			case RIGHT_STICK_CLICK:
 				switch (model) {
 					case PS4: return "R3";
-					case XINPUT: return "RS";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "RS";
 					default: return "C. Click";
 				}
 
@@ -152,25 +152,25 @@ class InputFormatter {
 			case LEFT_SHOULDER:
 				switch(model) {
 					case PS4: return "L1";
-					case XINPUT: return "LB";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "LB";
 					default: return "L. Bumper";
 				}
 			case RIGHT_SHOULDER:
 				switch(model) {
 					case PS4: return "R1";
-					case XINPUT: return "RB";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "RB";
 					default: return "R. Bumper";
 				}
 			case LEFT_TRIGGER, LEFT_TRIGGER_BUTTON:
 				switch(model) {
 					case PS4: return "L2";
-					case XINPUT: return "LT";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "LT";
 					default: return "L. Trigger";
 				}
 			case RIGHT_TRIGGER, RIGHT_TRIGGER_BUTTON:
 				switch(model) {
 					case PS4: return "R2";
-					case XINPUT: return "RT";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "RT";
 					default: return "R. Trigger";
 				}
 
@@ -178,32 +178,32 @@ class InputFormatter {
 			case A:
 				switch (model) {
 					case PS4: return "X";
-					case XINPUT: return "A";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "A";
 					default: return "Action Down";
 				}
 			case B:
 				switch (model) {
 					case PS4: return "O";
-					case XINPUT: return "B";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "B";
 					default: return "Action Right";
 				}
 			case X:
 				switch (model) {
 					case PS4: return "["; //This gets its image changed through code
-					case XINPUT: return "X";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "X";
 					default: return "Action Left";
 				}
 			case Y:
 				switch (model) { 
 					case PS4: return "]"; //This gets its image changed through code
-					case XINPUT: return "Y";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "Y";
 					default: return "Action Up";
 				}
 
 			case BACK:
 				switch(model) {
 					case PS4: return "Share";
-					case XINPUT: return "Back";
+					case XINPUT, SWITCH_PRO, SWITCH_JOYCON_LEFT, SWITCH_JOYCON_RIGHT: return "Back";
 					default: return "Select";
 				}
 			case START:

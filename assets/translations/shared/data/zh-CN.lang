@@ -1,9 +1,11 @@
 简体中文
 
-// 字体：默认字体与位图字母表都没有汉字，所以文字改用 Noto Sans 绘制
+// 字体：其余以字体绘制的文字（对话、字幕）使用 Noto Sans SC
 fonts/vcr.ttf: "fonts/NotoSansSC.otf"
 fonts/pixel-latin.ttf: "fonts/NotoSansSC.otf"
-alphabet_font: "NotoSansSC.otf"
+
+// 文字改用游戏原本的手写字母表绘制
+images/alphabet: "images/zh-CN/alphabet_zhcn"
 
 // 图片替换：中文版本的图片都放在 assets/translations/shared/images/zh-CN 里
 images/sick: "images/zh-CN/sick"

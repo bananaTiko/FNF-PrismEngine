@@ -1,5 +1,6 @@
 package options;
 
+import backend.GamepadIcons;
 import backend.InputFormatter;
 import flixel.addons.display.FlxBackdrop;
 import flixel.addons.display.FlxGridOverlay;
@@ -204,7 +205,7 @@ class ControlsSubState extends MusicBeatSubstate
 			attach.y += FlxG.height * 2;
 			grpBinds.add(attach);
 
-			playstationCheck(attach);
+			gamepadIconCheck(attach);
 			attach.scaleX = Math.min(1, 230 / attach.width);
 			//attach.text = key;
 
@@ -219,26 +220,10 @@ class ControlsSubState extends MusicBeatSubstate
 		}
 	}
 
-	function playstationCheck(alpha:Alphabet)
+	function gamepadIconCheck(alpha:Alphabet)
 	{
 		if(onKeyboardMode) return;
-
-		var gamepad:FlxGamepad = FlxG.gamepads.firstActive;
-		var model:FlxGamepadModel = gamepad != null ? gamepad.detectedModel : UNKNOWN;
-		var letter = alpha.letters[0];
-		if(letter == null) return; //Languages drawn with a TTF have no atlas letters
-		if(model == PS4)
-		{
-			switch(alpha.text)
-			{
-				case '[', ']': //Square and Triangle respectively
-					letter.image = 'alphabet_playstation';
-					letter.updateHitbox();
-					
-					letter.offset.x += 4;
-					letter.offset.y -= 5;
-			}
-		}
+		GamepadIcons.apply(alpha); //draws the symbol the connected pad has for this bind
 	}
 
 	function updateBind(num:Int, text:String)
@@ -253,7 +238,7 @@ class ControlsSubState extends MusicBeatSubstate
 		attach.x = bind.x;
 		attach.y = bind.y;
 		
-		playstationCheck(attach);
+		gamepadIconCheck(attach);
 		attach.scaleX = Math.min(1, 230 / attach.width);
 		//attach.text = text;
 

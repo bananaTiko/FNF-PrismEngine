@@ -1,0 +1,18 @@
+controllerIcons.png / controllerIcons.xml - button symbols for the bind menus.
+
+These two files are taken from FPS-Plus-Public by ThatRozebudDude:
+https://github.com/ThatRozebudDude/FPS-Plus-Public/tree/master/assets/images/ui
+
+Used under that project's licence, which allows use in non-commercial
+projects (this mod is free). Its terms, in short:
+
+  "Hey, you can use this in anything non-commercial. If for whatever reason
+   you want to use something in this repository for something commercial,
+   contact me."
+  "You cannot use any code or assets from this repository to train generative
+   AI or give it to a generative AI model as a prompt."
+  Non-original Friday Night Funkin' assets in that repository fall under the
+  Funkin' assets licence: https://github.com/FunkinCrew/funkin.assets
+
+If this mod is ever sold or otherwise used commercially, these two files have
+to be replaced or separately licensed by their author.
