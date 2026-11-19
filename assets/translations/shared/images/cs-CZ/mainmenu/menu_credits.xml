@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="menu_credits.png">
+	<SubTexture name="credits idle0000" x="2" y="2" width="474" height="121"/>
+	<SubTexture name="credits idle0001" x="2" y="125" width="474" height="121"/>
+	<SubTexture name="credits idle0002" x="2" y="248" width="474" height="121"/>
+	<SubTexture name="credits idle0003" x="2" y="371" width="474" height="121"/>
+	<SubTexture name="credits idle0004" x="2" y="494" width="474" height="121"/>
+	<SubTexture name="credits idle0005" x="2" y="617" width="474" height="121"/>
+	<SubTexture name="credits idle0006" x="2" y="740" width="474" height="121"/>
+	<SubTexture name="credits idle0007" x="2" y="863" width="474" height="121"/>
+	<SubTexture name="credits idle0008" x="2" y="986" width="474" height="121"/>
+	<SubTexture name="credits selected0000" x="2" y="1109" width="645" height="167"/>
+	<SubTexture name="credits selected0001" x="2" y="1278" width="643" height="164"/>
+	<SubTexture name="credits selected0002" x="2" y="1444" width="651" height="171"/>
+</TextureAtlas>
