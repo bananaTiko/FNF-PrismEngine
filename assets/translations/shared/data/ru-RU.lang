@@ -1,10 +1,38 @@
 Русский
 
-// Fonts: the vanilla fonts have no Cyrillic glyphs, and the bitmap alphabet
-// has no Cyrillic letters either, so text is drawn with Noto Sans instead
+// Fonts: the vanilla vcr font has no Cyrillic glyphs, so FlxText is drawn with Noto Sans
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
-alphabet_font: "NotoSans-Regular.ttf"
+
+// The bitmap alphabet only had Latin letters, so menus had nothing to draw.
+// alphabet_ru is Prism's own atlas with the Cyrillic letters of NC-devC's
+// Russian translation merged in, keeping Latin for song names.
+images/alphabet: "images/alphabet_ru"
+
+// Art ported from NC-devC/FNF-PsychEngine-RUS (Apache 2.0), see
+// assets/shared/images/ru/NOTICE.txt
+images/mainmenu/menu_story_mode: "images/mainmenu/ru/menu_story_mode"
+images/mainmenu/menu_freeplay: "images/mainmenu/ru/menu_freeplay"
+images/mainmenu/menu_options: "images/mainmenu/ru/menu_options"
+images/mainmenu/menu_credits: "images/mainmenu/ru/menu_credits"
+images/mainmenu/menu_awards: "images/mainmenu/ru/menu_awards"
+images/mainmenu/menu_mods: "images/mainmenu/ru/menu_mods"
+images/mainmenu/menu_donate: "images/mainmenu/ru/menu_donate"
+images/sick: "images/ru/sick"
+images/good: "images/ru/good"
+images/bad: "images/ru/bad"
+images/shit: "images/ru/shit"
+images/ready: "images/ru/ready"
+images/set: "images/ru/set"
+images/go: "images/ru/go"
+images/storymenu/tutorial: "images/storymenu/ru/tutorial"
+images/storymenu/week1: "images/storymenu/ru/week1"
+images/storymenu/week2: "images/storymenu/ru/week2"
+images/storymenu/week3: "images/storymenu/ru/week3"
+images/storymenu/week4: "images/storymenu/ru/week4"
+images/storymenu/week5: "images/storymenu/ru/week5"
+images/storymenu/week6: "images/storymenu/ru/week6"
+images/storymenu/week7: "images/storymenu/ru/week7"
 
 // Gameplay
 score_text: "Очки: {1} | Промахи: {2} | Оценка: {3}"
