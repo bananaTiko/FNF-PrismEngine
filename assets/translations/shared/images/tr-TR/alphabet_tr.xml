@@ -1058,28 +1058,28 @@
 	<SubTexture name="ž uppercase instance 10001" x="1748" y="155" width="39" height="60"/>
 	<SubTexture name="ž uppercase instance 10002" x="895" y="418" width="39" height="60"/>
 	<SubTexture name="ž uppercase instance 10003" x="895" y="418" width="39" height="60"/>
-	<SubTexture name="ğ bold instance 10000" x="2" y="712" width="54" height="79"/>
-	<SubTexture name="ğ bold instance 10001" x="2" y="712" width="54" height="79"/>
-	<SubTexture name="ğ bold instance 10002" x="2" y="712" width="54" height="79"/>
-	<SubTexture name="ğ bold instance 10003" x="2" y="712" width="54" height="79"/>
+	<SubTexture name="ğ bold instance 10000" x="2" y="712" width="54" height="100"/>
+	<SubTexture name="ğ bold instance 10001" x="2" y="712" width="54" height="100"/>
+	<SubTexture name="ğ bold instance 10002" x="2" y="712" width="54" height="100"/>
+	<SubTexture name="ğ bold instance 10003" x="2" y="712" width="54" height="100"/>
 	<SubTexture name="ı bold instance 10000" x="58" y="712" width="43" height="64"/>
 	<SubTexture name="ı bold instance 10001" x="58" y="712" width="43" height="64"/>
 	<SubTexture name="ı bold instance 10002" x="58" y="712" width="43" height="64"/>
 	<SubTexture name="ı bold instance 10003" x="58" y="712" width="43" height="64"/>
-	<SubTexture name="ş bold instance 10000" x="103" y="712" width="49" height="81"/>
-	<SubTexture name="ş bold instance 10001" x="103" y="712" width="49" height="81"/>
-	<SubTexture name="ş bold instance 10002" x="103" y="712" width="49" height="81"/>
-	<SubTexture name="ş bold instance 10003" x="103" y="712" width="49" height="81"/>
-	<SubTexture name="ğ normal instance 10000" x="154" y="712" width="33" height="44"/>
-	<SubTexture name="ğ normal instance 10001" x="154" y="712" width="33" height="44"/>
-	<SubTexture name="ğ normal instance 10002" x="154" y="712" width="33" height="44"/>
-	<SubTexture name="ğ normal instance 10003" x="154" y="712" width="33" height="44"/>
-	<SubTexture name="ı normal instance 10000" x="189" y="712" width="11" height="27"/>
-	<SubTexture name="ı normal instance 10001" x="189" y="712" width="11" height="27"/>
-	<SubTexture name="ı normal instance 10002" x="189" y="712" width="11" height="27"/>
-	<SubTexture name="ı normal instance 10003" x="189" y="712" width="11" height="27"/>
-	<SubTexture name="ş normal instance 10000" x="202" y="712" width="28" height="47"/>
-	<SubTexture name="ş normal instance 10001" x="202" y="712" width="28" height="47"/>
-	<SubTexture name="ş normal instance 10002" x="202" y="712" width="28" height="47"/>
-	<SubTexture name="ş normal instance 10003" x="202" y="712" width="28" height="47"/>
+	<SubTexture name="ş bold instance 10000" x="103" y="712" width="49" height="83"/>
+	<SubTexture name="ş bold instance 10001" x="103" y="712" width="49" height="83"/>
+	<SubTexture name="ş bold instance 10002" x="103" y="712" width="49" height="83"/>
+	<SubTexture name="ş bold instance 10003" x="103" y="712" width="49" height="83"/>
+	<SubTexture name="ğ normal instance 10000" x="154" y="712" width="33" height="54"/>
+	<SubTexture name="ğ normal instance 10001" x="154" y="712" width="33" height="54"/>
+	<SubTexture name="ğ normal instance 10002" x="154" y="712" width="33" height="54"/>
+	<SubTexture name="ğ normal instance 10003" x="154" y="712" width="33" height="54"/>
+	<SubTexture name="ı normal instance 10000" x="189" y="712" width="13" height="42"/>
+	<SubTexture name="ı normal instance 10001" x="189" y="712" width="13" height="42"/>
+	<SubTexture name="ı normal instance 10002" x="189" y="712" width="13" height="42"/>
+	<SubTexture name="ı normal instance 10003" x="189" y="712" width="13" height="42"/>
+	<SubTexture name="ş normal instance 10000" x="204" y="712" width="28" height="49"/>
+	<SubTexture name="ş normal instance 10001" x="204" y="712" width="28" height="49"/>
+	<SubTexture name="ş normal instance 10002" x="204" y="712" width="28" height="49"/>
+	<SubTexture name="ş normal instance 10003" x="204" y="712" width="28" height="49"/>
 </TextureAtlas>
