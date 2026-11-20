@@ -5,6 +5,7 @@
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/uk-UA/alphabet_uk"
+images/titleEnter: "images/uk-UA/titleEnter"
 // Головне меню: власні написи кнопок
 images/mainmenu/menu_story_mode: "images/uk-UA/mainmenu/menu_story_mode"
 images/mainmenu/menu_freeplay: "images/uk-UA/mainmenu/menu_freeplay"

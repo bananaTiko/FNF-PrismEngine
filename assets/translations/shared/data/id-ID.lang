@@ -6,6 +6,7 @@ fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
 // Menu cerita: spanduk minggu sendiri
+images/titleEnter: "images/id-ID/titleEnter"
 images/storymenu/tutorial: "images/id-ID/storymenu/tutorial"
 images/storymenu/week1: "images/id-ID/storymenu/week1"
 images/storymenu/week2: "images/id-ID/storymenu/week2"

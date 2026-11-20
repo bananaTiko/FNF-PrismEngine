@@ -5,6 +5,7 @@ Español (España)
 
 // Imágenes: los carteles de las semanas están en
 // assets/translations/shared/images/es-ES
+images/titleEnter: "images/es-ES/titleEnter"
 images/storymenu/tutorial: "images/es-ES/storymenu/tutorial"
 images/storymenu/week1: "images/es-ES/storymenu/week1"
 images/storymenu/week2: "images/es-ES/storymenu/week2"

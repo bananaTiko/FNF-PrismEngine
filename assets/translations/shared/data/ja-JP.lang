@@ -6,6 +6,7 @@ fonts/pixel-latin.ttf: "fonts/NotoSansJP.otf"
 
 // 文字はゲーム本来の手描き書体のビットマップ字母表で描きます
 images/alphabet: "images/ja-JP/alphabet_jajp"
+images/titleEnter: "images/ja-JP/titleEnter"
 
 // 画像は assets/translations/shared/images/ja-JP にあります
 // 立ち絵の差し替え: このフォルダの画像を参照します

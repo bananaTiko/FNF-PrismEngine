@@ -5,6 +5,7 @@ Polski
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/pl-PL/alphabet_pl"
+images/titleEnter: "images/pl-PL/titleEnter"
 
 // Menu fabularne: własne plakaty tygodni
 images/storymenu/tutorial: "images/pl-PL/storymenu/tutorial"

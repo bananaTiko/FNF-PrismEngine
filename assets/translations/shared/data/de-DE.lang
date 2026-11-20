@@ -6,6 +6,7 @@ fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
 // Story-Menü: eigene Wochen-Banner
+images/titleEnter: "images/de-DE/titleEnter"
 images/storymenu/tutorial: "images/de-DE/storymenu/tutorial"
 images/storymenu/week1: "images/de-DE/storymenu/week1"
 images/storymenu/week2: "images/de-DE/storymenu/week2"

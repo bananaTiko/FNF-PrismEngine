@@ -6,6 +6,7 @@ fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
 // Text se kreslí vlastní ručně psanou abecedou hry
 images/alphabet: "images/cs-CZ/alphabet_cs"
+images/titleEnter: "images/cs-CZ/titleEnter"
 
 // Obrázky: české obrázky jsou v assets/translations/shared/images/cs-CZ
 images/sick: "images/cs-CZ/sick"

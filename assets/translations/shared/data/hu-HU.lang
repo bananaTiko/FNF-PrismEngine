@@ -6,6 +6,7 @@ fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
 // A szöveg a játék saját kézírásos betűkészletével rajzolódik ki
 images/alphabet: "images/hu-HU/alphabet_hu"
+images/titleEnter: "images/hu-HU/titleEnter"
 
 // Képek: a magyar képek a assets/translations/shared/images/hu-HU mappában vannak
 images/sick: "images/hu-HU/sick"

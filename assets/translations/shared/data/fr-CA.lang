@@ -3,6 +3,7 @@ Français (Canada)
 // Français du Canada — seuls quelques termes diffèrent du français standard (fr.lang)
 // L'art de la traduction française vit dans assets/translations/shared/images/french
 // Les touches ci-dessous remplacent les images de l'anglais par les nôtres.
+images/titleEnter: "images/fr-CA/titleEnter"
 images/sick: "images/french/sick"
 images/good: "images/french/good"
 images/bad: "images/french/bad"
@@ -29,13 +30,6 @@ images/go: "images/french/go"
 
 // Gameplay
 // Francais: images live in assets/translations/shared/images/french
-images/sick: "images/french/sick"
-images/good: "images/french/good"
-images/bad: "images/french/bad"
-images/shit: "images/french/shit"
-images/ready: "images/french/ready"
-images/set: "images/french/set"
-images/go: "images/french/go"
 images/pixelUI/sick-pixel: "images/french/pixelUI/sick-pixel"
 images/pixelUI/good-pixel: "images/french/pixelUI/good-pixel"
 images/pixelUI/bad-pixel: "images/french/pixelUI/bad-pixel"

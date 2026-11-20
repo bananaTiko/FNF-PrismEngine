@@ -6,6 +6,7 @@ fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
 // Το κείμενο σχεδιάζεται με το χειρόγραφο αλφάβητο του παιχνιδιού
 images/alphabet: "images/el-GR/alphabet_el"
+images/titleEnter: "images/el-GR/titleEnter"
 
 // Εικόνες: οι ελληνικές εικόνες βρίσκονται στο assets/translations/shared/images/el-GR
 images/sick: "images/el-GR/sick"

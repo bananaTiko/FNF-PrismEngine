@@ -6,6 +6,7 @@ fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
 // Verhaalmenu: eigen weekborden
+images/titleEnter: "images/nl-NL/titleEnter"
 images/storymenu/tutorial: "images/nl-NL/storymenu/tutorial"
 images/storymenu/week1: "images/nl-NL/storymenu/week1"
 images/storymenu/week2: "images/nl-NL/storymenu/week2"

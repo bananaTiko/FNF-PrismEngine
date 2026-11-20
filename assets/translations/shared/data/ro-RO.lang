@@ -6,6 +6,7 @@ fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
 // Textul este desenat cu alfabetul scris de mână al jocului
 images/alphabet: "images/ro-RO/alphabet_ro"
+images/titleEnter: "images/ro-RO/titleEnter"
 
 // Imagini: imaginile în română sunt în assets/translations/shared/images/ro-RO
 images/sick: "images/ro-RO/sick"

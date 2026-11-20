@@ -5,6 +5,7 @@ Türkçe
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/tr-TR/alphabet_tr"
+images/titleEnter: "images/tr-TR/titleEnter"
 
 // Hikaye menüsü: kendi hafta afişleri
 images/storymenu/tutorial: "images/tr-TR/storymenu/tutorial"

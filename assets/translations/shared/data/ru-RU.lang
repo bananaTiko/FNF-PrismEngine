@@ -8,6 +8,7 @@ fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 // alphabet_ru is Prism's own atlas with the Cyrillic letters of NC-devC's
 // Russian translation merged in, keeping Latin for song names.
 images/alphabet: "images/ru-RU/alphabet_ru"
+images/titleEnter: "images/ru-RU/titleEnter"
 
 // Art ported from NC-devC/FNF-PsychEngine-RUS (Apache 2.0), see
 // assets/shared/images/ru/NOTICE.txt

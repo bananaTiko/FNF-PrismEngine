@@ -36,6 +36,7 @@ charting_mode: "Modo Charter"
 blueballed: "Broxadas: {1}"
 
 // Main Menu
+images/titleEnter: "images/pt-BR/titleEnter"
 images/mainmenu/menu_story_mode: "images/pt-BR/mainmenu/menu_story_mode"
 images/mainmenu/menu_credits: "images/pt-BR/mainmenu/menu_credits"
 images/mainmenu/menu_freeplay: "images/pt-BR/mainmenu/menu_freeplay"

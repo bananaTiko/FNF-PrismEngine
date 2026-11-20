@@ -6,6 +6,7 @@ fonts/pixel-latin.ttf: "fonts/NotoSansSC.otf"
 
 // 文字改用游戏原本的手写字母表绘制
 images/alphabet: "images/zh-CN/alphabet_zhcn"
+images/titleEnter: "images/zh-CN/titleEnter"
 
 // 图片替换：中文版本的图片都放在 assets/translations/shared/images/zh-CN 里
 images/sick: "images/zh-CN/sick"

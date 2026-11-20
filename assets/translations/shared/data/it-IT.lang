@@ -6,6 +6,7 @@ fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 
 // Menu storia: cartelli delle settimane
+images/titleEnter: "images/it-IT/titleEnter"
 images/storymenu/tutorial: "images/it-IT/storymenu/tutorial"
 images/storymenu/week1: "images/it-IT/storymenu/week1"
 images/storymenu/week2: "images/it-IT/storymenu/week2"

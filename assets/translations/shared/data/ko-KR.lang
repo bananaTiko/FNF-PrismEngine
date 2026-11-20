@@ -6,6 +6,7 @@ fonts/pixel-latin.ttf: "fonts/NotoSansKR.otf"
 
 // 글자는 게임 원래의 손글씨 비트맵 알파벳으로 그립니다
 images/alphabet: "images/ko-KR/alphabet_kokr"
+images/titleEnter: "images/ko-KR/titleEnter"
 
 // 이미지는 assets/translations/shared/images/ko-KR 에 있습니다
 // 이 폴더의 이미지를 사용합니다
