@@ -32,6 +32,12 @@ class GameplaySettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Subtitles',
+			'If checked, song lyrics and cutscene dialogue are shown as subtitles.',
+			'subtitles',
+			BOOL);
+		addOption(option);
+
 		var option:Option = new Option('Miss Sounds',
 			'If checked, a quick note plays every time you miss.',
 			'missSounds',

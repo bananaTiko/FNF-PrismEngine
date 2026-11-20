@@ -187,6 +187,9 @@ class Paths
 	inline static public function json(key:String, ?folder:String)
 		return getPath('data/$key.json', TEXT, folder, true);
 
+	inline static public function srt(key:String, ?folder:String)
+		return getPath(Language.getFileTranslation('data/$key') + '.srt', TEXT, folder, true);
+
 	inline static public function shaderFragment(key:String, ?folder:String)
 		return getPath('shaders/$key.frag', TEXT, folder, true);
 

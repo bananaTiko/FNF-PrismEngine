@@ -2,6 +2,7 @@ package cutscenes;
 
 import haxe.Json;
 import openfl.utils.Assets;
+import backend.Language;
 
 import objects.TypedAlphabet;
 import cutscenes.DialogueCharacter;
@@ -383,12 +384,32 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		}
 	}
 
-	inline public static function parseDialogue(path:String):DialogueFile {
+	public static function parseDialogue(path:String):DialogueFile {
+		var parsed:DialogueFile = null;
 		#if MODS_ALLOWED
-		return cast (FileSystem.exists(path)) ? Json.parse(File.getContent(path)) : dummy();
+		parsed = (FileSystem.exists(path)) ? Json.parse(File.getContent(path)) : dummy();
 		#else
-		return cast (Assets.exists(path, TEXT)) ? Json.parse(Assets.getText(path)) : dummy();
+		parsed = (Assets.exists(path, TEXT)) ? Json.parse(Assets.getText(path)) : dummy();
 		#end
+		translateDialogue(parsed, path);
+		return parsed;
+	}
+
+	/**
+	 * Every dialogue line is looked up in the active language first, so translators can
+	 * add `dialogue/<file>/<line>` phrases to their .lang file.
+	 * Lines that aren't translated fall back to the English text from the .json file.
+	 */
+	public static function translateDialogue(dialogueFile:DialogueFile, path:String):Void {
+		if(dialogueFile == null || dialogueFile.dialogue == null || path == null) return;
+
+		var fileName:String = haxe.io.Path.withoutExtension(haxe.io.Path.withoutDirectory(path));
+		for (i in 0...dialogueFile.dialogue.length) {
+			var line:DialogueLine = dialogueFile.dialogue[i];
+			if(line == null || line.text == null || line.text.length < 1) continue;
+
+			line.text = Language.getPhrase('dialogue_' + fileName + '_' + i, line.text);
+		}
 	}
 
 	inline public static function dummy():DialogueFile

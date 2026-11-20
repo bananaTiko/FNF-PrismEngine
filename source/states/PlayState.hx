@@ -19,6 +19,7 @@ import openfl.utils.Assets as OpenFlAssets;
 import openfl.events.KeyboardEvent;
 import haxe.Json;
 
+import objects.Subtitles;
 import cutscenes.DialogueBoxPsych;
 
 import states.StoryMenuState;
@@ -741,6 +742,15 @@ class PlayState extends MusicBeatState
 
 		resetRPC();
 
+		//Added last so the subtitles are drawn on top of the rest of the HUD
+		if(ClientPrefs.data.subtitles)
+		{
+			var downScroll:Bool = ClientPrefs.data.downScroll;
+			subtitles = new Subtitles(0, downScroll ? 4 : 90, downScroll ? 'top' : 'bottom');
+			subtitles.cameras = [camHUD];
+			add(subtitles);
+		}
+
 		stagesFunc(function(stage:BaseStage) stage.createPost());
 		callOnScripts('onCreatePost');
 		
@@ -1014,6 +1024,7 @@ class PlayState extends MusicBeatState
 
 	var dialogueCount:Int = 0;
 	public var psychDialogue:DialogueBoxPsych;
+	public var subtitles:Subtitles = null;
 	//You don't have to add a song, just saying. You can just do "startDialogue(DialogueBoxPsych.parseDialogue(Paths.json(songName + '/dialogue')))" and it should load dialogue.json
 	public function startDialogue(dialogueFile:DialogueFile, ?song:String = null):Void
 	{
@@ -1588,6 +1599,9 @@ class PlayState extends MusicBeatState
 		FlxG.sound.music.onComplete = finishSong.bind();
 		vocals.play();
 		opponentVocals.play();
+
+		if(subtitles != null)
+			subtitles.assignSubtitles('songs/' + songName + '/subtitles/song-lyrics', FlxG.sound.music);
 
 		setSongTime(Math.max(0, startOnTime - 500) + Conductor.offset);
 		startOnTime = 0;
@@ -2777,6 +2791,7 @@ class PlayState extends MusicBeatState
 
 		timeBar.visible = false;
 		timeTxt.visible = false;
+		if(subtitles != null) subtitles.clear();
 		canPause = false;
 		endingSong = true;
 		camZooming = false;
