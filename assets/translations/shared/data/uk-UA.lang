@@ -5,6 +5,12 @@
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/uk-UA/alphabet_uk"
+// Головне меню: власні написи кнопок
+images/mainmenu/menu_story_mode: "images/uk-UA/mainmenu/menu_story_mode"
+images/mainmenu/menu_freeplay: "images/uk-UA/mainmenu/menu_freeplay"
+images/mainmenu/menu_credits: "images/uk-UA/mainmenu/menu_credits"
+images/mainmenu/menu_mods: "images/uk-UA/mainmenu/menu_mods"
+
 
 // Сюжетне меню: власні банери тижнів
 images/storymenu/tutorial: "images/uk-UA/storymenu/tutorial"

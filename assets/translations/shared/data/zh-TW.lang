@@ -16,12 +16,12 @@ images/ready: "images/zh-TW/ready"
 images/set: "images/zh-TW/set"
 images/go: "images/zh-TW/go"
 
-// 主選單按鈕和曲目橫幅同理：把圖片放進上面那個資料夾後，取消註釋即可生效
-// images/mainmenu/menu_story_mode: "images/zh-TW/mainmenu/menu_story_mode"
-// images/mainmenu/menu_freeplay: "images/zh-TW/mainmenu/menu_freeplay"
+// 主選單按鈕：圖片在 images/zh-TW/mainmenu 裡
+images/mainmenu/menu_story_mode: "images/zh-TW/mainmenu/menu_story_mode"
+images/mainmenu/menu_freeplay: "images/zh-TW/mainmenu/menu_freeplay"
 // images/mainmenu/menu_options: "images/zh-TW/mainmenu/menu_options"
-// images/mainmenu/menu_credits: "images/zh-TW/mainmenu/menu_credits"
-// images/mainmenu/menu_mods: "images/zh-TW/mainmenu/menu_mods"
+images/mainmenu/menu_credits: "images/zh-TW/mainmenu/menu_credits"
+images/mainmenu/menu_mods: "images/zh-TW/mainmenu/menu_mods"
 images/storymenu/tutorial: "images/zh-TW/storymenu/tutorial"
 images/storymenu/week1: "images/zh-TW/storymenu/week1"
 images/storymenu/week2: "images/zh-TW/storymenu/week2"

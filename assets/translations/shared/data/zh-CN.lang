@@ -16,12 +16,12 @@ images/ready: "images/zh-CN/ready"
 images/set: "images/zh-CN/set"
 images/go: "images/zh-CN/go"
 
-// 主菜单按钮和曲目横幅同理：把图片放进上面那个文件夹后，取消注释即可生效
-// images/mainmenu/menu_story_mode: "images/zh-CN/mainmenu/menu_story_mode"
-// images/mainmenu/menu_freeplay: "images/zh-CN/mainmenu/menu_freeplay"
+// 主菜单按钮：图片在 images/zh-CN/mainmenu 里
+images/mainmenu/menu_story_mode: "images/zh-CN/mainmenu/menu_story_mode"
+images/mainmenu/menu_freeplay: "images/zh-CN/mainmenu/menu_freeplay"
 // images/mainmenu/menu_options: "images/zh-CN/mainmenu/menu_options"
-// images/mainmenu/menu_credits: "images/zh-CN/mainmenu/menu_credits"
-// images/mainmenu/menu_mods: "images/zh-CN/mainmenu/menu_mods"
+images/mainmenu/menu_credits: "images/zh-CN/mainmenu/menu_credits"
+images/mainmenu/menu_mods: "images/zh-CN/mainmenu/menu_mods"
 images/storymenu/tutorial: "images/zh-CN/storymenu/tutorial"
 images/storymenu/week1: "images/zh-CN/storymenu/week1"
 images/storymenu/week2: "images/zh-CN/storymenu/week2"

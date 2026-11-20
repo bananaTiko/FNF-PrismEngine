@@ -5,6 +5,12 @@ Tiếng Việt
 fonts/vcr.ttf: "fonts/NotoSans-Regular.ttf"
 fonts/pixel-latin.ttf: "fonts/NotoSans-Regular.ttf"
 images/alphabet: "images/vi-VN/alphabet_vi"
+// Menu chính: chữ trên các nút
+images/mainmenu/menu_story_mode: "images/vi-VN/mainmenu/menu_story_mode"
+images/mainmenu/menu_freeplay: "images/vi-VN/mainmenu/menu_freeplay"
+images/mainmenu/menu_credits: "images/vi-VN/mainmenu/menu_credits"
+images/mainmenu/menu_mods: "images/vi-VN/mainmenu/menu_mods"
+
 
 // Menu cốt truyện: bảng tuần riêng
 images/storymenu/tutorial: "images/vi-VN/storymenu/tutorial"
