@@ -365,3 +365,17 @@ dialogue_thorns-erectDialogue_2: "Αυτή η νοοτροπία θα σας σ�
 dialogue_thorns-erectDialogue_3: "Τότε γιατί να μην το τελειώσουμε εδώ και τώρα;"
 dialogue_thorns-erectDialogue_4: "Δεν σε πειράζει που η μοίρα σου θα είναι χειρότερη από τον θάνατο; Είναι μόνο δίκαιο..."
 dialogue_thorns-erectDialogue_5: "Με πειράζει, αλλά είμαι πολύ ηλίθιος για να με νοιάζει."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-el-GR"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-el-GR"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-el-GR"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-el-GR"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-el-GR"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-el-GR"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-el-GR"

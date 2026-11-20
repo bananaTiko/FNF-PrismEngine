@@ -365,3 +365,17 @@ dialogue_thorns-erectDialogue_2: "Mentalitatea asta vă va ucide oricum."
 dialogue_thorns-erectDialogue_3: "Atunci de ce să nu terminăm aici și acum?"
 dialogue_thorns-erectDialogue_4: "Nu te deranjează că soarta ta va fi mai rea decât moartea? E doar corect..."
 dialogue_thorns-erectDialogue_5: "Ba mă deranjează, dar sunt prea prost ca să-mi pese."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-ro-RO"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-ro-RO"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-ro-RO"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-ro-RO"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-ro-RO"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-ro-RO"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-ro-RO"

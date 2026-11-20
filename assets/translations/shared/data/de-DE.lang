@@ -343,3 +343,17 @@ dialogue_thorns-erectDialogue_2: "Diese Einstellung wird euch so oder so töten.
 dialogue_thorns-erectDialogue_3: "Warum also nicht hier und jetzt ein Ende setzen?"
 dialogue_thorns-erectDialogue_4: "Es stört dich nicht, dass dein Schicksal schlimmer als der Tod ist? Das ist nur fair..."
 dialogue_thorns-erectDialogue_5: "Es stört mich schon, aber ich bin zu dumm, um mich darum zu kümmern."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-de-DE"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-de-DE"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-de-DE"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-de-DE"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-de-DE"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-de-DE"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-de-DE"

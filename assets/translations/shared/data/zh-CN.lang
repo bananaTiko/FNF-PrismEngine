@@ -353,3 +353,17 @@ dialogue_thorns-erectDialogue_2: "这种心态早晚会害死你们。"
 dialogue_thorns-erectDialogue_3: "那为什么不就在这里、现在就结束呢？"
 dialogue_thorns-erectDialogue_4: "你不介意自己的命运比死还惨？这才公平..."
 dialogue_thorns-erectDialogue_5: "我介意，但我太蠢了，懒得在意。"
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-zh-CN"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-zh-CN"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-zh-CN"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-zh-CN"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-zh-CN"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-zh-CN"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-zh-CN"

@@ -344,3 +344,17 @@ dialogue_thorns-erectDialogue_2: "To nastawienie i tak was zabije."
 dialogue_thorns-erectDialogue_3: "Więc czemu nie skończyć tego tu i teraz?"
 dialogue_thorns-erectDialogue_4: "Nie przeszkadza ci, że twój los będzie gorszy niż śmierć? To tylko sprawiedliwe..."
 dialogue_thorns-erectDialogue_5: "Przeszkadza, ale jestem za głupi, żeby się tym przejmować."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-pl-PL"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-pl-PL"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-pl-PL"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-pl-PL"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-pl-PL"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-pl-PL"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-pl-PL"

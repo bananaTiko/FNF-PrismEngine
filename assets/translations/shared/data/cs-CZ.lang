@@ -365,3 +365,17 @@ dialogue_thorns-erectDialogue_2: "Tahle mentalita vás stejně zabije."
 dialogue_thorns-erectDialogue_3: "Tak proč to neskončit tady a teď?"
 dialogue_thorns-erectDialogue_4: "Nevadí ti, že tvůj osud bude horší než smrt? Je to jen spravedlivé..."
 dialogue_thorns-erectDialogue_5: "Vadí, ale jsem moc hloupý na to, abych se o to staral."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-cs-CZ"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-cs-CZ"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-cs-CZ"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-cs-CZ"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-cs-CZ"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-cs-CZ"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-cs-CZ"

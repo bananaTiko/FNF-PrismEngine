@@ -365,3 +365,17 @@ dialogue_thorns-erectDialogue_2: "Ez a hozzáállás így is megöl titeket."
 dialogue_thorns-erectDialogue_3: "Akkor miért ne fejeznénk be itt és most?"
 dialogue_thorns-erectDialogue_4: "Nem bánod, hogy a sorsod rosszabb lesz a halálnál? Ez csak fair..."
 dialogue_thorns-erectDialogue_5: "Dehogynem bánom, de túl hülye vagyok, hogy érdekeljen."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-hu-HU"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-hu-HU"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-hu-HU"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-hu-HU"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-hu-HU"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-hu-HU"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-hu-HU"

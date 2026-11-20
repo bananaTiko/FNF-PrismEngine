@@ -361,3 +361,17 @@ dialogue_thorns-erectDialogue_2: "Esa mentalidad os matará de todas formas."
 dialogue_thorns-erectDialogue_3: "Entonces, ¿por qué no acabar aquí y ahora?"
 dialogue_thorns-erectDialogue_4: "¿No te importa que tu destino sea peor que la muerte? Es lo justo..."
 dialogue_thorns-erectDialogue_5: "Sí me importa, pero soy demasiado tonto para que me dé igual."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-es-ES"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-es-ES"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-es-ES"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-es-ES"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-es-ES"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-es-ES"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-es-ES"

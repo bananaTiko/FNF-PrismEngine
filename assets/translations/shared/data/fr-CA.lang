@@ -347,3 +347,17 @@ dialogue_thorns-erectDialogue_2: "Cette mentalité va finir par vous tuer de tou
 dialogue_thorns-erectDialogue_3: "Alors pourquoi pas en finir ici, tout de suite ?"
 dialogue_thorns-erectDialogue_4: "Ça te dérange pas que ton sort soit pire que la mort ? C'est juste normal..."
 dialogue_thorns-erectDialogue_5: "Ça me dérange, mais je suis trop niaiseux pour m'en soucier."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-fr-CA"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-fr-CA"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-fr-CA"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-fr-CA"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-fr-CA"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-fr-CA"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-fr-CA"

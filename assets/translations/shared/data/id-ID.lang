@@ -343,3 +343,17 @@ dialogue_thorns-erectDialogue_2: "Mentalitas ini akan membunuh kalian bagaimanap
 dialogue_thorns-erectDialogue_3: "Jadi kenapa tidak akhiri saja di sini, sekarang?"
 dialogue_thorns-erectDialogue_4: "Kamu tidak keberatan takdirmu lebih buruk dari kematian? Itu adil..."
 dialogue_thorns-erectDialogue_5: "Aku keberatan, tapi aku terlalu bodoh untuk peduli."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-id-ID"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-id-ID"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-id-ID"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-id-ID"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-id-ID"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-id-ID"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-id-ID"

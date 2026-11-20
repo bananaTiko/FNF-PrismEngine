@@ -356,3 +356,17 @@ dialogue_thorns-erectDialogue_2: "С таким настроем вы всё р�
 dialogue_thorns-erectDialogue_3: "Так почему бы не закончить всё здесь и сейчас?"
 dialogue_thorns-erectDialogue_4: "Тебя не смущает, что твоя судьба будет хуже смерти? Это ведь только справедливо..."
 dialogue_thorns-erectDialogue_5: "Смущает, но мне слишком глупо, чтобы волноваться."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-ru-RU"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-ru-RU"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-ru-RU"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-ru-RU"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-ru-RU"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-ru-RU"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-ru-RU"

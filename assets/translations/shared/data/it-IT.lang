@@ -343,3 +343,17 @@ dialogue_thorns-erectDialogue_2: "Questa mentalità vi ucciderà comunque."
 dialogue_thorns-erectDialogue_3: "Allora perché non finirla qui e ora?"
 dialogue_thorns-erectDialogue_4: "Non ti importa che il tuo destino sia peggio della morte? È solo giusto..."
 dialogue_thorns-erectDialogue_5: "Mi importa, ma sono troppo stupido per preoccuparmene."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-it-IT"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-it-IT"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-it-IT"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-it-IT"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-it-IT"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-it-IT"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-it-IT"

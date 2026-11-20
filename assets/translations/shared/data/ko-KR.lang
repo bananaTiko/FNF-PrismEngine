@@ -361,3 +361,17 @@ dialogue_thorns-erectDialogue_2: "그런 사고방식은 어차피 너희를 죽
 dialogue_thorns-erectDialogue_3: "그렇다면 여기서, 지금 끝내는 게 어떻겠나?"
 dialogue_thorns-erectDialogue_4: "네 운명이 죽음보다 나빠도 상관없나? 그게 공평하지..."
 dialogue_thorns-erectDialogue_5: "상관있지, 하지만 신경 쓰기엔 너무 멍청하군."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-ko-KR"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-ko-KR"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-ko-KR"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-ko-KR"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-ko-KR"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-ko-KR"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-ko-KR"

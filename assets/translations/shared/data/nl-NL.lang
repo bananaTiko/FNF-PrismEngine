@@ -343,3 +343,17 @@ dialogue_thorns-erectDialogue_2: "Deze mentaliteit kost je hoe dan ook je leven.
 dialogue_thorns-erectDialogue_3: "Waarom maken we er dan niet hier en nu een eind aan?"
 dialogue_thorns-erectDialogue_4: "Vind je het niet erg dat je lot erger is dan de dood? Dat is toch eerlijk..."
 dialogue_thorns-erectDialogue_5: "Ik vind het wel erg, maar ik ben te dom om erom te geven."
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-nl-NL"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-nl-NL"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-nl-NL"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-nl-NL"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-nl-NL"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-nl-NL"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-nl-NL"

@@ -353,3 +353,17 @@ dialogue_thorns-erectDialogue_2: "呢種心態遲早會害死你哋。"
 dialogue_thorns-erectDialogue_3: "咁點解唔喺呢度、而家就完結佢？"
 dialogue_thorns-erectDialogue_4: "你唔介意自己嘅命運比死更慘？咁先公平..."
 dialogue_thorns-erectDialogue_5: "我介意，但我太蠢，懶得理。"
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-zh-HK"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-zh-HK"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-zh-HK"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-zh-HK"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-zh-HK"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-zh-HK"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-zh-HK"

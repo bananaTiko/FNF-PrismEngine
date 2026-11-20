@@ -353,3 +353,17 @@ dialogue_thorns-erectDialogue_2: "その考え方ではどちらにせよ死ぬ�
 dialogue_thorns-erectDialogue_3: "ならばここで、今終わらせてはどうだ？"
 dialogue_thorns-erectDialogue_4: "自分の運命が死より悪くても構わないのか？公平だろう..."
 dialogue_thorns-erectDialogue_5: "構うさ、だが気にするには愚かすぎる。"
+
+data/songs/monster/subtitles/song-lyrics: "data/songs/monster/subtitles/song-lyrics-ja-JP"
+
+data/songs/winter-horrorland/subtitles/song-lyrics: "data/songs/winter-horrorland/subtitles/song-lyrics-ja-JP"
+
+data/songs/tutorial/subtitles/song-lyrics: "data/songs/tutorial/subtitles/song-lyrics-ja-JP"
+
+data/songs/stress/subtitles/song-lyrics: "data/songs/stress/subtitles/song-lyrics-ja-JP"
+
+data/songs/stress-(pico-mix)/subtitles/song-lyrics: "data/songs/stress-(pico-mix)/subtitles/song-lyrics-ja-JP"
+
+data/songs/stress-(pico-mix)/subtitles/end-cutscene: "data/songs/stress-(pico-mix)/subtitles/end-cutscene-ja-JP"
+
+data/songs/eggnog/subtitles/santa-emotions: "data/songs/eggnog/subtitles/santa-emotions-ja-JP"
