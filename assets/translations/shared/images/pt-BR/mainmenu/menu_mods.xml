@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TextureAtlas imagePath="FNF_main_menu_assets_pt-BR.png">
+	<SubTexture name="mods idle0000" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods idle0001" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods idle0002" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods idle0003" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods idle0004" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods idle0005" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods idle0006" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods idle0007" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods idle0008" x="37" y="2" width="387" height="117"/>
+	<SubTexture name="mods selected0000" x="2" y="121" width="457" height="138"/>
+	<SubTexture name="mods selected0001" x="2" y="121" width="457" height="138"/>
+	<SubTexture name="mods selected0002" x="2" y="121" width="457" height="138"/>
+</TextureAtlas>
