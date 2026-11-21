@@ -37,6 +37,8 @@ import backend.MoonchartImporter;
 
 import backend.ui.*; //Psych-UI
 
+import prismui.*; //prismUI
+
 import objects.Alphabet;
 import objects.BGSprite;
 import objects.FlxAtlasSprite;

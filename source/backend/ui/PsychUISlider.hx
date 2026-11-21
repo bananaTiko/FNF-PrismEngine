@@ -16,10 +16,14 @@ class PsychUISlider extends FlxSpriteGroup
 	public var min(default, set):Float = -999;
 	public var max(default, set):Float = 999;
 	public var decimals(default, set):Int = 2;
-	public function new(x:Float = 0, y:Float = 0, callback:Float->Void, def:Float = 0, min:Float = -999, max:Float = 999, wid:Float = 200, mainColor:FlxColor = FlxColor.WHITE, handleColor:FlxColor = 0xFFAAAAAA)
+	public function new(x:Float = 0, y:Float = 0, callback:Float->Void, def:Float = 0, min:Float = -999, max:Float = 999, wid:Float = 200, ?mainColor:FlxColor, ?handleColor:FlxColor)
 	{
 		super(x, y);
 		this.onChange = callback;
+
+		//skinned by prismUI unless the caller wants specific colours
+		if(mainColor == null) mainColor = PrismUI.theme.accent;
+		if(handleColor == null) handleColor = PrismUI.theme.textMuted;
 
 		bar = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
 		bar.scale.set(wid, 5);

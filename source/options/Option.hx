@@ -1,5 +1,7 @@
 package options;
 
+import prismui.PrismValueRow;
+
 typedef Keybind = {
 	keyboard:String,
 	gamepad:String
@@ -18,7 +20,7 @@ enum OptionType {
 
 class Option
 {
-	public var child:Alphabet;
+	public var child:PrismValueRow;
 	public var text(get, set):String;
 	public var onChange:Void->Void = null; //Pressed enter (on Bool type options) or pressed/held left/right (on other types)
 	public var type:OptionType = BOOL;
@@ -132,9 +134,16 @@ class Option
 		if(child != null)
 		{
 			_text = newValue;
-			child.text = Language.getPhrase('setting_$_translationKey-${getValue()}', _text);
+			refreshChild();
 			return _text;
 		}
 		return null;
+	}
+
+	/** Pushes the (possibly translated) value text into this option's widget. */
+	public function refreshChild():Void
+	{
+		if(child != null)
+			child.setValueText(Language.getPhrase('setting_$_translationKey-${getValue()}', _text));
 	}
 }

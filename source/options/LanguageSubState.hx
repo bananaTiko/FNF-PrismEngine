@@ -1,24 +1,50 @@
 package options;
 
+import prismui.PrismButton;
+import prismui.PrismList;
+import prismui.PrismPanel;
+import prismui.PrismUI;
+
 import openfl.utils.Assets;
 
 class LanguageSubState extends MusicBeatSubstate
 {
 	#if TRANSLATIONS_ALLOWED
-	var grpLanguages:FlxTypedGroup<Alphabet> = new FlxTypedGroup<Alphabet>();
 	var languages:Array<String> = [];
 	var displayLanguages:Map<String, String> = [];
 	var curSelected:Int = 0;
+
+	var panel:PrismPanel;
+	var list:PrismList;
+
 	public function new()
 	{
 		super();
 
 		var bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
-		bg.color = 0xFFea71fd;
+		bg.color = PrismUI.theme.accentDark;
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.screenCenter();
 		add(bg);
-		add(grpLanguages);
+
+		var dim:FlxSprite = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
+		dim.scale.set(FlxG.width, FlxG.height);
+		dim.updateHitbox();
+		dim.alpha = 0.45;
+		add(dim);
+
+		panel = new PrismPanel(0, 0, 700, 560, Language.getPhrase('options_Language', 'Language'));
+		panel.center();
+		add(panel);
+
+		list = new PrismList();
+		list.rowWidth = panel.wid - PrismUI.px(PrismUI.theme.panelPadding) * 2;
+		list.rowHeight = 46;
+		list.visibleRows = 8;
+		list.fastStep = true;
+		list.onChange = function(index:Int) curSelected = index;
+		list.onActivate = function(index:Int) applyLanguage();
+		panel.addContent(list);
 
 		languages.push(ClientPrefs.defaultData.language); //English (US)
 		displayLanguages.set(ClientPrefs.defaultData.language, Language.defaultLangName);
@@ -63,35 +89,22 @@ class LanguageSubState extends MusicBeatSubstate
 			return 0;
 		});
 
-		//trace(ClientPrefs.data.language);
 		curSelected = languages.indexOf(ClientPrefs.data.language);
 		if(curSelected < 0)
 		{
-			//trace('Language not found: ' + ClientPrefs.data.language);
 			ClientPrefs.data.language = ClientPrefs.defaultData.language;
 			curSelected = Std.int(Math.max(0, languages.indexOf(ClientPrefs.data.language)));
 		}
 
-		for (num => lang in languages)
+		for (lang in languages)
 		{
 			var name:String = displayLanguages.get(lang);
 			if(name == null) name = lang;
-
-			var text:Alphabet = new Alphabet(0, 300, name, true);
-			text.isMenuItem = true;
-			text.targetY = num;
-			text.changeX = false;
-			text.distancePerItem.y = 100;
-			if(languages.length < 7)
-			{
-				text.changeY = false;
-				text.screenCenter(Y);
-				text.y += (100 * (num - (languages.length / 2))) + 45;
-			}
-			text.screenCenter(X);
-			grpLanguages.add(text);
+			list.addItem(new PrismButton(0, 0, name));
 		}
-		changeSelected();
+
+		list.select(curSelected, true);
+		list.refreshSelection();
 	}
 
 	var changedLanguage:Bool = false;
@@ -100,12 +113,8 @@ class LanguageSubState extends MusicBeatSubstate
 		super.update(elapsed);
 
 		var mult:Int = (FlxG.keys.pressed.SHIFT) ? 4 : 1;
-		if(controls.UI_UP_P)
-			changeSelected(-1 * mult);
-		if(controls.UI_DOWN_P)
-			changeSelected(1 * mult);
 		if(FlxG.mouse.wheel != 0)
-			changeSelected(FlxG.mouse.wheel * mult);
+			list.moveSelection(FlxG.mouse.wheel * mult);
 
 		if(controls.BACK)
 		{
@@ -118,28 +127,15 @@ class LanguageSubState extends MusicBeatSubstate
 			else close();
 			FlxG.sound.play(Paths.sound('cancelMenu'));
 		}
-
-		if(controls.ACCEPT)
-		{
-			FlxG.sound.play(Paths.sound('confirmMenu'), 0.6);
-			ClientPrefs.data.language = languages[curSelected];
-			//trace(ClientPrefs.data.language);
-			ClientPrefs.saveSettings();
-			Language.reloadPhrases();
-			changedLanguage = true;
-		}
 	}
 
-	function changeSelected(change:Int = 0)
+	function applyLanguage()
 	{
-		curSelected = FlxMath.wrap(curSelected + change, 0, languages.length-1);
-		for (num => lang in grpLanguages)
-		{
-			lang.targetY = num - curSelected;
-			lang.alpha = 0.6;
-			if(num == curSelected) lang.alpha = 1;
-		}
-		FlxG.sound.play(Paths.sound('scrollMenu'), 0.6);
+		FlxG.sound.play(Paths.sound('confirmMenu'), 0.6);
+		ClientPrefs.data.language = languages[curSelected];
+		ClientPrefs.saveSettings();
+		Language.reloadPhrases();
+		changedLanguage = true;
 	}
 	#end
 }

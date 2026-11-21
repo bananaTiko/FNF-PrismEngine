@@ -173,6 +173,11 @@ class Main extends Sprite
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
 		addChild(new FlxGame(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
 
+		// Opt-in desktop widescreen scaling. FlxGame has to exist first, it measures the window.
+		#if desktop
+		backend.Widescreen.refresh();
+		#end
+
 		#if !mobile
 		fpsVar = new FPSCounter(10, 3, 0xFFFFFF);
 		addChild(fpsVar);

@@ -45,6 +45,15 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		#if desktop
+		var option:Option = new Option('Widescreen',
+			"If checked, the game fills the whole window instead of leaving black bars\nat the sides, by showing more of the level on wide monitors.",
+			'widescreen',
+			BOOL);
+		option.onChange = onChangeWidescreen;
+		addOption(option);
+		#end
+
 		#if !html5 //Apparently other framerates isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
 		var option:Option = new Option('Framerate',
 			"Pretty self explanatory, isn't it?",
@@ -61,7 +70,7 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		#end
 
 		super();
-		insert(1, boyfriend);
+		add(boyfriend);
 	}
 
 	function onChangeAntiAliasing()
@@ -73,6 +82,11 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 				sprite.antialiasing = ClientPrefs.data.antialiasing;
 			}
 		}
+	}
+
+	function onChangeWidescreen()
+	{
+		backend.Widescreen.refresh();
 	}
 
 	function onChangeFramerate()
@@ -89,9 +103,8 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		}
 	}
 
-	override function changeSelection(change:Int = 0)
+	override public function onSelectionChanged():Void
 	{
-		super.changeSelection(change);
-		boyfriend.visible = (antialiasingOption == curSelected);
+		if(boyfriend != null) boyfriend.visible = (antialiasingOption == curSelected);
 	}
 }

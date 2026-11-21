@@ -1,5 +1,10 @@
 package options;
 
+import prismui.PrismButton;
+import prismui.PrismList;
+import prismui.PrismPanel;
+import prismui.PrismUI;
+
 import states.MainMenuState;
 import backend.StageData;
 
@@ -15,10 +20,12 @@ class OptionsState extends MusicBeatState
 		'Customize HUD'
 		#if TRANSLATIONS_ALLOWED , 'Language' #end
 	];
-	private var grpOptions:FlxTypedGroup<Alphabet>;
 	private static var curSelected:Int = 0;
 	public static var menuBG:FlxSprite;
 	public static var onPlayState:Bool = false;
+
+	var panel:PrismPanel;
+	var list:PrismList;
 
 	function openSelectedSubstate(label:String) {
 		switch(label)
@@ -42,41 +49,45 @@ class OptionsState extends MusicBeatState
 		}
 	}
 
-	var selectorLeft:Alphabet;
-	var selectorRight:Alphabet;
-
 	override function create()
 	{
 		#if DISCORD_ALLOWED
 		DiscordClient.changePresence("Options Menu", null);
 		#end
 
-		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
-		bg.antialiasing = ClientPrefs.data.antialiasing;
-		bg.color = 0xFFea71fd;
-		bg.updateHitbox();
+		menuBG = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
+		menuBG.antialiasing = ClientPrefs.data.antialiasing;
+		menuBG.color = PrismUI.theme.accentDark;
+		menuBG.updateHitbox();
+		menuBG.screenCenter();
+		add(menuBG);
 
-		bg.screenCenter();
-		add(bg);
+		var dim:FlxSprite = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
+		dim.scale.set(FlxG.width, FlxG.height);
+		dim.updateHitbox();
+		dim.alpha = 0.45;
+		add(dim);
 
-		grpOptions = new FlxTypedGroup<Alphabet>();
-		add(grpOptions);
+		panel = new PrismPanel(0, 0, 760, 560, Language.getPhrase('options_title', 'Options'));
+		panel.center();
+		add(panel);
 
-		for (num => option in options)
-		{
-			var optionText:Alphabet = new Alphabet(0, 0, Language.getPhrase('options_$option', option), true);
-			optionText.screenCenter();
-			optionText.y += (92 * (num - (options.length / 2))) + 45;
-			grpOptions.add(optionText);
-		}
+		list = new PrismList();
+		list.visibleRows = 8;
+		list.rowWidth = panel.wid - PrismUI.px(PrismUI.theme.panelPadding) * 2;
+		list.rowHeight = 52;
+		list.onChange = function(index:Int) curSelected = index;
+		list.onActivate = function(index:Int) openSelectedSubstate(options[index]);
+		panel.addContent(list);
 
-		selectorLeft = new Alphabet(0, 0, '>', true);
-		add(selectorLeft);
-		selectorRight = new Alphabet(0, 0, '<', true);
-		add(selectorRight);
+		for (option in options)
+			list.addItem(new PrismButton(0, 0, Language.getPhrase('options_$option', option)));
 
-		changeSelection();
+		list.select(curSelected, true);
+		list.refreshSelection();
+
 		ClientPrefs.saveSettings();
+		FlxG.mouse.visible = true;
 
 		super.create();
 	}
@@ -93,11 +104,6 @@ class OptionsState extends MusicBeatState
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 
-		if (controls.UI_UP_P)
-			changeSelection(-1);
-		if (controls.UI_DOWN_P)
-			changeSelection(1);
-
 		if (controls.BACK)
 		{
 			FlxG.sound.play(Paths.sound('cancelMenu'));
@@ -109,27 +115,6 @@ class OptionsState extends MusicBeatState
 			}
 			else MusicBeatState.switchState(new MainMenuState());
 		}
-		else if (controls.ACCEPT) openSelectedSubstate(options[curSelected]);
-	}
-	
-	function changeSelection(change:Int = 0)
-	{
-		curSelected = FlxMath.wrap(curSelected + change, 0, options.length - 1);
-
-		for (num => item in grpOptions.members)
-		{
-			item.targetY = num - curSelected;
-			item.alpha = 0.6;
-			if (item.targetY == 0)
-			{
-				item.alpha = 1;
-				selectorLeft.x = item.x - 63;
-				selectorLeft.y = item.y;
-				selectorRight.x = item.x + item.width + 15;
-				selectorRight.y = item.y;
-			}
-		}
-		FlxG.sound.play(Paths.sound('scrollMenu'));
 	}
 
 	override function destroy()

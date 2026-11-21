@@ -72,7 +72,7 @@ class Subtitles extends FlxSpriteGroup
 	 */
 	public function assignSubtitles(filePath:String, ?sound:FlxSound):Void
 	{
-		clear();
+		clearSubtitles();
 
 		if(sound == null) return;
 		if(filePath == null || filePath.length < 1) return;
@@ -90,7 +90,8 @@ class Subtitles extends FlxSpriteGroup
 		assignedSound = sound;
 	}
 
-	public function clear():Void
+	/** Drops the current cue list. Named apart from `FlxSpriteGroup.clear()`, which destroys members. */
+	public function clearSubtitles():Void
 	{
 		assignedSound = null;
 		subtitlesData = [];
@@ -129,10 +130,10 @@ class Subtitles extends FlxSpriteGroup
 
 	//Width of the actual text, not of its (full screen) field
 	inline function inkWidth():Float
-		return (subtitleText.textWidth > 0) ? subtitleText.textWidth : subtitleText.width;
+		return (subtitleText.textField.textWidth > 0) ? subtitleText.textField.textWidth : subtitleText.width;
 
 	inline function inkHeight():Float
-		return (subtitleText.textHeight > 0) ? subtitleText.textHeight : subtitleText.height;
+		return (subtitleText.textField.textHeight > 0) ? subtitleText.textField.textHeight : subtitleText.height;
 
 	function updatePosition():Void
 	{

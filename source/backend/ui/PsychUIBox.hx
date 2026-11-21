@@ -20,20 +20,21 @@ class PsychUIBox extends FlxSpriteGroup
 
 	public var bg:FlxSprite;
 
+	//The editor tool boxes are skinned by prismUI, so they match the menus
 	public var selectedStyle:UIStyleData = {
-		bgColor: FlxColor.WHITE,
-		textColor: FlxColor.BLACK,
+		bgColor: PrismUI.theme.accent,
+		textColor: 0xFF17121F,
 		bgAlpha: 1
 	};
 	public var hoverStyle:UIStyleData = {
-		bgColor: FlxColor.WHITE,
-		textColor: FlxColor.BLACK,
-		bgAlpha: 0.6
+		bgColor: PrismUI.theme.surfaceHover,
+		textColor: PrismUI.theme.text,
+		bgAlpha: 0.95
 	};
 	public var unselectedStyle:UIStyleData = {
-		bgColor: FlxColor.BLACK,
-		textColor: FlxColor.WHITE,
-		bgAlpha: 0.6
+		bgColor: PrismUI.theme.surfaceRaised,
+		textColor: PrismUI.theme.textMuted,
+		bgAlpha: 0.9
 	};
 
 	public var canMove:Bool = true;
@@ -46,8 +47,8 @@ class PsychUIBox extends FlxSpriteGroup
 		super(x, y);
 		
 		bg = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
-		bg.color = FlxColor.BLACK;
-		bg.alpha = 0.6;
+		bg.color = PrismUI.theme.surface;
+		bg.alpha = 0.9;
 		add(bg);
 
 		if(tabs != null)

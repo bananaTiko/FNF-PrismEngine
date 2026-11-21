@@ -1,27 +1,39 @@
 package options;
 
+import prismui.PrismList;
+import prismui.PrismPanel;
+import prismui.PrismUI;
+import prismui.PrismValueRow;
+
+import flixel.text.FlxText.FlxTextAlign;
 import flixel.input.keyboard.FlxKey;
 import flixel.input.gamepad.FlxGamepad;
 import flixel.input.gamepad.FlxGamepadInputID;
 import flixel.input.gamepad.FlxGamepadManager;
 
-import objects.CheckboxThingie;
-import objects.AttachedText;
 import options.Option;
 import backend.GamepadIcons;
 import backend.InputFormatter;
 
+/**
+ * Shared settings menu, now built from prismUI rows.
+ *
+ * Every settings screen in the game (graphics, visuals, gameplay, mod settings,
+ * language...) extends this class, so this is the single place the option list
+ * is drawn: a `PrismPanel` with a `PrismList` of `PrismValueRow`s, one per
+ * `Option`. Switches, sliders and the keybind overlay all live here; what an
+ * option *does* is still entirely up to `Option` and its subclasses.
+ */
 class BaseOptionsMenu extends MusicBeatSubstate
 {
 	private var curOption:Option = null;
 	private var curSelected:Int = 0;
 	private var optionsArray:Array<Option>;
 
-	private var grpOptions:FlxTypedGroup<Alphabet>;
-	private var checkboxGroup:FlxTypedGroup<CheckboxThingie>;
-	private var grpTexts:FlxTypedGroup<AttachedText>;
+	private var rows:Array<PrismValueRow> = [];
+	private var list:PrismList;
+	private var panel:PrismPanel;
 
-	private var descBox:FlxSprite;
 	private var descText:FlxText;
 
 	public var title:String;
@@ -34,76 +46,69 @@ class BaseOptionsMenu extends MusicBeatSubstate
 
 		if(title == null) title = Language.getPhrase('options_title', 'Options');
 		if(rpcTitle == null) rpcTitle = Language.getPhrase('rpc_options_menu', 'Options Menu');
-		
+
 		#if DISCORD_ALLOWED
 		DiscordClient.changePresence(rpcTitle, null);
 		#end
-		
+
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
-		bg.color = 0xFFea71fd;
+		bg.color = PrismUI.theme.accentDark;
 		bg.screenCenter();
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		add(bg);
 
-		// avoids lagspikes while scrolling through menus!
-		grpOptions = new FlxTypedGroup<Alphabet>();
-		add(grpOptions);
+		var dim:FlxSprite = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
+		dim.scale.set(FlxG.width, FlxG.height);
+		dim.updateHitbox();
+		dim.alpha = 0.4;
+		add(dim);
 
-		grpTexts = new FlxTypedGroup<AttachedText>();
-		add(grpTexts);
+		panel = new PrismPanel(40, 0, 800, 580, title);
+		panel.y = (FlxG.height - panel.hei) * 0.5;
+		add(panel);
 
-		checkboxGroup = new FlxTypedGroup<CheckboxThingie>();
-		add(checkboxGroup);
+		list = new PrismList();
+		list.rowWidth = panel.wid - PrismUI.px(PrismUI.theme.panelPadding) * 2;
+		list.rowHeight = 46;
+		list.visibleRows = 8;
+		list.onChange = function(index:Int) {
+			curSelected = index;
+			curOption = optionsArray[index];
+			onSelectionChanged();
+			updateDescription();
+		};
+		list.onActivate = function(index:Int) pressOption(optionsArray[index]);
+		panel.addContent(list);
 
-		descBox = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
-		descBox.alpha = 0.6;
-		add(descBox);
-
-		var titleText:Alphabet = new Alphabet(75, 45, title, true);
-		titleText.setScale(0.6);
-		titleText.alpha = 0.4;
-		add(titleText);
-
-		descText = new FlxText(50, 600, 1180, "", 32);
-		descText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		descText.scrollFactor.set();
-		descText.borderSize = 2.4;
-		add(descText);
+		descText = new FlxText(PrismUI.px(PrismUI.theme.panelPadding), 0,
+			panel.wid - PrismUI.px(PrismUI.theme.panelPadding) * 2, '', PrismUI.px(PrismUI.theme.descriptionSize));
+		PrismUI.theme.styleText(descText, PrismUI.px(PrismUI.theme.descriptionSize), PrismUI.theme.textMuted, FlxTextAlign.CENTER);
+		panel.add(descText);
 
 		for (i in 0...optionsArray.length)
 		{
-			var optionText:Alphabet = new Alphabet(220, 260, optionsArray[i].name, false);
-			optionText.isMenuItem = true;
-			/*optionText.forceX = 300;
-			optionText.yMult = 90;*/
-			optionText.targetY = i;
-			grpOptions.add(optionText);
-
-			if(optionsArray[i].type == BOOL)
-			{
-				var checkbox:CheckboxThingie = new CheckboxThingie(optionText.x - 105, optionText.y, Std.string(optionsArray[i].getValue()) == 'true');
-				checkbox.sprTracker = optionText;
-				checkbox.ID = i;
-				checkboxGroup.add(checkbox);
-			}
-			else
-			{
-				optionText.x -= 80;
-				optionText.startPosition.x -= 80;
-				//optionText.xAdd -= 80;
-				var valueText:AttachedText = new AttachedText('' + optionsArray[i].getValue(), optionText.width + 60);
-				valueText.sprTracker = optionText;
-				valueText.copyAlpha = true;
-				valueText.ID = i;
-				grpTexts.add(valueText);
-				optionsArray[i].child = valueText;
-			}
-			//optionText.snapToPosition(); //Don't ignore me when i ask for not making a fucking pull request to uncomment this line ok
-			updateTextFrom(optionsArray[i]);
+			var option:Option = optionsArray[i];
+			var row:PrismValueRow = new PrismValueRow(0, 0, option.name);
+			row.data = option;
+			row.description = option.description;
+			row.onAdjust = function(direction:Int) adjustOption(option, direction, true);
+			option.child = row;
+			rows.push(row);
+			list.addItem(row);
 		}
 
-		changeSelection();
+		// fill in every value once, now that each option has its row
+		for (option in optionsArray)
+			updateTextFrom(option);
+
+		curOption = optionsArray[0];
+		list.select(0, true);
+		list.refreshSelection();
 		reloadCheckboxes();
+		updateDescription();
+		onSelectionChanged();
+
+		FlxG.mouse.visible = true;
 	}
 
 	public function addOption(option:Option) {
@@ -119,148 +124,49 @@ class BaseOptionsMenu extends MusicBeatSubstate
 	var bindingKey:Bool = false;
 	var holdingEsc:Float = 0;
 	var bindingBlack:FlxSprite;
-	var bindingText:Alphabet;
-	var bindingText2:Alphabet;
+	var bindingText:FlxText;
+	var bindingText2:FlxText;
+
+	/** Called whenever the highlighted option changes. Subclasses hook previews here. */
+	public function onSelectionChanged():Void {}
+
 	override function update(elapsed:Float)
 	{
-		super.update(elapsed);
-
 		if(bindingKey)
 		{
 			bindingKeyUpdate(elapsed);
+			super.update(elapsed);
 			return;
 		}
 
-		if (controls.UI_UP_P)
-		{
-			changeSelection(-1);
-		}
-		if (controls.UI_DOWN_P)
-		{
-			changeSelection(1);
-		}
-
-		if (controls.BACK) {
-			close();
-			FlxG.sound.play(Paths.sound('cancelMenu'));
-		}
+		super.update(elapsed);
 
 		if(nextAccept <= 0)
 		{
-			switch(curOption.type)
+			// A single press is handled by the row itself; this only ramps while held.
+			final canRamp:Bool = curOption != null && curOption.type != STRING
+				&& curOption.type != BOOL && curOption.type != KEYBIND;
+
+			if(canRamp && (controls.UI_LEFT || controls.UI_RIGHT))
 			{
-				case BOOL:
-					if(controls.ACCEPT)
-					{
-						FlxG.sound.play(Paths.sound('scrollMenu'));
-						curOption.setValue((curOption.getValue() == true) ? false : true);
-						curOption.change();
-						reloadCheckboxes();
-					}
-
-				case KEYBIND:
-					if(controls.ACCEPT)
-					{
-						bindingBlack = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
-						bindingBlack.scale.set(FlxG.width, FlxG.height);
-						bindingBlack.updateHitbox();
-						bindingBlack.alpha = 0;
-						FlxTween.tween(bindingBlack, {alpha: 0.6}, 0.35, {ease: FlxEase.linear});
-						add(bindingBlack);
-	
-						bindingText = new Alphabet(FlxG.width / 2, 160, Language.getPhrase('controls_rebinding', 'Rebinding {1}', [curOption.name]), false);
-						bindingText.alignment = CENTERED;
-						add(bindingText);
-						
-						bindingText2 = new Alphabet(FlxG.width / 2, 340, Language.getPhrase('controls_rebinding2', 'Hold ESC to Cancel\nHold Backspace to Delete'), true);
-						bindingText2.alignment = CENTERED;
-						add(bindingText2);
-	
-						bindingKey = true;
-						holdingEsc = 0;
-						ClientPrefs.toggleVolumeKeys(false);
-						FlxG.sound.play(Paths.sound('scrollMenu'));
-					}
-
-				default:
-					if(controls.UI_LEFT || controls.UI_RIGHT)
-					{
-						var pressed = (controls.UI_LEFT_P || controls.UI_RIGHT_P);
-						if(holdTime > 0.5 || pressed)
-						{
-							if(pressed)
-							{
-								var add:Dynamic = null;
-								if(curOption.type != STRING)
-									add = controls.UI_LEFT ? -curOption.changeValue : curOption.changeValue;
-		
-								switch(curOption.type)
-								{
-									case INT, FLOAT, PERCENT:
-										holdValue = curOption.getValue() + add;
-										if(holdValue < curOption.minValue) holdValue = curOption.minValue;
-										else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
-		
-										if(curOption.type == INT)
-										{
-											holdValue = Math.round(holdValue);
-											curOption.setValue(holdValue);
-										}
-										else
-										{
-											holdValue = FlxMath.roundDecimal(holdValue, curOption.decimals);
-											curOption.setValue(holdValue);
-										}
-		
-									case STRING:
-										var num:Int = curOption.curOption; //lol
-										if(controls.UI_LEFT_P) --num;
-										else num++;
-		
-										if(num < 0)
-											num = curOption.options.length - 1;
-										else if(num >= curOption.options.length)
-											num = 0;
-		
-										curOption.curOption = num;
-										curOption.setValue(curOption.options[num]);
-										//trace(curOption.options[num]);
-
-									default:
-								}
-								updateTextFrom(curOption);
-								curOption.change();
-								FlxG.sound.play(Paths.sound('scrollMenu'));
-							}
-							else if(curOption.type != STRING)
-							{
-								holdValue += curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1);
-								if(holdValue < curOption.minValue) holdValue = curOption.minValue;
-								else if (holdValue > curOption.maxValue) holdValue = curOption.maxValue;
-		
-								switch(curOption.type)
-								{
-									case INT:
-										curOption.setValue(Math.round(holdValue));
-									
-									case PERCENT:
-										curOption.setValue(FlxMath.roundDecimal(holdValue, curOption.decimals));
-
-									default:
-								}
-								updateTextFrom(curOption);
-								curOption.change();
-							}
-						}
-		
-						if(curOption.type != STRING)
-							holdTime += elapsed;
-					}
-					else if(controls.UI_LEFT_R || controls.UI_RIGHT_R)
-					{
-						if(holdTime > 0.5) FlxG.sound.play(Paths.sound('scrollMenu'));
-						holdTime = 0;
-					}
+				if(holdTime > 0.5)
+				{
+					holdValue += curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1);
+					holdValue = clampNumeric(curOption, holdValue);
+					applyNumeric(curOption, holdValue);
+					updateTextFrom(curOption);
+					curOption.change();
+				}
+				holdTime += elapsed;
+			}
+			else if(controls.UI_LEFT_R || controls.UI_RIGHT_R)
+			{
+				if(holdTime > 0.5) FlxG.sound.play(Paths.sound('scrollMenu'));
+				holdTime = 0;
+			}
+			else if(!controls.UI_LEFT && !controls.UI_RIGHT)
+			{
+				holdTime = 0;
 			}
 
 			if(controls.RESET)
@@ -277,7 +183,7 @@ class BaseOptionsMenu extends MusicBeatSubstate
 				}
 				else
 				{
-					leOption.setValue(!Controls.instance.controllerMode ? leOption.defaultKeys.keyboard : leOption.defaultKeys.gamepad);
+					leOption.setValue(!controls.controllerMode ? leOption.defaultKeys.keyboard : leOption.defaultKeys.gamepad);
 					updateBind(leOption);
 				}
 				leOption.change();
@@ -393,7 +299,6 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		}
 	}
 
-	final MAX_KEYBIND_WIDTH = 320;
 	function updateBind(?text:String = null, ?option:Option = null)
 	{
 		if(option == null) option = curOption;
@@ -408,39 +313,76 @@ class BaseOptionsMenu extends MusicBeatSubstate
 				text = InputFormatter.getGamepadName(FlxGamepadInputID.fromString(text));
 		}
 
-		var bind:AttachedText = cast option.child;
-		var attach:AttachedText = new AttachedText(text, bind.offsetX);
-		attach.sprTracker = bind.sprTracker;
-		attach.copyAlpha = true;
-		attach.ID = bind.ID;
-		gamepadIconCheck(attach);
-		attach.scaleX = Math.min(1, MAX_KEYBIND_WIDTH / attach.width);
-		attach.x = bind.x;
-		attach.y = bind.y;
+		var row:PrismValueRow = rowFor(option);
+		if(row == null) return;
 
-		option.child = attach;
-		grpTexts.insert(grpTexts.members.indexOf(bind), attach);
-		grpTexts.remove(bind);
-		bind.destroy();
+		row.setValueText(text);
+		gamepadIconCheck(row, text);
 	}
 
-	function gamepadIconCheck(alpha:Alphabet)
+	function gamepadIconCheck(row:PrismValueRow, text:String)
 	{
-		if(!controls.controllerMode) return;
-		GamepadIcons.apply(alpha); //draws the symbol the connected pad has for this bind
+		if(!controls.controllerMode)
+		{
+			row.clearIcon();
+			return;
+		}
+
+		//draws the symbol the connected pad has for this bind
+		var frame:String = GamepadIcons.frameFor(text);
+		if(frame != null) row.setIcon(frame);
+		else row.clearIcon();
+	}
+
+	function startBinding()
+	{
+		bindingBlack = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
+		bindingBlack.scale.set(FlxG.width, FlxG.height);
+		bindingBlack.updateHitbox();
+		bindingBlack.alpha = 0;
+		FlxTween.tween(bindingBlack, {alpha: 0.6}, 0.35, {ease: FlxEase.linear});
+		add(bindingBlack);
+
+		bindingText = new FlxText(0, 160, FlxG.width, Language.getPhrase('controls_rebinding', 'Rebinding {1}', [curOption.name]), 32);
+		PrismUI.theme.styleText(bindingText, 32, PrismUI.theme.accent, FlxTextAlign.CENTER);
+		add(bindingText);
+
+		bindingText2 = new FlxText(0, 340, FlxG.width, Language.getPhrase('controls_rebinding2', 'Hold ESC to Cancel\nHold Backspace to Delete'), 32);
+		PrismUI.theme.styleText(bindingText2, 32, PrismUI.theme.textMuted, FlxTextAlign.CENTER);
+		add(bindingText2);
+
+		bindingKey = true;
+		holdingEsc = 0;
+		list.keyboard = false;
+		ClientPrefs.toggleVolumeKeys(false);
+		FlxG.sound.play(Paths.sound('scrollMenu'));
 	}
 
 	function closeBinding()
 	{
 		bindingKey = false;
-		bindingBlack.destroy();
-		remove(bindingBlack);
+		if(bindingBlack != null)
+		{
+			remove(bindingBlack);
+			bindingBlack.destroy();
+			bindingBlack = null;
+		}
 
-		bindingText.destroy();
-		remove(bindingText);
+		if(bindingText != null)
+		{
+			remove(bindingText);
+			bindingText.destroy();
+			bindingText = null;
+		}
 
-		bindingText2.destroy();
-		remove(bindingText2);
+		if(bindingText2 != null)
+		{
+			remove(bindingText2);
+			bindingText2.destroy();
+			bindingText2 = null;
+		}
+
+		list.keyboard = true;
 		ClientPrefs.toggleVolumeKeys(true);
 	}
 
@@ -456,37 +398,141 @@ class BaseOptionsMenu extends MusicBeatSubstate
 		if(option.type == PERCENT) val *= 100;
 		var def:Dynamic = option.defaultValue;
 		option.text = text.replace('%v', val).replace('%d', def);
+
+		refreshRow(rowFor(option), option);
 	}
-	
-	function changeSelection(change:Int = 0)
+
+	/** Paints one row from its option, whatever kind it is. */
+	function refreshRow(row:PrismValueRow, option:Option):Void
 	{
-		curSelected = FlxMath.wrap(curSelected + change, 0, optionsArray.length - 1);
+		if(row == null || option == null) return;
 
-		descText.text = optionsArray[curSelected].description;
-		descText.screenCenter(Y);
-		descText.y += 270;
+		row.showSwitch = (option.type == BOOL);
+		row.showSlider = (option.type == INT || option.type == FLOAT || option.type == PERCENT);
 
-		for (num => item in grpOptions.members)
+					switch(option.type)
+			{
+				case BOOL:
+					row.switchOn = (option.getValue() == true);
+					row.setValueText('');
+				case KEYBIND:
+					updateBind(option);
+				default:
+					row.clearIcon();
+					option.refreshChild(); //keeps the per-value translation
+			}
+
+		if(row.showSlider) row.sliderValue = sliderFraction(option);
+	}
+
+	function rowFor(option:Option):PrismValueRow
+	{
+		for (row in rows)
+			if(row != null && row.data == option) return row;
+		return null;
+	}
+
+	function sliderFraction(option:Option):Float
+	{
+		var min:Dynamic = option.minValue;
+		var max:Dynamic = option.maxValue;
+		var value:Dynamic = option.getValue();
+		var minF:Float = (min == null) ? 0 : (min : Float);
+		var maxF:Float = (max == null) ? 1 : (max : Float);
+		var valF:Float = (value == null) ? 0 : (value : Float);
+		return (maxF > minF) ? (valF - minF) / (maxF - minF) : 0;
+	}
+
+	function clampNumeric(option:Option, value:Dynamic):Float
+	{
+		var result:Float = (value : Float);
+		var min:Dynamic = option.minValue;
+		var max:Dynamic = option.maxValue;
+		if(min != null && result < (min : Float)) result = (min : Float);
+		if(max != null && result > (max : Float)) result = (max : Float);
+		return result;
+	}
+
+	function applyNumeric(option:Option, value:Float):Void
+	{
+		if(option.type == INT)
+			option.setValue(Math.round(value));
+		else
+			option.setValue(FlxMath.roundDecimal(value, option.decimals));
+	}
+
+	function pressOption(option:Option):Void
+	{
+		if(option == null || nextAccept > 0) return;
+
+		switch(option.type)
 		{
-			item.targetY = num - curSelected;
-			item.alpha = 0.6;
-			if (item.targetY == 0) item.alpha = 1;
+			case BOOL:
+				FlxG.sound.play(Paths.sound('scrollMenu'));
+				option.setValue(option.getValue() != true);
+				option.change();
+				reloadCheckboxes();
+
+			case KEYBIND:
+				startBinding();
+
+			default:
 		}
-		for (text in grpTexts)
+	}
+
+	/** Left/right on a row: a press steps once, holding is ramped in `update()`. */
+	function adjustOption(option:Option, direction:Int, fromPress:Bool = true):Void
+	{
+		if(option == null || direction == 0) return;
+		if(option.type == BOOL || option.type == KEYBIND) return;
+
+		if(option.type == STRING)
 		{
-			text.alpha = 0.6;
-			if(text.ID == curSelected) text.alpha = 1;
+			if(!fromPress) return;
+			var num:Int = option.curOption + direction;
+			if(num < 0)
+				num = option.options.length - 1;
+			else if(num >= option.options.length)
+				num = 0;
+
+			option.curOption = num;
+			option.setValue(option.options[num]);
+		}
+		else
+		{
+			var next:Dynamic = option.getValue() + direction * option.changeValue;
+			holdValue = clampNumeric(option, next);
+			applyNumeric(option, holdValue);
+			if(fromPress) holdTime = 0;
 		}
 
-		descBox.setPosition(descText.x - 10, descText.y - 10);
-		descBox.setGraphicSize(Std.int(descText.width + 20), Std.int(descText.height + 25));
-		descBox.updateHitbox();
-
-		curOption = optionsArray[curSelected]; //shorter lol
+		updateTextFrom(option);
+		option.change();
 		FlxG.sound.play(Paths.sound('scrollMenu'));
 	}
 
+	function updateDescription():Void
+	{
+		if(descText == null || optionsArray == null || curSelected < 0 || curSelected >= optionsArray.length) return;
+
+		descText.text = optionsArray[curSelected].description;
+		var height:Float = descText.textField.textHeight > 0 ? descText.textField.textHeight : descText.height;
+		descText.y = panel.hei - PrismUI.px(PrismUI.theme.panelPadding) - height;
+	}
+
+	function changeSelection(change:Int = 0)
+	{
+		if(optionsArray == null || optionsArray.length < 1) return;
+		if(list != null) list.select(FlxMath.wrap(curSelected + change, 0, optionsArray.length - 1));
+	}
+
 	function reloadCheckboxes()
-		for (checkbox in checkboxGroup)
-			checkbox.daValue = Std.string(optionsArray[checkbox.ID].getValue()) == 'true'; //Do not take off the Std.string() from this, it will break a thing in Mod Settings Menu
+	{
+		for (row in rows)
+		{
+			if(row == null) continue;
+			var option:Option = row.data;
+			refreshRow(row, option);
+		}
+	}
 }

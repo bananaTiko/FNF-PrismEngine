@@ -2791,7 +2791,7 @@ class PlayState extends MusicBeatState
 
 		timeBar.visible = false;
 		timeTxt.visible = false;
-		if(subtitles != null) subtitles.clear();
+		if(subtitles != null) subtitles.clearSubtitles();
 		canPause = false;
 		endingSong = true;
 		camZooming = false;

@@ -220,13 +220,13 @@ class PsychUIDropDownMenu extends PsychUIInputText
 class PsychUIDropDownItem extends FlxSpriteGroup
 {
 	public var hoverStyle:UIStyleData = {
-		bgColor: 0xFF0066FF,
-		textColor: FlxColor.WHITE,
+		bgColor: PrismUI.theme.surfaceHover,
+		textColor: PrismUI.theme.text,
 		bgAlpha: 1
 	};
 	public var normalStyle:UIStyleData = {
-		bgColor: FlxColor.WHITE,
-		textColor: FlxColor.BLACK,
+		bgColor: PrismUI.theme.surfaceRaised,
+		textColor: PrismUI.theme.textMuted,
 		bgAlpha: 1
 	};
 
@@ -239,10 +239,11 @@ class PsychUIDropDownItem extends FlxSpriteGroup
 		bg = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
 		bg.setGraphicSize(width, 20);
 		bg.updateHitbox();
+		bg.color = normalStyle.bgColor;
 		add(bg);
 
 		text = new FlxText(0, 0, width, 8);
-		text.color = FlxColor.BLACK;
+		text.color = normalStyle.textColor;
 		add(text);
 	}
 

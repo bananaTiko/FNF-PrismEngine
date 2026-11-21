@@ -30,6 +30,12 @@ class MusicBeatState extends FlxState
 		// unplugging headphones kills OpenAL's device without telling anyone
 		AudioRecovery.reset();
 
+		// idempotent, and the first state after the save is loaded is where the
+		// widescreen option actually takes effect
+		#if desktop
+		Widescreen.refresh();
+		#end
+
 		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
 
