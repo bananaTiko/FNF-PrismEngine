@@ -26,6 +26,20 @@ import backend.Mods;
 @:access(openfl.display.BitmapData)
 class Paths
 {
+	/**
+	 * Audio extensions the engine looks for, in priority order. OGG stays first so a mod
+	 * that ships several copies of a song keeps playing the file it always did.
+	 * FLAC needs hxflac on desktop, because Lime's own decoder only knows OGG and WAV.
+	 */
+	#if web
+	public static var SOUND_EXTS:Array<String> = ['mp3', 'ogg', 'wav'];
+	#elseif desktop
+	public static var SOUND_EXTS:Array<String> = ['ogg', 'wav', 'flac'];
+	#else
+	// Android/iOS: hxflac is desktop-only, so a .flac file would be found but never decoded.
+	public static var SOUND_EXTS:Array<String> = ['ogg', 'wav'];
+	#end
+	/** Primary extension, for code (and mods) that builds a file name by hand. */
 	inline public static var SOUND_EXT = #if web "mp3" #else "ogg" #end;
 	inline public static var VIDEO_EXT = "mp4";
 
@@ -209,21 +223,30 @@ class Paths
 	}
 
 	inline static public function sound(key:String, ?modsAllowed:Bool = true):Sound
-		return returnSound('sounds/$key', modsAllowed);
+		return returnSound('sounds/$key', null, modsAllowed);
 
 	inline static public function music(key:String, ?modsAllowed:Bool = true):Sound
-		return returnSound('music/$key', modsAllowed);
+		return returnSound('music/$key', null, modsAllowed);
 
 	inline static public function inst(song:String, ?modsAllowed:Bool = true):Sound
-		return returnSound('${formatToSongPath(song)}/Inst', 'songs', modsAllowed);
+		return returnSound(instKey(song), 'songs', modsAllowed);
 
 	inline static public function voices(song:String, postfix:String = null, ?modsAllowed:Bool = true):Sound
-	{
-		var songKey:String = '${formatToSongPath(song)}/Voices';
-		if(postfix != null) songKey += '-' + postfix;
-		//trace('songKey test: $songKey');
-		return returnSound(songKey, 'songs', modsAllowed, false);
-	}
+		return returnSound(voicesKey(song, postfix), 'songs', modsAllowed, false);
+
+	static inline function instKey(song:String):String
+		return '${formatToSongPath(song)}/Inst';
+
+	static inline function voicesKey(song:String, postfix:String):String
+		return postfix == null ? '${formatToSongPath(song)}/Voices' : '${formatToSongPath(song)}/Voices-$postfix';
+
+	/** File `inst()` would load, without decoding it (StreamedSound plays it while it decodes). */
+	inline static public function instPath(song:String, ?modsAllowed:Bool = true):String
+		return findSoundPath(instKey(song), 'songs', modsAllowed);
+
+	/** File `voices()` would load, without decoding it. */
+	inline static public function voicesPath(song:String, postfix:String = null, ?modsAllowed:Bool = true):String
+		return findSoundPath(voicesKey(song, postfix), 'songs', modsAllowed);
 
 	inline static public function soundRandom(key:String, min:Int, max:Int, ?modsAllowed:Bool = true)
 		return sound(key + FlxG.random.int(min, max), modsAllowed);
@@ -423,30 +446,83 @@ class Paths
 		return hideChars.replace(invalidChars.replace(path, '-'), '').trim().toLowerCase();
 	}
 
+	/**
+	 * First extension in `SOUND_EXTS` that actually exists for `key`, or null.
+	 * Anything that needs to know whether a sound is there should ask this instead
+	 * of guessing that it ends in the primary extension.
+	 */
+	public static function findSoundPath(key:String, ?path:String, ?modsAllowed:Bool = true):String
+	{
+		var translated:String = Language.getFileTranslation(key);
+		for (ext in SOUND_EXTS)
+		{
+			var file:String = getPath('$translated.$ext', SOUND, path, modsAllowed);
+			#if sys
+			if(FileSystem.exists(file)) return file;
+			#else
+			if(OpenFlAssets.exists(file, SOUND)) return file;
+			#end
+		}
+		return null;
+	}
+
+	inline public static function soundExists(key:String, ?path:String, ?modsAllowed:Bool = true):Bool
+		return findSoundPath(key, path, modsAllowed) != null;
+
+	/**
+	 * Whether the engine can decode this file as FLAC. hxflac only builds on desktop, and
+	 * FLAC is only offered in `SOUND_EXTS` there, so nothing else can reach a FLAC file.
+	 */
+	public static function isFlac(file:String):Bool
+	{
+		#if desktop
+		return file != null && file.toLowerCase().endsWith('.flac');
+		#else
+		return false;
+		#end
+	}
+
+	/**
+	 * Loads a sound file, fully decoded. FLAC goes through hxflac because Lime's decoder has
+	 * none; everything else goes through Lime. Song-length audio uses StreamedSound instead.
+	 */
+	public static function loadSoundFile(file:String):Sound
+	{
+		#if desktop
+		if(isFlac(file)) return hxflac.FLACHelper.toOpenFL(File.getBytes(file));
+		#end
+		return Sound.fromFile(file);
+	}
+
 	public static var currentTrackedSounds:Map<String, Sound> = [];
 	public static function returnSound(key:String, ?path:String, ?modsAllowed:Bool = true, ?beepOnNull:Bool = true)
 	{
-		var file:String = getPath(Language.getFileTranslation(key) + '.$SOUND_EXT', SOUND, path, modsAllowed);
+		var file:String = findSoundPath(key, path, modsAllowed);
+		var sound:Sound = null;
 
-		//trace('precaching sound: $file');
-		if(!currentTrackedSounds.exists(file))
+		if(file != null)
 		{
-			#if sys
-			if(FileSystem.exists(file))
-				currentTrackedSounds.set(file, Sound.fromFile(file));
-			#else
-			if(OpenFlAssets.exists(file, SOUND))
-				currentTrackedSounds.set(file, OpenFlAssets.getSound(file));
-			#end
-			else if(beepOnNull)
+			if(currentTrackedSounds.exists(file))
+				sound = currentTrackedSounds.get(file);
+			else
 			{
-				trace('SOUND NOT FOUND: $key, PATH: $path');
-				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return FlxAssets.getSound('flixel/sounds/beep');
+				#if sys
+				sound = loadSoundFile(file);
+				#else
+				if(OpenFlAssets.exists(file, SOUND)) sound = OpenFlAssets.getSound(file);
+				#end
+
+				if(sound != null) currentTrackedSounds.set(file, sound);
 			}
+			localTrackedAssets.push(file);
 		}
-		localTrackedAssets.push(file);
-		return currentTrackedSounds.get(file);
+
+		if(sound != null) return sound;
+		if(!beepOnNull) return null;
+
+		trace('SOUND NOT FOUND: $key, PATH: $path');
+		FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
+		return FlxAssets.getSound('flixel/sounds/beep');
 	}
 
 	#if MODS_ALLOWED

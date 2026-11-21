@@ -1,6 +1,7 @@
 package states;
 
 import backend.WeekData;
+import backend.StreamedSound;
 import backend.Highscore;
 import backend.Song;
 
@@ -359,12 +360,12 @@ class FreeplayState extends MusicBeatState
 					try
 					{
 						var playerVocals:String = getVocalFromCharacter(PlayState.SONG.player1);
-						var loadedVocals = Paths.voices(PlayState.SONG.song, (playerVocals != null && playerVocals.length > 0) ? playerVocals : 'Player');
-						if(loadedVocals == null) loadedVocals = Paths.voices(PlayState.SONG.song);
+						var playerPostfix:String = (playerVocals != null && playerVocals.length > 0) ? playerVocals : 'Player';
+						var streamedVocals:FlxSound = StreamedSound.vocalTrack(PlayState.SONG.song, playerPostfix, true);
 						
-						if(loadedVocals != null && loadedVocals.length > 0)
+						if(streamedVocals != null)
 						{
-							vocals.loadEmbedded(loadedVocals);
+							vocals = streamedVocals;
 							FlxG.sound.list.add(vocals);
 							vocals.persist = vocals.looped = true;
 							vocals.volume = 0.8;
@@ -383,11 +384,12 @@ class FreeplayState extends MusicBeatState
 					{
 						//trace('please work...');
 						var oppVocals:String = getVocalFromCharacter(PlayState.SONG.player2);
-						var loadedVocals = Paths.voices(PlayState.SONG.song, (oppVocals != null && oppVocals.length > 0) ? oppVocals : 'Opponent');
+						var oppPostfix:String = (oppVocals != null && oppVocals.length > 0) ? oppVocals : 'Opponent';
+						var streamedOpp:FlxSound = StreamedSound.vocalTrack(PlayState.SONG.song, oppPostfix);
 						
-						if(loadedVocals != null && loadedVocals.length > 0)
+						if(streamedOpp != null)
 						{
-							opponentVocals.loadEmbedded(loadedVocals);
+							opponentVocals = streamedOpp;
 							FlxG.sound.list.add(opponentVocals);
 							opponentVocals.persist = opponentVocals.looped = true;
 							opponentVocals.volume = 0.8;
@@ -404,8 +406,17 @@ class FreeplayState extends MusicBeatState
 					}
 				}
 
-				FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0.8);
-				FlxG.sound.music.pause();
+				var streamedInst:StreamedSound = StreamedSound.create(Paths.instPath(PlayState.SONG.song));
+				if(streamedInst != null)
+				{
+					streamedInst.playAsMusic(0.8, true);
+					streamedInst.pause();
+				}
+				else
+				{
+					FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0.8);
+					FlxG.sound.music.pause();
+				}
 				instPlaying = curSelected;
 
 				player.playingMusic = true;

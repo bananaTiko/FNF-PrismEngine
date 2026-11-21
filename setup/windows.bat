@@ -13,6 +13,7 @@ haxelib install hscript-iris 1.1.3
 haxelib install tjson 1.4.0
 haxelib install hxdiscord_rpc 1.2.4
 haxelib install hxvlc 2.0.1 --skip-dependencies
+haxelib install hxflac 1.1.0
 haxelib set lime 8.1.2
 haxelib set openfl 9.3.3
 haxelib git moonchart https://github.com/bananaTiko/moonchart-prism

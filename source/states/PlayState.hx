@@ -30,6 +30,7 @@ import states.editors.CharacterEditorState;
 import substates.PauseSubState;
 import substates.GameOverSubstate;
 import backend.PlayStats;
+import backend.StreamedSound;
 import substates.ResultsSubState;
 
 #if !flash
@@ -1593,8 +1594,13 @@ class PlayState extends MusicBeatState
 	{
 		startingSong = false;
 
-		@:privateAccess
-		FlxG.sound.playMusic(inst._sound, 1, false);
+		if(inst is StreamedSound)
+			(cast inst : StreamedSound).playAsMusic(1, false);
+		else
+		{
+			@:privateAccess
+			FlxG.sound.playMusic(inst._sound, 1, false);
+		}
 		#if FLX_PITCH FlxG.sound.music.pitch = playbackRate; #end
 		FlxG.sound.music.onComplete = finishSong.bind();
 		vocals.play();
@@ -1656,11 +1662,13 @@ class PlayState extends MusicBeatState
 		{
 			if (songData.needsVoices)
 			{
-				var playerVocals = Paths.voices(songData.song, (boyfriend.vocalsFile == null || boyfriend.vocalsFile.length < 1) ? 'Player' : boyfriend.vocalsFile);
-				vocals.loadEmbedded(playerVocals != null ? playerVocals : Paths.voices(songData.song));
+				var playerPostfix:String = (boyfriend.vocalsFile == null || boyfriend.vocalsFile.length < 1) ? 'Player' : boyfriend.vocalsFile;
+				var playerVocals:FlxSound = StreamedSound.vocalTrack(songData.song, playerPostfix, true);
+				if(playerVocals != null) vocals = playerVocals;
 				
-				var oppVocals = Paths.voices(songData.song, (dad.vocalsFile == null || dad.vocalsFile.length < 1) ? 'Opponent' : dad.vocalsFile);
-				if(oppVocals != null && oppVocals.length > 0) opponentVocals.loadEmbedded(oppVocals);
+				var oppPostfix:String = (dad.vocalsFile == null || dad.vocalsFile.length < 1) ? 'Opponent' : dad.vocalsFile;
+				var oppVocals:FlxSound = StreamedSound.vocalTrack(songData.song, oppPostfix);
+				if(oppVocals != null) opponentVocals = oppVocals;
 			}
 		}
 		catch (e:Dynamic) {}
@@ -1672,13 +1680,14 @@ class PlayState extends MusicBeatState
 		FlxG.sound.list.add(vocals);
 		FlxG.sound.list.add(opponentVocals);
 
-		inst = new FlxSound();
 		try
 		{
-			inst.loadEmbedded(Paths.inst(songData.song));
+			inst = StreamedSound.instTrack(songData.song);
 		}
 		catch (e:Dynamic) {}
-		FlxG.sound.list.add(inst);
+		if(inst == null) inst = new FlxSound();
+		// A streamed inst becomes FlxG.sound.music in startSong(), which Flixel updates on its own.
+		if(!(inst is StreamedSound)) FlxG.sound.list.add(inst);
 
 		notes = new FlxTypedGroup<Note>();
 		noteGroup.add(notes);

@@ -564,12 +564,12 @@ class LoadingState extends MusicBeatState
 			preloadCharacter(player1, prefixVocals);
 			if (!dontPreloadDefaultVoices && prefixVocals != null)
 			{
-				if(Paths.fileExists('$prefixVocals-Player.${Paths.SOUND_EXT}', SOUND, false, 'songs') && Paths.fileExists('$prefixVocals-Opponent.${Paths.SOUND_EXT}', SOUND, false, 'songs'))
+				if(Paths.soundExists('$prefixVocals-Player', 'songs') && Paths.soundExists('$prefixVocals-Opponent', 'songs'))
 				{
 					songsToPrepare.push('$prefixVocals-Player');
 					songsToPrepare.push('$prefixVocals-Opponent');
 				}
-				else if(Paths.fileExists('$prefixVocals.${Paths.SOUND_EXT}', SOUND, false, 'songs'))
+				else if(Paths.soundExists(prefixVocals, 'songs'))
 					songsToPrepare.push(prefixVocals);
 			}
 
@@ -605,56 +605,67 @@ class LoadingState extends MusicBeatState
 
 	public static function clearInvalids()
 	{
-		clearInvalidFrom(imagesToPrepare, 'images', '.png', IMAGE);
-		clearInvalidFrom(soundsToPrepare, 'sounds', '.${Paths.SOUND_EXT}', SOUND);
-		clearInvalidFrom(musicToPrepare, 'music',' .${Paths.SOUND_EXT}', SOUND);
-		clearInvalidFrom(songsToPrepare, 'songs', '.${Paths.SOUND_EXT}', SOUND, 'songs');
+		clearInvalidFrom(imagesToPrepare, 'images', ['png'], IMAGE);
+		clearInvalidFrom(soundsToPrepare, 'sounds', Paths.SOUND_EXTS, SOUND);
+		clearInvalidFrom(musicToPrepare, 'music', Paths.SOUND_EXTS, SOUND);
+		clearInvalidFrom(songsToPrepare, 'songs', Paths.SOUND_EXTS, SOUND, 'songs');
 
 		for (arr in [imagesToPrepare, soundsToPrepare, musicToPrepare, songsToPrepare])
 			while (arr.contains(null))
 				arr.remove(null);
 	}
 
-	static function clearInvalidFrom(arr:Array<String>, prefix:String, ext:String, type:AssetType, ?parentFolder:String = null)
+	static function clearInvalidFrom(arr:Array<String>, prefix:String, exts:Array<String>, type:AssetType, ?parentFolder:String = null)
 	{
 		for (folder in arr.copy())
 		{
 			var nam:String = folder.trim();
-			if(nam.endsWith('/'))
-			{
-				for (subfolder in Mods.directoriesWithFile(Paths.getSharedPath(), '$prefix/$nam'))
-				{
-					for (file in FileSystem.readDirectory(subfolder))
-					{
-						if(file.endsWith(ext))
-						{
-							var toAdd:String = nam + haxe.io.Path.withoutExtension(file);
-							if(!arr.contains(toAdd)) arr.push(toAdd);
-						}
-					}
-				}
+			if(!nam.endsWith('/')) continue;
 
-				//trace('Folder detected! ' + folder);
+			for (subfolder in Mods.directoriesWithFile(Paths.getSharedPath(), '$prefix/$nam'))
+			{
+				for (file in FileSystem.readDirectory(subfolder))
+				{
+					if(!hasExtension(file, exts)) continue;
+
+					var toAdd:String = nam + haxe.io.Path.withoutExtension(file);
+					if(!arr.contains(toAdd)) arr.push(toAdd);
+				}
 			}
+
+			//trace('Folder detected! ' + folder);
 		}
 
+		var memberPrefix:String = (parentFolder == 'songs') ? '' : '$prefix/';
 		var i:Int = 0;
 		while(i < arr.length)
 		{
-
 			var member:String = arr[i];
-			var myKey = '$prefix/$member$ext';
-			if(parentFolder == 'songs') myKey = '$member$ext';
+			var exists:Bool = false;
+			for (ext in exts)
+			{
+				if(Paths.fileExists('$memberPrefix$member.$ext', type, false, parentFolder))
+				{
+					exists = true;
+					break;
+				}
+			}
 
-			//trace('attempting on $prefix: $myKey');
-			var doTrace:Bool = false;
-			if(member.endsWith('/') || (!Paths.fileExists(myKey, type, false, parentFolder) && (doTrace = true)))
+			//trace('attempting on $prefix: $member');
+			if(member.endsWith('/') || !exists)
 			{
 				arr.remove(member);
-				if(doTrace) trace('Removed invalid $prefix: $member');
+				if(!member.endsWith('/')) trace('Removed invalid $prefix: $member');
 			}
 			else i++;
 		}
+	}
+
+	static function hasExtension(file:String, exts:Array<String>):Bool
+	{
+		for (ext in exts)
+			if(file.endsWith('.$ext')) return true;
+		return false;
 	}
 
 	public static function startThreads()
@@ -672,7 +683,13 @@ class LoadingState extends MusicBeatState
 		_startPool();
 		for (sound in soundsToPrepare) initThread(() -> preloadSound('sounds/$sound'), 'sound $sound');
 		for (music in musicToPrepare) initThread(() -> preloadSound('music/$music'), 'music $music');
-		for (song in songsToPrepare) initThread(() -> preloadSound(song, 'songs', true, false), 'song $song');
+		for (song in songsToPrepare)
+			initThread(() -> {
+				// FLAC song tracks are streamed while they play, so decoding them here would
+				// only hold a whole song's PCM in memory for nothing.
+				if (Paths.isFlac(Paths.findSoundPath(song, 'songs', true))) return null;
+				return preloadSound(song, 'songs', true, false);
+			}, 'song $song');
 
 		// for images, they get to have their own thread
 		for (image in imagesToPrepare) initThread(() -> preloadGraphic(image), 'image $image');
@@ -768,24 +785,23 @@ class LoadingState extends MusicBeatState
 	// thread safe sound loader
 	static function preloadSound(key:String, ?path:String, ?modsAllowed:Bool = true, ?beepOnNull:Bool = true):Null<Sound>
 	{
-		var file:String = Paths.getPath(Language.getFileTranslation(key) + '.${Paths.SOUND_EXT}', SOUND, path, modsAllowed);
+		var file:String = Paths.findSoundPath(key, path, modsAllowed);
+		if(file == null)
+		{
+			if(!beepOnNull) return null;
+
+			trace('SOUND NOT FOUND: $key, PATH: $path');
+			FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
+			return FlxAssets.getSound('flixel/sounds/beep');
+		}
 
 		//trace('precaching sound: $file');
 		if(!Paths.currentTrackedSounds.exists(file))
 		{
-			if (#if sys FileSystem.exists(file) || #end OpenFlAssets.exists(file, SOUND))
-			{
-				var sound:Sound = #if sys Sound.fromFile(file) #else OpenFlAssets.getSound(file, false) #end;
-				mutex.acquire();
-				Paths.currentTrackedSounds.set(file, sound);
-				mutex.release();
-			}
-			else if (beepOnNull)
-			{
-				trace('SOUND NOT FOUND: $key, PATH: $path');
-				FlxG.log.error('SOUND NOT FOUND: $key, PATH: $path');
-				return FlxAssets.getSound('flixel/sounds/beep');
-			}
+			var sound:Sound = #if sys Paths.loadSoundFile(file) #else OpenFlAssets.getSound(file, false) #end;
+			mutex.acquire();
+			Paths.currentTrackedSounds.set(file, sound);
+			mutex.release();
 		}
 		mutex.acquire();
 		Paths.localTrackedAssets.push(file);
