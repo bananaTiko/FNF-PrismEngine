@@ -161,6 +161,12 @@
 
 	<!--Disable the Flixel core focus lost screen-->
 	<haxedef name="FLX_NO_FOCUS_LOST_SCREEN" />
+
+	<!--Windows: draw the backbuffer at the window's real pixel size instead of letting
+		the OS stretch a 1280x720 picture over a 125% / 150% scaled display. Pairs with the
+		allow-high-dpi window above and Native.registerDPIAware(), which tells Windows the
+		process handles display scaling itself (same fix Codename Engine uses).-->
+	<haxedef name="openfl_dpi_aware" unless="mac" />
 	
 	<!-- Show debug traces for hxCodec -->
 	<haxedef name="HXC_DEBUG_TRACE" if="debug" />

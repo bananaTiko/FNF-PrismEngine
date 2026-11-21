@@ -64,6 +64,13 @@ class Main extends Sprite
 
 	public static function main():Void
 	{
+		#if (cpp && windows)
+		// Declare the process DPI-aware before the window is created. Windows decides
+		// once, at creation, whether to bitmap-stretch us: a window made first stays
+		// blurry at 125% / 150% display scaling however we resize it afterwards.
+		backend.Native.registerDPIAware();
+		#end
+
 		Lib.current.addChild(new Main());
 	}
 

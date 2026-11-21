@@ -26,6 +26,10 @@ class MusicBeatState extends FlxState
 		return getState().variables;
 
 	override function create() {
+		// a state change is also the moment to look the audio device up again:
+		// unplugging headphones kills OpenAL's device without telling anyone
+		AudioRecovery.reset();
+
 		var skip:Bool = FlxTransitionableState.skipNextTransOut;
 		#if MODS_ALLOWED Mods.updatedOnState = false; #end
 
