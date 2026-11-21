@@ -13,8 +13,8 @@ class PsychUITab extends FlxSprite
 	{
 		super();
 		makeGraphic(1, 1, FlxColor.WHITE);
-		color = PrismUI.theme.surfaceRaised;
-		alpha = 0.9;
+		color = FlxColor.BLACK;
+		alpha = 0.6;
 
 		@:bypassAccessor this.name = name;
 		text = new FlxText(0, 0, 100, name);

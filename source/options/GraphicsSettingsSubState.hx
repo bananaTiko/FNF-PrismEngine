@@ -33,6 +33,15 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		addOption(option);
 		antialiasingOption = optionsArray.length-1;
 
+		#if desktop
+		var option:Option = new Option('Widescreen',
+			"If checked, the game fills the whole window instead of leaving black bars\nat the sides, by showing more of the level on wide monitors.",
+			'widescreen',
+			BOOL);
+		option.onChange = onChangeWidescreen;
+		addOption(option);
+		#end
+
 		var option:Option = new Option('Shaders', //Name
 			"If unchecked, disables shaders.\nIt's used for some visual effects, and also CPU intensive for weaker PCs.", //Description
 			'shaders',
@@ -44,15 +53,6 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 			'cacheOnGPU',
 			BOOL);
 		addOption(option);
-
-		#if desktop
-		var option:Option = new Option('Widescreen',
-			"If checked, the game fills the whole window instead of leaving black bars\nat the sides, by showing more of the level on wide monitors.",
-			'widescreen',
-			BOOL);
-		option.onChange = onChangeWidescreen;
-		addOption(option);
-		#end
 
 		#if !html5 //Apparently other framerates isn't correctly supported on Browser? Probably it has some V-Sync shit enabled by default, idk
 		var option:Option = new Option('Framerate',
@@ -70,7 +70,7 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		#end
 
 		super();
-		add(boyfriend);
+		insert(1, boyfriend);
 	}
 
 	function onChangeAntiAliasing()
@@ -103,8 +103,9 @@ class GraphicsSettingsSubState extends BaseOptionsMenu
 		}
 	}
 
-	override public function onSelectionChanged():Void
+	override function changeSelection(change:Int = 0)
 	{
-		if(boyfriend != null) boyfriend.visible = (antialiasingOption == curSelected);
+		super.changeSelection(change);
+		boyfriend.visible = (antialiasingOption == curSelected);
 	}
 }

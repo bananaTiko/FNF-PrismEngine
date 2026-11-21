@@ -14,21 +14,20 @@ class PsychUIButton extends FlxSpriteGroup
 	public var onChangeState:String->Void;
 	public var onClick:Void->Void;
 	
-	//Skinned by prismUI, so buttons in the editors match the rest of the UI
 	public var clickStyle:UIStyleData = {
-		bgColor: PrismUI.theme.accent,
-		textColor: 0xFF17121F,
+		bgColor: FlxColor.BLACK,
+		textColor: FlxColor.WHITE,
 		bgAlpha: 1
 	};
 	public var hoverStyle:UIStyleData = {
-		bgColor: PrismUI.theme.surfaceHover,
-		textColor: PrismUI.theme.text,
+		bgColor: FlxColor.WHITE,
+		textColor: FlxColor.BLACK,
 		bgAlpha: 1
 	};
 	public var normalStyle:UIStyleData = {
-		bgColor: PrismUI.theme.surfaceRaised,
-		textColor: PrismUI.theme.textMuted,
-		bgAlpha: 0.9
+		bgColor: 0xFFAAAAAA,
+		textColor: FlxColor.BLACK,
+		bgAlpha: 1
 	};
 
 	public function new(x:Float = 0, y:Float = 0, label:String = '', ?onClick:Void->Void = null, ?wid:Int = 80, ?hei:Int = 20)
@@ -36,8 +35,8 @@ class PsychUIButton extends FlxSpriteGroup
 		super(x, y);
 		bg = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
 		add(bg);
-		bg.color = normalStyle.bgColor;
-		bg.alpha = normalStyle.bgAlpha;
+		bg.color = 0xFFAAAAAA;
+		bg.alpha = 0.6;
 
 		text = new FlxText(0, 0, 1, '');
 		text.alignment = CENTER;

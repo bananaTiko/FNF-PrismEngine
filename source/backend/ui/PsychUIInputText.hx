@@ -63,7 +63,7 @@ class PsychUIInputText extends FlxSpriteGroup
 	public function new(x:Float = 0, y:Float = 0, wid:Int = 100, ?text:String = '', size:Int = 8)
 	{
 		super(x, y);
-		this.bg = new FlxSprite().makeGraphic(1, 1, PrismUI.theme.surfaceRaised);
+		this.bg = new FlxSprite().makeGraphic(1, 1, FlxColor.BLACK);
 		this.behindText = new FlxSprite(1, 1).makeGraphic(1, 1, FlxColor.WHITE);
 		this.selection = new FlxSprite().makeGraphic(1, 1, FlxColor.WHITE);
 		this.textObj = new FlxText(1, 1, Math.max(1, wid - 2), '', size);
@@ -74,12 +74,11 @@ class PsychUIInputText extends FlxSpriteGroup
 		add(this.textObj);
 		add(this.caret);
 
-		this.textObj.color = PrismUI.theme.text;
+		this.textObj.color = FlxColor.BLACK;
 		this.textObj.textField.selectable = false;
 		this.textObj.textField.wordWrap = false;
 		this.textObj.textField.multiline = false;
-		this.selection.color = PrismUI.theme.accent;
-		this.selection.alpha = 0.45;
+		this.selection.color = FlxColor.BLUE;
 
 		@:bypassAccessor fieldWidth = wid;
 		setGraphicSize(wid + 2, this.textObj.height + 2);
