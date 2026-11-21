@@ -15,6 +15,10 @@ typedef SwagSong =
 	var speed:Float;
 	var offset:Float;
 
+	/** Time signature, Psych Extra style. Missing means 4/4. See backend.TimeSignature. */
+	@:optional var timeSignatureNum:Int;
+	@:optional var timeSignatureDen:Int;
+
 	var player1:String;
 	var player2:String;
 	var gfVersion:String;
@@ -58,6 +62,8 @@ class Song
 	public var gameOverEnd:String;
 	public var disableNoteRGB:Bool = false;
 	public var speed:Float = 1;
+	public var timeSignatureNum:Int = 4;
+	public var timeSignatureDen:Int = 4;
 	public var stage:String;
 	public var player1:String = 'bf';
 	public var player2:String = 'dad';
@@ -104,7 +110,7 @@ class Song
 			var beats:Null<Float> = cast section.sectionBeats;
 			if (beats == null || Math.isNaN(beats))
 			{
-				section.sectionBeats = 4;
+				section.sectionBeats = TimeSignature.songBeatsPerMeasure(cast songJson);
 				if(Reflect.hasField(section, 'lengthInSteps')) Reflect.deleteField(section, 'lengthInSteps');
 			}
 

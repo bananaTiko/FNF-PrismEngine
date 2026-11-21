@@ -117,8 +117,9 @@ class MusicBeatSubstate extends FlxSubState
 	
 	function getBeatsOnSection()
 	{
-		var val:Null<Float> = 4;
+		var val:Null<Float> = null;
 		if(PlayState.SONG != null && PlayState.SONG.notes[curSection] != null) val = PlayState.SONG.notes[curSection].sectionBeats;
+		if(val == null && PlayState.SONG != null) val = TimeSignature.songBeatsPerMeasure(PlayState.SONG);
 		return val == null ? 4 : val;
 	}
 }

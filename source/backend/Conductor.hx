@@ -127,7 +127,7 @@ class Conductor
 	{
 		var val:Null<Float> = null;
 		if(song.notes[section] != null) val = song.notes[section].sectionBeats;
-		return val != null ? val : 4;
+		return val != null ? val : TimeSignature.songBeatsPerMeasure(song);
 	}
 
 	inline public static function calculateCrochet(bpm:Float){

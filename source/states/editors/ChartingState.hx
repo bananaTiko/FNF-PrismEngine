@@ -27,6 +27,7 @@ import backend.Song;
 import backend.StageData;
 import backend.Highscore;
 import backend.Difficulty;
+import backend.TimeSignature;
 
 import objects.Character;
 import objects.HealthIcon;
@@ -2078,7 +2079,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		for (secNum => section in PlayState.SONG.notes)
 		{
 			var secs:Null<Float> = cast section.sectionBeats;
-			if(secs == null || Math.isNaN(secs) || secs <= 0) section.sectionBeats = 4;
+			if(secs == null || Math.isNaN(secs) || secs <= 0) section.sectionBeats = TimeSignature.songBeatsPerMeasure(PlayState.SONG);
 	
 			if(section.changeBPM) bpm = section.bpm;
 			var beat:Float = Conductor.calculateCrochet(bpm);
@@ -2126,7 +2127,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		{
 			var lastSection = PlayState.SONG.notes[PlayState.SONG.notes.length-1];
 			var beat:Float = Conductor.calculateCrochet(bpm);
-			var sectionBeats:Float = lastSection != null ? lastSection.sectionBeats : 4;
+			var sectionBeats:Float = lastSection != null ? lastSection.sectionBeats : TimeSignature.songBeatsPerMeasure(PlayState.SONG);
 			var rowRound:Int = Math.round(4 * sectionBeats);
 			var timeAdd:Float = beat * (rowRound / 4);
 			var mustHitSec:Bool = lastSection != null ? lastSection.mustHitSection : true;
@@ -2215,6 +2216,8 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			changeBpmCheckBox.checked = sec.changeBPM;
 			changeBpmStepper.value = Conductor.bpm;
 			beatsPerSecStepper.value = sec.sectionBeats;
+			timeSigNumStepper.value = TimeSignature.numeratorOf(PlayState.SONG);
+			timeSigDenStepper.value = TimeSignature.denominatorOf(PlayState.SONG);
 
 			strumTimeStepper.step = Conductor.stepCrochet;
 			susLengthStepper.step = cachedSectionCrochets[curSec] / 4 / 2;
@@ -2816,6 +2819,8 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 	var changeBpmCheckBox:PsychUICheckBox;
 	var changeBpmStepper:PsychUINumericStepper;
 	var beatsPerSecStepper:PsychUINumericStepper;
+	var timeSigNumStepper:PsychUINumericStepper;
+	var timeSigDenStepper:PsychUINumericStepper;
 
 	function addSectionTab()
 	{
@@ -2948,6 +2953,12 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			}
 		};
 
+		objY += 25;
+		timeSigNumStepper = new PsychUINumericStepper(objX, objY, 1, TimeSignature.DEFAULT_NUMERATOR, 1, TimeSignature.MAX_NUMERATOR, 0);
+		timeSigDenStepper = new PsychUINumericStepper(objX + 150, objY, 1, TimeSignature.DEFAULT_DENOMINATOR, 1, TimeSignature.MAX_DENOMINATOR, 0);
+		timeSigNumStepper.onValueChange = function() onChangeTimeSignature();
+		timeSigDenStepper.onValueChange = function() onChangeTimeSignature();
+
 		objY += 40;
 		var copyButton:PsychUIButton = new PsychUIButton(objX, objY, 'Copy Section', copyNotesOnSection.bind());
 		var pasteButton:PsychUIButton = new PsychUIButton(objX + 100, objY, 'Paste Section', function()
@@ -3065,6 +3076,10 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		tab_group.add(altAnimSectionCheckBox);
 
 		tab_group.add(new FlxText(beatsPerSecStepper.x, beatsPerSecStepper.y - 15, 100, 'Beats per Section:'));
+		tab_group.add(new FlxText(timeSigNumStepper.x, timeSigNumStepper.y - 15, 100, 'Time Sig Num:'));
+		tab_group.add(new FlxText(timeSigDenStepper.x, timeSigDenStepper.y - 15, 100, 'Time Sig Den:'));
+		tab_group.add(timeSigNumStepper);
+		tab_group.add(timeSigDenStepper);
 		tab_group.add(changeBpmCheckBox);
 		tab_group.add(changeBpmStepper);
 		tab_group.add(beatsPerSecStepper);
@@ -3081,6 +3096,32 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		tab_group.add(swapSectionButton);
 		tab_group.add(duetSectionButton);
 		tab_group.add(mirrorNotesButton);
+	}
+
+	/**
+	 * Song time signature, Psych Extra style (numerator 1-100, denominator 1-64).
+	 * A section is one measure here, so the section being edited is resized to the
+	 * new measure length - that is the value that actually moves notes and events.
+	 * Sections added later, and charts that never wrote sectionBeats, follow it too.
+	 */
+	function onChangeTimeSignature():Void
+	{
+		var num:Int = TimeSignature.clampNumerator(Std.int(timeSigNumStepper.value));
+		var den:Int = TimeSignature.clampDenominator(Std.int(timeSigDenStepper.value));
+		timeSigNumStepper.value = num;
+		timeSigDenStepper.value = den;
+		if(PlayState.SONG == null) return;
+
+		PlayState.SONG.timeSignatureNum = num;
+		PlayState.SONG.timeSignatureDen = den;
+
+		var sec = getCurChartSection();
+		if(sec == null) return;
+
+		var oldTimes:Array<Float> = cachedSectionTimes.copy();
+		sec.sectionBeats = TimeSignature.beatsPerMeasure(num, den);
+		beatsPerSecStepper.value = sec.sectionBeats;
+		adaptNotesToNewTimes(oldTimes);
 	}
 
 	function reloadNotesDropdowns()
