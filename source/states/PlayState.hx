@@ -961,7 +961,8 @@ class PlayState extends MusicBeatState
 	{
 		#if VIDEOS_ALLOWED
 		inCutscene = !forMidSong;
-		canPause = forMidSong;
+		// Cutscenes are pausable, so the player can freeze or skip one without losing it.
+		canPause = true;
 
 		var foundFile:Bool = false;
 		var fileName:String = Paths.video(name);
@@ -1013,6 +1014,34 @@ class PlayState extends MusicBeatState
 		startAndEnd();
 		#end
 		return null;
+	}
+
+	/** True while a cutscene that offers a skip (a video, not a dialogue) is playing. */
+	public function hasSkippableCutscene():Bool
+	{
+		#if VIDEOS_ALLOWED
+		return videoCutscene != null && videoCutscene.canSkip;
+		#else
+		return false;
+		#end
+	}
+
+	/**
+	 * Ends the running cutscene the same way holding accept does, and carries on:
+	 * a pre-song video leads into the countdown, a mid-song one just lets the song
+	 * continue from where it is. Nothing is restarted.
+	 */
+	public function skipCutscene():Void
+	{
+		#if VIDEOS_ALLOWED
+		if(videoCutscene == null) return;
+
+		var cutscene:VideoSprite = videoCutscene;
+		videoCutscene = null;
+		if(cutscene.onSkip != null)
+			cutscene.onSkip();
+		cutscene.destroy();
+		#end
 	}
 
 	function startAndEnd()
@@ -2069,7 +2098,8 @@ class PlayState extends MusicBeatState
 			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
 		}
 
-		if (controls.PAUSE && startedCountdown && canPause)
+		// `startedCountdown` is still false while a pre-song cutscene runs, hence inCutscene.
+		if (controls.PAUSE && canPause && (startedCountdown || inCutscene))
 		{
 			var ret:Dynamic = callOnScripts('onPause', null, true);
 			if(ret != LuaUtils.Function_Stop) {
@@ -2297,6 +2327,11 @@ class PlayState extends MusicBeatState
 		persistentUpdate = false;
 		persistentDraw = true;
 		paused = true;
+
+		// Freeze the cutscene video as well, otherwise it keeps playing under the menu.
+		#if VIDEOS_ALLOWED
+		if(videoCutscene != null) videoCutscene.pause();
+		#end
 
 		if(FlxG.sound.music != null) {
 			FlxG.sound.music.pause();

@@ -27,6 +27,7 @@ class PauseSubState extends MusicBeatSubstate
 
 	var missingTextBG:FlxSprite;
 	var missingText:FlxText;
+	var skippingCutscene:Bool = false;
 
 	public static var songName:String = null;
 
@@ -47,6 +48,11 @@ class PauseSubState extends MusicBeatSubstate
 			menuItemsOG.insert(5 + num, 'Toggle Botplay');
 		} else if(PlayState.instance.practiceMode && !PlayState.instance.startingSong)
 			menuItemsOG.insert(3, 'Skip Time');
+
+		// A video cutscene can be dropped from here instead of holding accept through it.
+		if(PlayState.instance.hasSkippableCutscene())
+			menuItemsOG.insert(1, 'Skip Cutscene');
+
 		menuItems = menuItemsOG;
 
 		for (i in 0...Difficulty.list.length) {
@@ -264,6 +270,10 @@ class PauseSubState extends MusicBeatSubstate
 			{
 				case "Resume":
 					close();
+				case 'Skip Cutscene':
+					skippingCutscene = true;
+					close();
+					PlayState.instance.skipCutscene();
 				case 'Change Difficulty':
 					menuItems = difficultyChoices;
 					deleteSkipTimeText();
@@ -369,6 +379,19 @@ class PauseSubState extends MusicBeatSubstate
 		{
 			MusicBeatState.resetState();
 		}
+	}
+
+	/**
+	 * A cutscene that was paused with the menu picks up on the frame it stopped at,
+	 * unless the player picked "Skip Cutscene" instead.
+	 */
+	override function close():Void
+	{
+		#if VIDEOS_ALLOWED
+		if(!skippingCutscene && PlayState.instance != null && PlayState.instance.videoCutscene != null)
+			PlayState.instance.videoCutscene.resume();
+		#end
+		super.close();
 	}
 
 	override function destroy()
