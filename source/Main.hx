@@ -178,6 +178,13 @@ class Main extends Sprite
 		backend.Widescreen.refresh();
 		#end
 
+		#if (cpp && windows)
+		// ClientPrefs only loads on the title screen, the window exists before that.
+		if(FlxG.save.data.windowColorMode != null)
+			ClientPrefs.data.windowColorMode = FlxG.save.data.windowColorMode;
+		applyWindowColorMode();
+		#end
+
 		#if !mobile
 		fpsVar = new FPSCounter(10, 3, 0xFFFFFF);
 		addChild(fpsVar);
@@ -222,6 +229,17 @@ class Main extends Sprite
 			if (FlxG.game != null)
 			resetSpriteCache(FlxG.game);
 		});
+	}
+
+	// Colors the title bar and border from Options > Visuals. Windows only.
+	public static function applyWindowColorMode():Void {
+		#if (cpp && windows)
+		// Windows 10 only redraws the title bar once the window is toggled,
+		// Windows 11 applies the change immediately.
+		hxwindowmode.WindowColorMode.setWindowColorMode(ClientPrefs.data.windowColorMode != 'Light');
+		if(hxwindowmode.WindowColorMode.isWindows10)
+			hxwindowmode.WindowColorMode.redrawWindowHeader();
+		#end
 	}
 
 	static function resetSpriteCache(sprite:Sprite):Void {

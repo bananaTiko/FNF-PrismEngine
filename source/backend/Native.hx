@@ -7,10 +7,18 @@ import lime.system.System;
 import flixel.util.FlxColor;
 
 #if (cpp && windows)
+// The last three libraries belong to sl-windows-api's native code. Project.xml keeps
+// winapi.WindowsAPI in the build for scripts, but the library links its system libraries
+// through build.xml entries gated on HX_WINDOWS, which is not the condition hxcpp checks
+// for the target, so the reference could arrive without the libraries. Declaring them here
+// (this class is only compiled on Windows) keeps the link working either way.
 @:buildXml('
 <target id="haxe">
 	<lib name="dwmapi.lib" if="windows"/>
 	<lib name="gdi32.lib" if="windows"/>
+	<lib name="user32.lib" if="windows"/>
+	<lib name="ntdll.lib" if="windows"/>
+	<lib name="advapi32.lib" if="windows"/>
 </target>
 ')
 @:cppFileCode('
