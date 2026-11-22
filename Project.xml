@@ -215,6 +215,15 @@
 
 	<haxedef name="hscriptPos" if="HSCRIPT_ALLOWED" />
 
+	<!-- ______________________________ Build Speed _____________________________ -->
+
+	<!--Rebuilds reuse a Haxe compiler server instead of re-parsing every library each time.
+		Start one per session with `haxe --wait 6000`, then build with `-D haxe_server`.
+		The build fails if the server is not running, so this stays opt-in.-->
+	<section if="haxe_server">
+		<haxeflag name="--connect" value="6000" />
+	</section>
+
 	<!-- _________________________________ Custom _______________________________ -->
 
 	<assets path='art/icons/iconOG.png' rename='icon.png' if="linux || mac" />
