@@ -192,6 +192,11 @@ class Song
 		if(parsed == null) return;
 
 		var extra:Array<Dynamic> = Reflect.field(parsed, 'events');
+		if(extra == null)
+		{
+			var wrapped:Dynamic = Reflect.field(parsed, 'song');
+			if(wrapped != null && Type.typeof(wrapped) == TObject) extra = Reflect.field(wrapped, 'events');
+		}
 		if(extra == null || extra.length < 1) return;
 
 		songJson.events = extra;
