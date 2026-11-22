@@ -9,7 +9,15 @@
 //   local x = 1          becomes var x = 1
 //   nil                  becomes null
 //   elif                 becomes else if
+//   def setup(a, b)      becomes function setup(a, b)
+//   True / False / None  become true / false / null
+//   and / or / not       become && / || / !
+//   x is None            becomes x == null   (x is not None becomes x != null)
 //   string literals and existing // comments are never rewritten
+//   after a dot these stay member names, and the console warns about them
+//
+// On desktop the rewrite, the hash and the brace/quote check run in C++; other targets use the
+// Haxe version, so the same script behaves the same everywhere.
 //
 //
 // Header, anywhere in the file:
