@@ -124,6 +124,8 @@ class MainMenuState extends MusicBeatState
 		}
 		#end
 
+		MusicBeatState.ensureMenuMusic();
+
 		FlxG.camera.follow(camFollow, null, 0.15);
 	}
 
@@ -147,7 +149,7 @@ class MainMenuState extends MusicBeatState
 	var timeNotMoving:Float = 0;
 	override function update(elapsed:Float)
 	{
-		if (FlxG.sound.music.volume < 0.8)
+		if (FlxG.sound.music != null && FlxG.sound.music.volume < 0.8)
 			FlxG.sound.music.volume = Math.min(FlxG.sound.music.volume + 0.5 * elapsed, 0.8);
 
 		if (!selectedSomethin)

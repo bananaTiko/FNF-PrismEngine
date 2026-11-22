@@ -122,7 +122,7 @@ class MasterEditorMenu extends MusicBeatState
 				case 'Note Splash Editor':
 					MusicBeatState.switchState(new NoteSplashEditorState());
 			}
-			FlxG.sound.music.volume = 0;
+			if (FlxG.sound.music != null) FlxG.sound.music.volume = 0;
 			FreeplayState.destroyFreeplayVocals();
 		}
 		

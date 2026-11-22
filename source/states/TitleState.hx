@@ -124,6 +124,11 @@ class TitleState extends MusicBeatState
 		if (!initialized && FlxG.sound.music == null)
 			FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
 
+		// the state change restarted the menu track at full volume; the intro fades it
+		// in on the first beat instead
+		if (FlxG.sound.music != null)
+			FlxG.sound.music.volume = 0;
+
 		loadJsonData();
 		#if TITLE_SCREEN_EASTER_EGG easterEggData(); #end
 		Conductor.bpm = musicBPM;
@@ -549,8 +554,7 @@ class TitleState extends MusicBeatState
 			{
 				case 1:
 					//FlxG.sound.music.stop();
-					FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
-					FlxG.sound.music.fadeIn(4, 0, 0.7);
+					if (MusicBeatState.ensureMenuMusic()) FlxG.sound.music.fadeIn(4, 0, 0.7);
 				case 2:
 					createCoolText(['Prism Engine'], 40);
 				case 4:
@@ -617,8 +621,7 @@ class TitleState extends MusicBeatState
 						FlxG.camera.flash(FlxColor.WHITE, 2);
 						skippedIntro = true;
 
-						FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
-						FlxG.sound.music.fadeIn(4, 0, 0.7);
+						if (MusicBeatState.ensureMenuMusic()) FlxG.sound.music.fadeIn(4, 0, 0.7);
 						return;
 				}
 
@@ -639,8 +642,7 @@ class TitleState extends MusicBeatState
 					remove(credGroup);
 					FlxG.camera.flash(FlxColor.WHITE, 3);
 					sound.onComplete = function() {
-						FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
-						FlxG.sound.music.fadeIn(4, 0, 0.7);
+						if (MusicBeatState.ensureMenuMusic()) FlxG.sound.music.fadeIn(4, 0, 0.7);
 						transitioning = false;
 						#if ACHIEVEMENTS_ALLOWED
 						if(easteregg == 'PESSY') Achievements.unlock('pessy_easter_egg');

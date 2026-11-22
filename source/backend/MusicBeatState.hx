@@ -31,10 +31,27 @@ class MusicBeatState extends FlxState
 	public static function getVariables()
 		return getState().variables;
 
+	/**
+	 * Makes sure the menu track is loaded, without restarting one that is already playing.
+	 * Returns whether `FlxG.sound.music` is available: a missing or unreadable
+	 * `freakyMenu` leaves it null, and the menus used to dereference that and crash.
+	 */
+	public static function ensureMenuMusic(volume:Float = 0):Bool
+	{
+		if (FlxG.sound.music == null)
+			FlxG.sound.playMusic(Paths.music('freakyMenu'), volume);
+
+		return FlxG.sound.music != null;
+	}
+
 	override function create() {
 		// a state change is also the moment to look the audio device up again:
-		// unplugging headphones kills OpenAL's device without telling anyone
+		// unplugging headphones kills OpenAL's device without telling anyone.
+		// The reset tears down every sound, music included, so the menu track is
+		// started again here: without this every state after the title screen ran
+		// with `FlxG.sound.music == null`, which crashed the menus.
 		AudioRecovery.reset();
+		ensureMenuMusic(0.7);
 
 		// idempotent, and the first state after the save is loaded is where the
 		// widescreen option actually takes effect

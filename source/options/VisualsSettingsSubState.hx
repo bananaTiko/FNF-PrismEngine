@@ -282,7 +282,9 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 	function onChangePauseMusic()
 	{
 		if(ClientPrefs.data.pauseMusic == 'None')
-			FlxG.sound.music.volume = 0;
+		{
+			if (FlxG.sound.music != null) FlxG.sound.music.volume = 0;
+		}
 		else
 			FlxG.sound.playMusic(Paths.music(Paths.formatToSongPath(ClientPrefs.data.pauseMusic)));
 

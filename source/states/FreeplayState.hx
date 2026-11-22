@@ -250,7 +250,7 @@ class FreeplayState extends MusicBeatState
 
 		var typing:Bool = (searchBox != null && PsychUIInputText.focusOn == searchBox);
 
-		if (FlxG.sound.music.volume < 0.7)
+		if (FlxG.sound.music != null && FlxG.sound.music.volume < 0.7)
 			FlxG.sound.music.volume += 0.5 * elapsed;
 
 		lerpScore = Math.floor(FlxMath.lerp(intendedScore, lerpScore, Math.exp(-elapsed * 24)));
@@ -336,14 +336,14 @@ class FreeplayState extends MusicBeatState
 			{
 				FlxG.sound.music.stop();
 				destroyFreeplayVocals();
-				FlxG.sound.music.volume = 0;
+				if (FlxG.sound.music != null) FlxG.sound.music.volume = 0;
 				instPlaying = -1;
 
 				player.playingMusic = false;
 				player.switchPlayMusic();
 
 				FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
-				FlxTween.tween(FlxG.sound.music, {volume: 1}, 1);
+				if (FlxG.sound.music != null) FlxTween.tween(FlxG.sound.music, {volume: 1}, 1);
 			}
 			else 
 			{
@@ -363,7 +363,7 @@ class FreeplayState extends MusicBeatState
 			if(instPlaying != curSelected && !player.playingMusic)
 			{
 				destroyFreeplayVocals();
-				FlxG.sound.music.volume = 0;
+				if (FlxG.sound.music != null) FlxG.sound.music.volume = 0;
 
 				Mods.currentModDirectory = songs[curSelected].folder;
 				var poop:String = Highscore.formatSong(songs[curSelected].songName.toLowerCase(), curDifficulty);
@@ -429,7 +429,7 @@ class FreeplayState extends MusicBeatState
 				else
 				{
 					FlxG.sound.playMusic(Paths.inst(PlayState.SONG.song), 0.8);
-					FlxG.sound.music.pause();
+					if (FlxG.sound.music != null) FlxG.sound.music.pause();
 				}
 				instPlaying = curSelected;
 
@@ -484,7 +484,7 @@ class FreeplayState extends MusicBeatState
 			}
 			LoadingState.prepareToSong();
 			LoadingState.loadAndSwitchState(new PlayState());
-			#if !SHOW_LOADING_SCREEN FlxG.sound.music.stop(); #end
+			#if !SHOW_LOADING_SCREEN if (FlxG.sound.music != null) FlxG.sound.music.stop(); #end
 			stopMusicPlay = true;
 
 			destroyFreeplayVocals();
@@ -984,7 +984,7 @@ class FreeplayState extends MusicBeatState
 		super.destroy();
 
 		FlxG.autoPause = ClientPrefs.data.autoPause;
-		if (!FlxG.sound.music.playing && !stopMusicPlay)
+		if (FlxG.sound.music != null && !FlxG.sound.music.playing && !stopMusicPlay)
 			FlxG.sound.playMusic(Paths.music('freakyMenu'));
 	}	
 }
