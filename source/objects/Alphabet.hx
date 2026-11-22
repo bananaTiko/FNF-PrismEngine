@@ -107,7 +107,7 @@ class Alphabet extends FlxSpriteGroup
 	{
 		newText = newText.replace('\\n', '\n');
 		clearLetters();
-		if(usesFont())
+		if(usesFont() || !canDrawAll(newText))
 			buildFontText(newText);
 		else
 			createLetters(newText);
@@ -116,12 +116,31 @@ class Alphabet extends FlxSpriteGroup
 		return newText;
 	}
 
+	/**
+	 * True when the loaded atlas has a letter for every character in `text`. Text the
+	 * atlas can't draw at all is rendered with the language's font instead of a row of
+	 * "?" placeholders.
+	 */
+	static function canDrawAll(text:String):Bool
+	{
+		if(AlphaCharacter.allLetters == null) return true;
+
+		for (i in 0...text.length)
+		{
+			var character:String = text.charAt(i);
+			if(character == ' ' || character == '\n' || character == '\t') continue;
+			if(!AlphaCharacter.allLetters.exists(character.toLowerCase())) return false;
+		}
+		return true;
+	}
+
 	function buildFontText(newText:String)
 	{
 		if(fontText == null)
 		{
+			var fontKey:String = (Language.alphabetFont != null && Language.alphabetFont.length > 0) ? Language.alphabetFont : 'vcr.ttf';
 			fontText = new FlxText(0, 0, 0, '', 40);
-			fontText.setFormat(Paths.font(Language.alphabetFont), 40, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			fontText.setFormat(Paths.font(fontKey), 40, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 			fontText.borderSize = 2;
 			add(fontText);
 		}

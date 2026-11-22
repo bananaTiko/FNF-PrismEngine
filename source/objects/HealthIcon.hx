@@ -23,11 +23,32 @@ class HealthIcon extends FlxSprite
 	}
 
 	private var iconOffsets:Array<Float> = [0, 0];
+	/**
+	 * Finds the icon for a character. Stage variants like `bf-car` or `mom-car` usually
+	 * don't have their own art, so the suffix is dropped a piece at a time before falling
+	 * back to the generic face.
+	 */
+	static function findIconImage(char:String):String
+	{
+		var candidate:String = char;
+		while(candidate != null && candidate.length > 0)
+		{
+			var name:String = 'icons/' + candidate;
+			if(Paths.fileExists('images/' + name + '.png', IMAGE)) return name;
+
+			name = 'icons/icon-' + candidate; //Older versions of psych engine's support
+			if(Paths.fileExists('images/' + name + '.png', IMAGE)) return name;
+
+			var dash:Int = candidate.lastIndexOf('-');
+			if(dash < 0) break;
+			candidate = candidate.substr(0, dash);
+		}
+		return 'icons/icon-face'; //Prevents crash from missing icon
+	}
+
 	public function changeIcon(char:String, ?allowGPU:Bool = true) {
 		if(this.char != char) {
-			var name:String = 'icons/' + char;
-			if(!Paths.fileExists('images/' + name + '.png', IMAGE)) name = 'icons/icon-' + char; //Older versions of psych engine's support
-			if(!Paths.fileExists('images/' + name + '.png', IMAGE)) name = 'icons/icon-face'; //Prevents crash from missing icon
+			var name:String = findIconImage(char);
 			
 			var graphic = Paths.image(name, allowGPU);
 			var iSize:Float = Math.round(graphic.width / graphic.height);
@@ -40,7 +61,7 @@ class HealthIcon extends FlxSprite
 			animation.play(char);
 			this.char = char;
 
-			if(char.endsWith('-pixel'))
+			if(char.endsWith('-pixel') || name.indexOf('-pixel') > -1)
 				antialiasing = false;
 			else
 				antialiasing = ClientPrefs.data.antialiasing;

@@ -74,6 +74,15 @@ class FreeplayState extends MusicBeatState
 	var noResultsText:FlxText;
 	static var sortModes:Array<String> = ['Name', 'Week', 'Favourites', 'Recent'];
 
+	//The list is split into these groups with a heading above each one, so it stops being
+	//one long scroll.
+	static var freeplayCategories:Array<String> = ['BF', 'BF Erect', 'Pico', 'Pico Erect'];
+	static inline var CATEGORY_GAP:Float = 95;
+	var grpCategories:FlxTypedGroup<Alphabet> = null;
+	var categoryNames:Array<String> = [];
+	var categoryFirst:Array<Int> = [];
+	var songGroups:Array<Int> = [];
+
 	override function create()
 	{
 		//Paths.clearStoredMemory();
@@ -228,7 +237,29 @@ class FreeplayState extends MusicBeatState
 
 	public function addSong(songName:String, weekNum:Int, songCharacter:String, color:Int)
 	{
-		allSongs.push(new SongMetadata(songName, weekNum, songCharacter, color));
+		var song:SongMetadata = new SongMetadata(songName, weekNum, songCharacter, color);
+		song.category = getSongCategory(songName, weekNum, songCharacter);
+		allSongs.push(song);
+	}
+
+	//Which group a song belongs to: its opponent, and whether it's an erect mix
+	static function getSongCategory(songName:String, weekNum:Int, songCharacter:String):String
+	{
+		var week:String = (weekNum >= 0 && weekNum < WeekData.weeksList.length) ? WeekData.weeksList[weekNum].toLowerCase() : '';
+		var lowerName:String = (songName == null) ? '' : songName.toLowerCase();
+		var lowerChar:String = (songCharacter == null) ? '' : songCharacter.toLowerCase();
+
+		var erect:Bool = week.indexOf('erect') > -1 || lowerName.indexOf('erect') > -1;
+		var pico:Bool = lowerChar.indexOf('pico') > -1 || week.indexOf('pico') > -1;
+
+		if (pico) return erect ? 'Pico Erect' : 'Pico';
+		return erect ? 'BF Erect' : 'BF';
+	}
+
+	static function categoryRank(category:String):Int
+	{
+		var index:Int = freeplayCategories.indexOf(category);
+		return index < 0 ? freeplayCategories.length : index;
 	}
 
 	function weekIsLocked(name:String):Bool
@@ -651,6 +682,66 @@ class FreeplayState extends MusicBeatState
 			icon.visible = icon.active = true;
 			_lastVisibles.push(i);
 		}
+
+		updateCategoryRows();
+	}
+
+	function buildCategoryRows():Void
+	{
+		if (grpCategories != null)
+		{
+			for (member in grpCategories.members)
+				if (member != null) member.destroy();
+			grpCategories.clear();
+		}
+		else
+		{
+			grpCategories = new FlxTypedGroup<Alphabet>();
+			add(grpCategories);
+		}
+
+		categoryNames = [];
+		categoryFirst = [];
+		songGroups = [];
+
+		var groupIndex:Int = -1;
+		var lastCategory:String = null;
+		for (i in 0...songs.length)
+		{
+			var category:String = songs[i].category;
+			if (category != lastCategory)
+			{
+				groupIndex++;
+				lastCategory = category;
+				categoryNames.push(category);
+				categoryFirst.push(i);
+			}
+			songGroups.push(groupIndex);
+		}
+
+		for (i in 0...categoryNames.length)
+		{
+			var header:Alphabet = new Alphabet(90, 320, categoryNames[i].toUpperCase(), true);
+			header.setScale(0.62);
+			header.alpha = 0.75;
+			header.startPosition.y = (320 + CATEGORY_GAP * i) - CATEGORY_GAP;
+			grpCategories.add(header);
+		}
+	}
+
+	function updateCategoryRows():Void
+	{
+		if (grpCategories == null) return;
+
+		for (i in 0...grpCategories.members.length)
+		{
+			var header:Alphabet = grpCategories.members[i];
+			if (header == null || i >= categoryFirst.length) continue;
+
+			header.visible = header.active = true;
+			header.x = ((categoryFirst[i] - lerpSelected) * header.distancePerItem.x) + header.startPosition.x;
+			header.y = ((categoryFirst[i] - lerpSelected) * 1.3 * header.distancePerItem.y) + header.startPosition.y;
+		}
 	}
 
 	function getFavouriteKey(song:SongMetadata):String
@@ -706,7 +797,19 @@ class FreeplayState extends MusicBeatState
 				}
 				filtered = favs.concat(rest);
 			default:
-				// "Week" keeps the original week/song order
+				//Group by category first, then keep the original week/song order inside it
+				var order:Array<Int> = [for (i in 0...filtered.length) i];
+				order.sort(function(a:Int, b:Int):Int
+				{
+					var rankA:Int = categoryRank(filtered[a].category);
+					var rankB:Int = categoryRank(filtered[b].category);
+					if (rankA != rankB) return rankA - rankB;
+					if (filtered[a].week != filtered[b].week) return filtered[a].week - filtered[b].week;
+					return a - b;
+				});
+				var ordered:Array<SongMetadata> = [];
+				for (i in order) ordered.push(filtered[i]);
+				filtered = ordered;
 		}
 		songs = filtered;
 	}
@@ -735,10 +838,13 @@ class FreeplayState extends MusicBeatState
 		iconArray = [];
 		_lastVisibles = [];
 
+		buildCategoryRows();
 		for (i in 0...songs.length)
 		{
 			var songText:Alphabet = new Alphabet(90, 320, songs[i].songName, true);
 			songText.targetY = i;
+			//Every group after the first starts lower, to leave room for its heading
+			if (songGroups[i] > 0) songText.startPosition.y = 320 + CATEGORY_GAP * songGroups[i];
 			grpSongs.add(songText);
 
 			songText.scaleX = Math.min(1, 980 / songText.width);
@@ -993,6 +1099,7 @@ class SongMetadata
 {
 	public var songName:String = "";
 	public var week:Int = 0;
+	public var category:String = "BF";
 	public var songCharacter:String = "";
 	public var color:Int = -7179779;
 	public var folder:String = "";

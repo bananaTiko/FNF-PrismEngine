@@ -79,6 +79,10 @@ class BaseOptionsMenu extends MusicBeatSubstate
 			optionText.targetY = i;
 			grpOptions.add(optionText);
 
+			//Long translated names used to push the value (or themselves) off the screen
+			var nameMaxWidth:Float = FlxG.width - (optionsArray[i].type == BOOL ? 380 : 470);
+			if (optionText.width > nameMaxWidth) optionText.setScale(nameMaxWidth / optionText.width);
+
 			if(optionsArray[i].type == BOOL)
 			{
 				var checkbox:CheckboxThingie = new CheckboxThingie(optionText.x - 105, optionText.y, Std.string(optionsArray[i].getValue()) == 'true');

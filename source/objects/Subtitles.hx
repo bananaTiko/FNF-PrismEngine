@@ -3,6 +3,10 @@ package objects;
 import flixel.text.FlxText.FlxTextAlign;
 import flixel.text.FlxText.FlxTextBorderStyle;
 import openfl.utils.Assets;
+#if MODS_ALLOWED
+import sys.FileSystem;
+import sys.io.File;
+#end
 
 typedef SubtitleEntry = {
 	var start:Float;
@@ -77,17 +81,33 @@ class Subtitles extends FlxSpriteGroup
 		if(sound == null) return;
 		if(filePath == null || filePath.length < 1) return;
 
-		var path:String = Paths.srt(filePath);
-		if(!Assets.exists(path))
-		{
-			//Nothing to show for this song, that's fine
-			return;
-		}
+		var raw:String = readText(Paths.srt(filePath));
+		if(raw == null || raw.length < 1) return;
 
-		subtitlesData = parseSRT(Assets.getText(path));
+		subtitlesData = parseSRT(raw);
 		if(subtitlesData.length < 1) return;
 
 		assignedSound = sound;
+	}
+
+	/**
+	 * Reads a text file whether it was embedded as an asset or just copied next to the
+	 * executable. `.srt` isn't in lime's known extensions, so it ends up typed as a binary
+	 * asset and `Assets.getText` alone never finds it; that's why subtitles stayed empty.
+	 */
+	static function readText(path:String):String
+	{
+		#if MODS_ALLOWED
+		if(FileSystem.exists(path)) return File.getContent(path);
+		#end
+
+		try
+		{
+			if(Assets.exists(path)) return Assets.getText(path);
+		}
+		catch(e:Dynamic) {}
+
+		return null;
 	}
 
 	/** Drops the current cue list. Named apart from `FlxSpriteGroup.clear()`, which destroys members. */

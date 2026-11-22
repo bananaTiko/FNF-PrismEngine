@@ -26,6 +26,6 @@
 	"difficulties": "Erect,Nightmare",
 	"startUnlocked": true,
 	"hiddenUntilUnlocked": false,
-	"hideStoryMode": false,
+	"hideStoryMode": true,
 	"hideFreeplay": false
 }

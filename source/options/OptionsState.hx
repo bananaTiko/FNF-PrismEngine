@@ -65,11 +65,16 @@ class OptionsState extends MusicBeatState
 		grpOptions = new FlxTypedGroup<Alphabet>();
 		add(grpOptions);
 
+		//Fit the whole list on screen: at a fixed 92px spacing the last entries of a long
+		//translated list ran past both edges of the screen.
+		var spacing:Float = Math.min(92, (FlxG.height - 150) / options.length);
+		var maxWidth:Float = FlxG.width - 170;
 		for (num => option in options)
 		{
 			var optionText:Alphabet = new Alphabet(0, 0, Language.getPhrase('options_$option', option), true);
+			if (optionText.width > maxWidth) optionText.setScale(maxWidth / optionText.width);
 			optionText.screenCenter();
-			optionText.y += (92 * (num - (options.length / 2))) + 45;
+			optionText.y += (spacing * (num - (options.length / 2))) + 45;
 			grpOptions.add(optionText);
 		}
 

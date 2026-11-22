@@ -24,6 +24,13 @@ class LimoRideErect extends BaseStage
 	var fastCar:BGSprite;
 	var fastCarCanDrive:Bool = true;
 
+	//Same timed pass as the normal limo stage, on its own clock so it never shares the
+	//car's path.
+	var tunnel:BGSprite;
+	var tunnelTimer:FlxTimer;
+	static inline var TUNNEL_SPEED:Float = 1150;
+	static inline var TUNNEL_INTERVAL:Float = 6.5;
+
 	var limoBgMetalPole:BGSprite;
 	var limoBglight:BGSprite;
 	var skipBgPoleOnBeats:Array<Int> = [];
@@ -56,7 +63,8 @@ class LimoRideErect extends BaseStage
 		skyBG.updateHitbox();
 		add(skyBG);
 
-		var tunnel:BGSprite = new BGSprite('limo/erect/limoTunnel', -300, -100, 0.25, 0.25, ['Tunnel'], true);
+		tunnel = new BGSprite('limo/erect/limoTunnel', -300, -100, 0.25, 0.25, ['Tunnel'], true);
+		tunnel.visible = false;
 		add(tunnel);
 
 		star = new BGSprite('limo/erect/shooting_star', 200, 0, 1, 1, ['shooting star']);
@@ -178,6 +186,9 @@ class LimoRideErect extends BaseStage
 	{
 		resetFastCar();
 		addBehindGF(fastCar);
+
+		resetTunnel();
+		scheduleTunnel();
 
 		var limo:BGSprite = new BGSprite('limo/erect/limoDrive', -120, 550, 1, 1, ['Limo stage'], true);
 		addBehindDad(limo);
@@ -371,6 +382,8 @@ class LimoRideErect extends BaseStage
 		{
 			if (carTimer != null)
 				carTimer.active = true;
+			if (tunnelTimer != null)
+				tunnelTimer.active = true;
 		}
 	}
 
@@ -380,6 +393,8 @@ class LimoRideErect extends BaseStage
 		{
 			if (carTimer != null)
 				carTimer.active = false;
+			if (tunnelTimer != null)
+				tunnelTimer.active = false;
 		}
 	}
 
@@ -455,6 +470,40 @@ class LimoRideErect extends BaseStage
 		{
 			resetFastCar();
 			carTimer = null;
+		});
+	}
+
+	function resetTunnel():Void
+	{
+		if (tunnel == null) return;
+		tunnel.velocity.x = 0;
+		tunnel.x = -300;
+		tunnel.y = -100;
+		tunnel.visible = false;
+	}
+
+	function scheduleTunnel():Void
+	{
+		tunnelTimer = new FlxTimer().start(FlxG.random.float(TUNNEL_INTERVAL, TUNNEL_INTERVAL + 2.5), function(tmr:FlxTimer)
+		{
+			slideTunnel();
+		});
+	}
+
+	function slideTunnel():Void
+	{
+		if (tunnel == null) return;
+
+		tunnel.x = FlxG.width + 60;
+		tunnel.y = -100;
+		tunnel.visible = true;
+		tunnel.velocity.x = -TUNNEL_SPEED;
+
+		var crossing:Float = (tunnel.x + Math.max(FlxG.width, tunnel.width) + 60) / TUNNEL_SPEED;
+		tunnelTimer = new FlxTimer().start(crossing, function(tmr:FlxTimer)
+		{
+			resetTunnel();
+			scheduleTunnel();
 		});
 	}
 
