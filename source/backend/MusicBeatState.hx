@@ -1,5 +1,6 @@
 package backend;
 
+import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.FlxSubState;
 import backend.PsychCamera;
@@ -42,6 +43,26 @@ class MusicBeatState extends FlxState
 			FlxG.sound.playMusic(Paths.music('freakyMenu'), volume);
 
 		return FlxG.sound.music != null;
+	}
+
+	/**
+	 * Fills the window with a background sprite the way V-Slice does: scaled uniformly
+	 * up or down until it covers the screen, then centered. Stretching the art to the
+	 * window size squashes it on wide screens, and centering it unscaled leaves bars.
+	 */
+	public static function coverScreen(spr:FlxSprite, ?scaleMultiplier:Float = 1):Void
+	{
+		if (spr == null) return;
+
+		var artWidth:Float = spr.frameWidth;
+		var artHeight:Float = spr.frameHeight;
+		if (artWidth <= 0 || artHeight <= 0) return;
+
+		var cover:Float = Math.max(FlxG.width / artWidth, FlxG.height / artHeight) * scaleMultiplier;
+		spr.scale.set(cover, cover);
+		spr.updateHitbox();
+		spr.x = (FlxG.width - spr.width) * 0.5;
+		spr.y = (FlxG.height - spr.height) * 0.5;
 	}
 
 	override function create() {

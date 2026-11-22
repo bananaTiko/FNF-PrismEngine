@@ -31,7 +31,7 @@ class RecordsState extends MusicBeatState
 		var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.color = 0xFF4a6fa5;
-		bg.screenCenter();
+		MusicBeatState.coverScreen(bg);
 		add(bg);
 
 		var title:Alphabet = new Alphabet(0, 36, Language.getPhrase('records_title', 'Records'), true);

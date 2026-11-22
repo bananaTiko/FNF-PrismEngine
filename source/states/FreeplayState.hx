@@ -221,13 +221,10 @@ class FreeplayState extends MusicBeatState
 
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
-		//Wide windows are wider than the menu art, so scale it up uniformly until it
-		//covers the screen; stretching it to the window would squash the picture.
-		var cover:Float = Math.max(FlxG.width / bg.width, FlxG.height / bg.height);
-		bg.scale.set(cover, cover);
-		bg.updateHitbox();
+		//Wide windows are wider than the menu art, so cover the screen with it
+		//instead of centering it unscaled and leaving bars.
 		add(bg);
-		bg.screenCenter();
+		MusicBeatState.coverScreen(bg);
 
 		createSongCard();
 

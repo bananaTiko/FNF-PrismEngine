@@ -291,6 +291,7 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 			if( #if MODS_ALLOWED FileSystem.exists(Paths.modsImages('menubackgrounds/menu_' + assetName)) || #end
 			Assets.exists(Paths.getPath('images/menubackgrounds/menu_' + assetName + '.png', IMAGE), IMAGE)) {
 				bgSprite.loadGraphic(Paths.image('menubackgrounds/menu_' + assetName));
+				MusicBeatState.coverScreen(bgSprite);
 				isMissing = false;
 			}
 		}
@@ -561,6 +562,7 @@ class WeekEditorFreeplayState extends MusicBeatState implements PsychUIEventHand
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		bg.color = FlxColor.WHITE;
 		add(bg);
+		MusicBeatState.coverScreen(bg);
 
 		grpSongs = new FlxTypedGroup<Alphabet>();
 		add(grpSongs);

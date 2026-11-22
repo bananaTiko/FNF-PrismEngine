@@ -48,7 +48,8 @@ class NoteSplashEditorState extends MusicBeatState
         var bg:FlxSprite = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
         bg.scrollFactor.set();
         bg.color = 0xFF505050;
-        add(bg);      
+        add(bg);
+        MusicBeatState.coverScreen(bg);      
 
         UI = new PsychUIBox(0, 0, 0, 0, ["Animation"]);
         UI.canMove = UI.canMinimize = false;

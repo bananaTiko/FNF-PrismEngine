@@ -56,7 +56,7 @@ class OptionsState extends MusicBeatState
 		bg.color = 0xFFea71fd;
 		bg.updateHitbox();
 
-		bg.screenCenter();
+		backend.MusicBeatState.coverScreen(bg);
 		add(bg);
 
 		grpOptions = new FlxTypedGroup<Alphabet>();
