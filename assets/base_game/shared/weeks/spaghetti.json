@@ -1,0 +1,21 @@
+{
+	"songs": [
+		["Spaghetti", "sserafim-kazuha", [146, 113, 253]]
+	],
+
+	"weekCharacters": [
+		"sserafim-kazuha",
+		"sserafim-sakura",
+		"sserafim-gf"
+	],
+	"weekBackground": "stage",
+
+	"storyName": "Spaghetti",
+	"weekBefore": "weekend1",
+	"weekName": "Spaghetti",
+	"difficulties": "Easy,Normal,Hard",
+	"startUnlocked": true,
+	"hiddenUntilUnlocked": false,
+	"hideStoryMode": true,
+	"hideFreeplay": false
+}

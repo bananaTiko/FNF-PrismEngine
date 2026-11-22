@@ -1,0 +1,45 @@
+{
+	"directory": "sserafim",
+	"defaultZoom": 0.5,
+	"stageUI": "normal",
+	"boyfriend": [
+		1530,
+		970
+	],
+	"girlfriend": [
+		938,
+		392
+	],
+	"opponent": [
+		70,
+		470
+	],
+	"hide_girlfriend": false,
+	"camera_boyfriend": [
+		0,
+		0
+	],
+	"camera_opponent": [
+		0,
+		0
+	],
+	"camera_girlfriend": [
+		0,
+		0
+	],
+	"camera_speed": 1,
+	"preload": {
+		"images/sserafim/bg": 3,
+		"images/sserafim/floor": 3,
+		"images/sserafim/back-tables": 3,
+		"images/sserafim/back-stools": 3,
+		"images/sserafim/truck-stuff": 3,
+		"images/sserafim/truck-door": 3,
+		"images/sserafim/front-stool": 3
+	},
+	"_editorMeta": {
+		"dad": "sserafim-kazuha",
+		"boyfriend": "sserafim-sakura",
+		"gf": "sserafim-gf"
+	}
+}
