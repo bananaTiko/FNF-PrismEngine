@@ -73,9 +73,55 @@ class FreeplayState extends MusicBeatState
 	var noResultsText:FlxText;
 	static var sortModes:Array<String> = ['Name', 'Week', 'Favourites', 'Recent'];
 
+	//Freeplay is split into two mixes; each one shows its own songs plus an erect section.
+	static var mixNames:Array<String> = ['BF MIXES', 'PICO MIXES'];
+	static var mixCategories:Array<Array<String>> = [['BF Mixes', 'BF Erect'], ['Pico Mixes', 'Pico Erect']];
+	static var curMix:Int = 0;
+	var mixTabs:Array<FlxText> = [];
+
 	//The list is split into these groups with a heading above each one, so it stops being
 	//one long scroll.
-	static var freeplayCategories:Array<String> = ['BF', 'BF Erect', 'Pico', 'Pico Erect'];
+	static var freeplayCategories:Array<String> = ['BF Mixes', 'BF Erect', 'Pico Mixes', 'Pico Erect'];
+	static var songOrder:Array<String> = [];
+	static var songCategories:Map<String, String> = [];
+
+	//Every freeplay song, in the order it shows up in its mix and the section it belongs to.
+	static function buildSongTable():Void
+	{
+		if (songOrder.length > 0) return;
+
+		addSongTable('BF Mixes', [
+			'tutorial', 'bopeebo', 'fresh', 'dad battle', 'spookeez', 'south', 'monster',
+			'pico', 'philly nice', 'blammed', 'satin panties', 'high', 'milf',
+			'cocoa', 'eggnog', 'winter horrorland', 'senpai', 'roses', 'thorns',
+			'ugh', 'guns', 'stress', 'spaghetti', 'darnell (bf mix)', 'lit up (bf mix)'
+		]);
+
+		addSongTable('BF Erect', [
+			'bopeebo erect', 'fresh erect', 'dad battle erect', 'spookeez erect', 'south erect',
+			'pico erect', 'philly nice erect', 'blammed erect', 'satin panties erect', 'high erect',
+			'cocoa erect', 'eggnog erect', 'senpai erect', 'roses erect', 'thorns erect', 'ugh erect'
+		]);
+
+		addSongTable('Pico Mixes', [
+			'bopeebo (pico mix)', 'fresh (pico mix)', 'dad battle (pico mix)', 'spookeez (pico mix)',
+			'south (pico mix)', 'pico (pico mix)', 'philly nice (pico mix)', 'blammed (pico mix)',
+			'cocoa (pico mix)', 'eggnog (pico mix)', 'senpai (pico mix)', 'roses (pico mix)',
+			'ugh (pico mix)', 'guns (pico mix)', 'stress (pico mix)',
+			'darnell', 'lit up', '2hot', 'blazin'
+		]);
+
+		addSongTable('Pico Erect', ['darnell erect']);
+	}
+
+	static function addSongTable(category:String, names:Array<String>):Void
+	{
+		for (name in names)
+		{
+			songOrder.push(name);
+			songCategories.set(name, category);
+		}
+	}
 	static inline var CATEGORY_GAP:Float = 95;
 	var grpCategories:FlxTypedGroup<Alphabet> = null;
 	var categoryNames:Array<String> = [];
@@ -89,6 +135,7 @@ class FreeplayState extends MusicBeatState
 		
 		persistentUpdate = true;
 		PlayState.isStoryMode = false;
+		buildSongTable();
 		WeekData.reloadWeekFiles(false);
 
 		#if DISCORD_ALLOWED
@@ -215,6 +262,18 @@ class FreeplayState extends MusicBeatState
 		favText.scrollFactor.set();
 		add(favText);
 
+		//The two mixes sit at the top of the screen; the song list below follows the pick
+		for (i in 0...mixNames.length)
+		{
+			var tab:FlxText = new FlxText(0, 12, 0, mixNames[i], 28);
+			tab.setFormat(Paths.font("vcr.ttf"), 28, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			tab.borderSize = 2;
+			tab.scrollFactor.set();
+			add(tab);
+			mixTabs.push(tab);
+		}
+		updateMixTabs();
+
 		noResultsText = new FlxText(0, 300, FlxG.width, Language.getPhrase('freeplay_no_results', 'No songs found.'), 32);
 		noResultsText.setFormat(Paths.font("vcr.ttf"), 32, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 		noResultsText.scrollFactor.set();
@@ -241,24 +300,33 @@ class FreeplayState extends MusicBeatState
 		allSongs.push(song);
 	}
 
-	//Which group a song belongs to: its opponent, and whether it's an erect mix
+	//Which group a song belongs to. The big table above wins; anything missing from it falls
+	//back to its opponent and whether it's an erect mix.
 	static function getSongCategory(songName:String, weekNum:Int, songCharacter:String):String
 	{
-		var week:String = (weekNum >= 0 && weekNum < WeekData.weeksList.length) ? WeekData.weeksList[weekNum].toLowerCase() : '';
 		var lowerName:String = (songName == null) ? '' : songName.toLowerCase();
+		if (songCategories.exists(lowerName)) return songCategories.get(lowerName);
+
+		var week:String = (weekNum >= 0 && weekNum < WeekData.weeksList.length) ? WeekData.weeksList[weekNum].toLowerCase() : '';
 		var lowerChar:String = (songCharacter == null) ? '' : songCharacter.toLowerCase();
 
 		var erect:Bool = week.indexOf('erect') > -1 || lowerName.indexOf('erect') > -1;
 		var pico:Bool = lowerChar.indexOf('pico') > -1 || week.indexOf('pico') > -1;
 
-		if (pico) return erect ? 'Pico Erect' : 'Pico';
-		return erect ? 'BF Erect' : 'BF';
+		if (pico) return erect ? 'Pico Erect' : 'Pico Mixes';
+		return erect ? 'BF Erect' : 'BF Mixes';
 	}
 
 	static function categoryRank(category:String):Int
 	{
 		var index:Int = freeplayCategories.indexOf(category);
 		return index < 0 ? freeplayCategories.length : index;
+	}
+
+	static function songOrderIndex(songName:String):Int
+	{
+		var index:Int = (songName == null) ? -1 : songOrder.indexOf(songName.toLowerCase());
+		return index < 0 ? songOrder.length : index;
 	}
 
 	function weekIsLocked(name:String):Bool
@@ -537,6 +605,19 @@ class FreeplayState extends MusicBeatState
 				toggleFavourite();
 			if (FlxG.keys.justPressed.R && songs.length > 1)
 				randomSong();
+			if (FlxG.keys.justPressed.Q)
+				switchMix(-1);
+			if (FlxG.keys.justPressed.E)
+				switchMix(1);
+			if (FlxG.mouse.justPressed)
+			{
+				for (i in 0...mixTabs.length)
+				{
+					if (!FlxG.mouse.overlaps(mixTabs[i])) continue;
+					setMix(i);
+					break;
+				}
+			}
 		}
 
 		updateTexts(elapsed);
@@ -752,9 +833,11 @@ class FreeplayState extends MusicBeatState
 	function applyFilterAndSort():Void
 	{
 		var query:String = (searchBox != null && searchBox.text != null) ? searchBox.text.trim().toLowerCase() : '';
+		var allowed:Array<String> = mixCategories[curMix];
 		var filtered:Array<SongMetadata> = [];
 		for (song in allSongs)
 		{
+			if (!allowed.contains(song.category)) continue;
 			if (query.length > 0 && !song.songName.toLowerCase().contains(query))
 				continue;
 			filtered.push(song);
@@ -803,6 +886,11 @@ class FreeplayState extends MusicBeatState
 					var rankA:Int = categoryRank(filtered[a].category);
 					var rankB:Int = categoryRank(filtered[b].category);
 					if (rankA != rankB) return rankA - rankB;
+
+					var posA:Int = songOrderIndex(filtered[a].songName);
+					var posB:Int = songOrderIndex(filtered[b].songName);
+					if (posA != posB) return posA - posB;
+
 					if (filtered[a].week != filtered[b].week) return filtered[a].week - filtered[b].week;
 					return a - b;
 				});
@@ -916,6 +1004,36 @@ class FreeplayState extends MusicBeatState
 		ClientPrefs.saveSettings();
 		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
 		refreshList();
+	}
+
+	function switchMix(dir:Int):Void
+		setMix(FlxMath.wrap(curMix + dir, 0, mixNames.length - 1));
+
+	function setMix(index:Int):Void
+	{
+		if (index == curMix || index < 0 || index >= mixNames.length) return;
+
+		curMix = index;
+		stopSongPreview();
+		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+		updateMixTabs();
+		refreshList();
+	}
+
+	function updateMixTabs():Void
+	{
+		var gap:Float = 40;
+		var total:Float = gap * (mixTabs.length - 1);
+		for (tab in mixTabs) total += tab.width;
+
+		var x:Float = (FlxG.width - total) / 2;
+		for (i in 0...mixTabs.length)
+		{
+			var tab:FlxText = mixTabs[i];
+			tab.x = x;
+			tab.alpha = (i == curMix) ? 1 : 0.45;
+			x += tab.width + gap;
+		}
 	}
 
 	function toggleFavourite():Void
@@ -1048,7 +1166,8 @@ class FreeplayState extends MusicBeatState
 	{
 		if (sortText != null)
 			sortText.text = Language.getPhrase('freeplay_sort', 'Sort: {1} (TAB)', [ClientPrefs.data.freeplaySort])
-				+ ' | ' + Language.getPhrase('freeplay_random_hint', 'Random (R)');
+				+ ' | ' + Language.getPhrase('freeplay_random_hint', 'Random (R)')
+				+ ' | ' + Language.getPhrase('freeplay_mix_hint', 'Mix (Q/E)');
 
 		if (favText != null)
 		{
@@ -1097,7 +1216,7 @@ class SongMetadata
 {
 	public var songName:String = "";
 	public var week:Int = 0;
-	public var category:String = "BF";
+	public var category:String = "BF Mixes";
 	public var songCharacter:String = "";
 	public var color:Int = -7179779;
 	public var folder:String = "";
