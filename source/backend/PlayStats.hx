@@ -52,6 +52,19 @@ class PlayStats
 		save();
 	}
 
+	/** Wipes every lifetime stat and the recent-song list. */
+	public static function reset():Void
+	{
+		// loaded stays true so the next load() does not pull the old numbers back off disk
+		loaded = true;
+		songsPlayed = 0;
+		notesHit = 0;
+		notesMissed = 0;
+		secondsPlayed = 0;
+		recentKeys = [];
+		save();
+	}
+
 	public static function totalNotes():Int
 		return notesHit + notesMissed;
 

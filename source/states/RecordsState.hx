@@ -11,6 +11,14 @@ import backend.PlayStats;
 class RecordsState extends MusicBeatState
 {
 	inline static var MAX_ENTRIES:Int = 8;
+	/** How long "press RESET again" stays up before the key goes back to being harmless. */
+	inline static var CLEAR_CONFIRM_TIME:Float = 3;
+
+	var statsText:FlxText;
+	var scoresText:FlxText;
+	var hintText:FlxText;
+	var hintTimer:Float = 0;
+	var clearArmed:Bool = false;
 
 	override function create():Void
 	{
@@ -30,20 +38,20 @@ class RecordsState extends MusicBeatState
 		title.screenCenter(X);
 		add(title);
 
-		var stats:FlxText = new FlxText(0, 140, FlxG.width, buildStats(), 24);
-		stats.setFormat(Paths.font('vcr.ttf'), 24, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		stats.borderSize = 2;
-		add(stats);
+		statsText = new FlxText(0, 140, FlxG.width, buildStats(), 24);
+		statsText.setFormat(Paths.font('vcr.ttf'), 24, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		statsText.borderSize = 2;
+		add(statsText);
 
-		var scores:FlxText = new FlxText(0, stats.y + stats.height + 30, FlxG.width, buildTopScores(), 20);
-		scores.setFormat(Paths.font('vcr.ttf'), 20, 0xFFFFE9A6, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		scores.borderSize = 2;
-		add(scores);
+		scoresText = new FlxText(0, statsText.y + statsText.height + 30, FlxG.width, buildTopScores(), 20);
+		scoresText.setFormat(Paths.font('vcr.ttf'), 20, 0xFFFFE9A6, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		scoresText.borderSize = 2;
+		add(scoresText);
 
-		var hint:FlxText = new FlxText(0, FlxG.height - 44, FlxG.width, Language.getPhrase('records_back', 'Press BACK to return'), 18);
-		hint.setFormat(Paths.font('vcr.ttf'), 18, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		hint.borderSize = 1;
-		add(hint);
+		hintText = new FlxText(0, FlxG.height - 44, FlxG.width, defaultHint(), 18);
+		hintText.setFormat(Paths.font('vcr.ttf'), 18, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		hintText.borderSize = 1;
+		add(hintText);
 
 		super.create();
 	}
@@ -109,9 +117,63 @@ class RecordsState extends MusicBeatState
 		return name + ' (' + Difficulty.getString(diff) + ')';
 	}
 
+	static function defaultHint():String
+		return Language.getPhrase('records_hint', 'BACK: Return    RESET: Clear records');
+
+	function setHint(text:String, color:Int):Void
+	{
+		hintText.text = text;
+		hintText.color = color;
+	}
+
+	function resetHint():Void
+	{
+		clearArmed = false;
+		hintTimer = 0;
+		setHint(defaultHint(), FlxColor.WHITE);
+	}
+
+	/** Wipes the lifetime stats and every saved song score, then redraws both lists. */
+	function clearRecords():Void
+	{
+		PlayStats.reset();
+		Highscore.resetAll();
+
+		statsText.text = buildStats();
+		scoresText.text = buildTopScores();
+		scoresText.y = statsText.y + statsText.height + 30;
+
+		FlxG.sound.play(Paths.sound('confirmMenu'));
+		clearArmed = false;
+		hintTimer = CLEAR_CONFIRM_TIME;
+		setHint(Language.getPhrase('records_cleared', 'Records cleared'), 0xFF77FF77);
+	}
+
 	override function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+
+		if (hintTimer > 0)
+		{
+			hintTimer -= elapsed;
+			if (hintTimer <= 0) resetHint();
+		}
+
+		if (controls.RESET)
+		{
+			// Two presses, so a stray R does not throw away every record.
+			if (clearArmed)
+			{
+				clearRecords();
+				return;
+			}
+
+			clearArmed = true;
+			hintTimer = CLEAR_CONFIRM_TIME;
+			setHint(Language.getPhrase('records_clear_confirm', 'Press RESET again to clear every record'), 0xFFFF5555);
+			FlxG.sound.play(Paths.sound('scrollMenu'));
+			return;
+		}
 
 		if (controls.BACK || controls.ACCEPT)
 		{

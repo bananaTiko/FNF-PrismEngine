@@ -105,6 +105,16 @@ class Main extends Sprite
 		FlxG.save.bind('prism', CoolUtil.getSavePath());
 		Highscore.load();
 
+		#if (cpp && windows)
+		// The title bar is painted by Windows, not by us, so it has to be recoloured before the
+		// game draws anything: doing it once FlxGame existed showed the default light bar for the
+		// first frames and then Windows either animated or redrew its way to dark, which is the
+		// fade on boot. ClientPrefs only loads on the title screen, so read the saved value here.
+		if(FlxG.save.data.windowColorMode != null)
+			ClientPrefs.data.windowColorMode = FlxG.save.data.windowColorMode;
+		applyWindowColorMode();
+		#end
+
 		#if CHECK_FOR_UPDATES
 		if(FlxG.save.data.checkForUpdates == null || FlxG.save.data.checkForUpdates)
 			CoolUtil.checkForUpdates();
@@ -176,13 +186,6 @@ class Main extends Sprite
 		// Opt-in desktop widescreen scaling. FlxGame has to exist first, it measures the window.
 		#if desktop
 		backend.Widescreen.refresh();
-		#end
-
-		#if (cpp && windows)
-		// ClientPrefs only loads on the title screen, the window exists before that.
-		if(FlxG.save.data.windowColorMode != null)
-			ClientPrefs.data.windowColorMode = FlxG.save.data.windowColorMode;
-		applyWindowColorMode();
 		#end
 
 		#if !mobile

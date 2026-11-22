@@ -6,6 +6,16 @@ class Highscore
 	public static var songScores:Map<String, Int> = new Map<String, Int>();
 	public static var songRating:Map<String, Float> = new Map<String, Float>();
 
+	/** Wipes every saved song score and accuracy rating, for Records > clear. */
+	public static function resetAll():Void
+	{
+		songScores.clear();
+		songRating.clear();
+		FlxG.save.data.songScores = songScores;
+		FlxG.save.data.songRating = songRating;
+		FlxG.save.flush();
+	}
+
 	public static function resetSong(song:String, diff:Int = 0):Void
 	{
 		var daSong:String = formatSong(song, diff);
