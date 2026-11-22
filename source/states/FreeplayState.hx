@@ -3,6 +3,7 @@ package states;
 import backend.WeekData;
 import backend.StreamedSound;
 import backend.Highscore;
+import backend.PlayStats;
 import backend.Song;
 
 import objects.HealthIcon;
@@ -53,6 +54,17 @@ class FreeplayState extends MusicBeatState
 
 	var player:MusicPlayer;
 
+	//Mic'd Up-style spinning disc, with a Plus-style song card in front of it
+	var disc:FlxSprite;
+	static var discAnimations:Array<String> = ['dad', 'gf', 'mom', 'monster', 'parents-christmas', 'pico', 'senpai', 'spirit', 'spooky'];
+	var cardSlideTargets:Array<FlxSprite> = [];
+	var cardSlideBaseX:Array<Float> = [];
+	var lastCardSongKey:String = '';
+	var cardBG:FlxSprite;
+	var cardTitle:FlxText;
+	var cardInfo:FlxText;
+	var cardFav:FlxText;
+
 	//Full song list, plus the filtered/sorted view that's actually drawn
 	var allSongs:Array<SongMetadata> = [];
 	var searchBox:PsychUIInputText;
@@ -60,7 +72,7 @@ class FreeplayState extends MusicBeatState
 	var sortText:FlxText;
 	var favText:FlxText;
 	var noResultsText:FlxText;
-	static var sortModes:Array<String> = ['Name', 'Week', 'Favourites'];
+	static var sortModes:Array<String> = ['Name', 'Week', 'Favourites', 'Recent'];
 
 	override function create()
 	{
@@ -118,6 +130,8 @@ class FreeplayState extends MusicBeatState
 		bg.antialiasing = ClientPrefs.data.antialiasing;
 		add(bg);
 		bg.screenCenter();
+
+		createSongCard();
 
 		applyFilterAndSort();
 		buildSongObjects();
@@ -491,6 +505,8 @@ class FreeplayState extends MusicBeatState
 				cycleSort();
 			if (FlxG.keys.justPressed.F && songs.length > 0)
 				toggleFavourite();
+			if (FlxG.keys.justPressed.R && songs.length > 1)
+				randomSong();
 		}
 
 		updateTexts(elapsed);
@@ -542,6 +558,7 @@ class FreeplayState extends MusicBeatState
 		positionHighscore();
 		missingText.visible = false;
 		missingTextBG.visible = false;
+		updateSongCard();
 	}
 
 	function changeSelection(change:Int = 0, playSound:Bool = true)
@@ -590,6 +607,7 @@ class FreeplayState extends MusicBeatState
 
 		changeDiff();
 		_updateSongLastDifficulty();
+		updateSongCard();
 		updateHint();
 	}
 
@@ -620,8 +638,8 @@ class FreeplayState extends MusicBeatState
 		}
 		_lastVisibles = [];
 
-		var min:Int = Math.round(Math.max(0, Math.min(songs.length, lerpSelected - _drawDistance)));
-		var max:Int = Math.round(Math.max(0, Math.min(songs.length, lerpSelected + _drawDistance)));
+		var min:Int = Math.round(MathUtils.clamp(lerpSelected - _drawDistance, 0, songs.length));
+		var max:Int = Math.round(MathUtils.clamp(lerpSelected + _drawDistance, 0, songs.length));
 		for (i in min...max)
 		{
 			var item:Alphabet = grpSongs.members[i];
@@ -662,6 +680,22 @@ class FreeplayState extends MusicBeatState
 					if (name1 == name2) return 0;
 					return name1 < name2 ? -1 : 1;
 				});
+			case 'Recent':
+				var recentKeys:Array<String> = PlayStats.getRecentKeys();
+				var played:Array<SongMetadata> = [];
+				var unplayed:Array<SongMetadata> = [];
+				for (song in filtered)
+				{
+					if (recentKeys.contains(Paths.formatToSongPath(song.songName) + '|' + curDifficulty)) played.push(song);
+					else unplayed.push(song);
+				}
+				played.sort(function(a:SongMetadata, b:SongMetadata):Int
+				{
+					var indexA:Int = recentKeys.indexOf(Paths.formatToSongPath(a.songName) + '|' + curDifficulty);
+					var indexB:Int = recentKeys.indexOf(Paths.formatToSongPath(b.songName) + '|' + curDifficulty);
+					return indexA - indexB;
+				});
+				filtered = played.concat(unplayed);
 			case 'Favourites':
 				var favs:Array<SongMetadata> = [];
 				var rest:Array<SongMetadata> = [];
@@ -759,6 +793,16 @@ class FreeplayState extends MusicBeatState
 		refreshList();
 	}
 
+	function randomSong():Void
+	{
+		var pick:Int = curSelected;
+		while(pick == curSelected) pick = FlxG.random.int(0, songs.length - 1);
+
+		curSelected = pick;
+		changeSelection(0, false);
+		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+	}
+
 	function cycleSort():Void
 	{
 		var index:Int = sortModes.indexOf(ClientPrefs.data.freeplaySort) + 1;
@@ -781,16 +825,126 @@ class FreeplayState extends MusicBeatState
 
 		ClientPrefs.saveSettings();
 		FlxG.sound.play(Paths.sound('scrollMenu'), 0.4);
+		updateSongCard();
 		updateHint();
 
 		if (ClientPrefs.data.freeplaySort == 'Favourites')
 			refreshList();
 	}
 
+	function createSongCard():Void
+	{
+		var cardW:Int = 300;
+		var cardH:Int = 180;
+		var cardX:Float = FlxG.width - cardW - 40;
+		var cardY:Float = 280;
+		var centerX:Float = cardX + cardW / 2;
+		var centerY:Float = cardY + cardH / 2;
+
+		//Disc art from FNF: Mic'd Up (Verwex), 'Freeplay_Discs' sparrow sheet
+		disc = new FlxSprite();
+		disc.frames = Paths.getSparrowAtlas('Freeplay_Discs');
+		for (name in discAnimations)
+			disc.animation.addByPrefix(name, name, 24);
+		disc.animation.play('dad');
+		disc.setGraphicSize(330, 330);
+		disc.updateHitbox();
+		disc.antialiasing = ClientPrefs.data.antialiasing;
+		disc.setPosition(centerX - disc.width / 2, centerY - disc.height / 2);
+		add(disc);
+
+		cardBG = new FlxSprite(cardX, cardY).makeGraphic(cardW, cardH, 0xFF000000);
+		cardBG.alpha = 0.6;
+		add(cardBG);
+
+		cardTitle = new FlxText(cardX + 14, cardY + 10, cardW - 28, '', 24);
+		cardTitle.setFormat(Paths.font('vcr.ttf'), 24, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		cardTitle.borderSize = 2;
+		cardTitle.wordWrap = true;
+		add(cardTitle);
+
+		cardInfo = new FlxText(cardX + 14, cardY + 64, cardW - 28, '', 16);
+		cardInfo.setFormat(Paths.font('vcr.ttf'), 16, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		cardInfo.borderSize = 1;
+		add(cardInfo);
+
+		cardFav = new FlxText(cardX + 14, cardY + cardH - 30, cardW - 28, '', 16);
+		cardFav.setFormat(Paths.font('vcr.ttf'), 16, FlxColor.WHITE, LEFT);
+		add(cardFav);
+
+		for (spr in [cardBG, cardTitle, cardInfo, cardFav])
+		{
+			cardSlideTargets.push(spr);
+			cardSlideBaseX.push(spr.x);
+		}
+	}
+
+	function animateCardChange():Void
+	{
+		if(disc != null)
+		{
+			FlxTween.cancelTweensOf(disc);
+			disc.angle = 0;
+			FlxTween.tween(disc, {angle: -360}, 0.45, {ease: FlxEase.quartOut, onComplete: function(_) {
+				if(disc != null) disc.angle = 0;
+			}});
+		}
+
+		for (i in 0...cardSlideTargets.length)
+		{
+			var spr:FlxSprite = cardSlideTargets[i];
+			if(spr == null) continue;
+
+			FlxTween.cancelTweensOf(spr);
+			spr.x = cardSlideBaseX[i] + 20;
+			FlxTween.tween(spr, {x: cardSlideBaseX[i]}, 0.28, {ease: FlxEase.quartOut});
+		}
+	}
+
+	function updateSongCard():Void
+	{
+		if(cardBG == null) return;
+
+		var hasSong:Bool = songs.length > 0 && curSelected >= 0 && curSelected < songs.length;
+		disc.visible = cardBG.visible = cardTitle.visible = cardInfo.visible = cardFav.visible = hasSong;
+		if(!hasSong) return;
+
+		var song:SongMetadata = songs[curSelected];
+		cardTitle.text = song.songName;
+
+		var weekName:String = (song.week >= 0 && song.week < WeekData.weeksList.length) ? WeekData.weeksList[song.week] : '?';
+		var scoreKey:String = Highscore.formatSong(song.songName, curDifficulty);
+		var bestScore:Int = Highscore.songScores.exists(scoreKey) ? Highscore.songScores.get(scoreKey) : 0;
+		var bestRating:Float = Highscore.songRating.exists(scoreKey) ? Highscore.songRating.get(scoreKey) : 0;
+		var bestText:String = bestScore > 0
+			? Language.getPhrase('freeplay_card_best', 'Best: {1} ({2}%)', [bestScore, CoolUtil.floorDecimal(bestRating * 100, 1)])
+			: Language.getPhrase('freeplay_card_best_none', 'Best: not played yet');
+
+		cardInfo.text = Language.getPhrase('freeplay_card_week', 'Week: {1}', [weekName])
+			+ '\n' + Language.getPhrase('freeplay_card_character', 'Character: {1}', [song.songCharacter])
+			+ '\n' + Language.getPhrase('freeplay_card_difficulty', 'Difficulty: {1}', [Difficulty.getString(curDifficulty)])
+			+ '\n' + bestText;
+
+		cardFav.text = isFavourite(song)
+			? Language.getPhrase('freeplay_fav_yes', 'Favourite: YES (F to remove)')
+			: Language.getPhrase('freeplay_fav_no', 'Favourite: NO (F to add)');
+
+		var animName:String = discAnimations.contains(song.songCharacter) ? song.songCharacter : 'dad';
+		if(disc.animation.name != animName) disc.animation.play(animName);
+
+		var cardKey:String = song.folder + ':' + song.songName;
+		if(lastCardSongKey != cardKey)
+		{
+			if(lastCardSongKey.length > 0) animateCardChange();
+			lastCardSongKey = cardKey;
+		}
+	}
+
 	function updateHint():Void
 	{
 		if (sortText != null)
-			sortText.text = Language.getPhrase('freeplay_sort', 'Sort: {1} (TAB)', [ClientPrefs.data.freeplaySort]);
+			sortText.text = Language.getPhrase('freeplay_sort', 'Sort: {1} (TAB)', [ClientPrefs.data.freeplaySort])
+				+ ' | ' + Language.getPhrase('freeplay_random_hint', 'Random (R)');
 
 		if (favText != null)
 		{
