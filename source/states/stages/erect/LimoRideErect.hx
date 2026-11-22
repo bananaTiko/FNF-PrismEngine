@@ -191,7 +191,8 @@ class LimoRideErect extends BaseStage
 		scheduleTunnel();
 
 		var limo:BGSprite = new BGSprite('limo/erect/limoDrive', -120, 550, 1, 1, ['Limo stage'], true);
-		addBehindDad(limo);
+		//GF dances behind the car, so the body and speaker cover her legs
+		game.insert(game.members.indexOf(game.gfGroup) + 1, limo);
 		addBehindGF(mist4);
 		addBehindGF(mist3);
 

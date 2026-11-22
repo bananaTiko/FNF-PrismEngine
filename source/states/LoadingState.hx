@@ -192,14 +192,30 @@ class LoadingState extends MusicBeatState
 	}
 
 	var transitioning:Bool = false;
+
+	//Safety valve: a preload worker that dies (a missing or unreadable asset) never reports
+	//back, so this screen used to wait for it forever. After this long the song starts with
+	//whatever did load instead.
+	static inline var MAX_LOAD_SECONDS:Float = 20;
+	var loadElapsed:Float = 0;
+
 	override function update(elapsed:Float)
 	{
 		super.update(elapsed);
 		if (dontUpdate) return;
 
+		loadElapsed += elapsed;
+
 		if (!transitioning)
 		{
-			if (!finishedLoading && checkLoaded())
+			var timedOut:Bool = loadElapsed > MAX_LOAD_SECONDS;
+			if (timedOut && !finishedLoading)
+			{
+				trace('Loading took longer than ' + MAX_LOAD_SECONDS + 's, starting without the rest of the assets');
+				initialThreadCompleted = true;
+			}
+
+			if (!finishedLoading && (timedOut || checkLoaded()))
 			{
 				if(stateChangeDelay <= 0)
 				{
@@ -209,7 +225,7 @@ class LoadingState extends MusicBeatState
 				}
 				else stateChangeDelay = Math.max(0, stateChangeDelay - elapsed);
 			}
-			intendedPercent = loaded / loadMax;
+			intendedPercent = (loadMax > 0) ? Math.min(1, loaded / loadMax) : 1;
 		}
 
 		if (curPercent != intendedPercent)
@@ -383,6 +399,9 @@ class LoadingState extends MusicBeatState
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
 
+		//Same safety valve as the loading screen: never sit here forever waiting on a
+		//preload thread that won't come back.
+		var deadline:Float = Sys.time() + 20;
 		while(true)
 		{
 			if(checkLoaded())
@@ -390,7 +409,13 @@ class LoadingState extends MusicBeatState
 				_loaded();
 				break;
 			}
-			else Sys.sleep(0.001);
+			if(Sys.time() > deadline)
+			{
+				trace('Loading timed out, starting without the rest of the assets');
+				_loaded();
+				break;
+			}
+			Sys.sleep(0.001);
 		}
 		return target;
 	}

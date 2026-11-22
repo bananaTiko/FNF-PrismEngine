@@ -121,20 +121,14 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		option.decimals = 1;
 		addOption(option);
 
-		var option:Option = new Option('Judgement Counters',
-			'If checked, shows how many Sick/Good/Bad/Shit/Miss you got under the score.',
-			'showJudgements',
-			BOOL);
-		addOption(option);
-
 		var option:Option = new Option('NPS Counter',
-			'If checked, shows your notes per second in the top left corner.',
+			'If checked, shows your notes per second under the score.',
 			'showNPS',
 			BOOL);
 		addOption(option);
 
 		var option:Option = new Option('Hit Timing Readout',
-			'If checked, shows how early/late your last note was in the top right corner.',
+			'If checked, shows how early/late your last note was under the judgement.',
 			'showHitTiming',
 			BOOL);
 		addOption(option);

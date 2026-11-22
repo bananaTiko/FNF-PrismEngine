@@ -229,9 +229,7 @@ class PlayState extends MusicBeatState
 	public var songMisses:Int = 0;
 	public var maxCombo:Int = 0;
 	public var scoreTxt:FlxText;
-	public var judgementTxt:FlxText;
 	public var npsTxt:FlxText;
-	public var hitTimingTxt:FlxText;
 
 	/** Signed offset of the last hit note, in ms (negative = early). Used by the hit timing readout. */
 	public var lastHitDiff:Float = 0;
@@ -631,40 +629,17 @@ class PlayState extends MusicBeatState
 		scoreTxt.y += ClientPrefs.data.hudScoreY;
 
 		// Optional HUD extras, inspired by Troll Engine's HUD customization options.
-		if (ClientPrefs.data.showJudgements)
-		{
-			judgementTxt = new FlxText(0, scoreTxt.y + 24, FlxG.width, "", 18);
-			judgementTxt.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-			judgementTxt.scrollFactor.set();
-			judgementTxt.borderSize = 1.25;
-			judgementTxt.visible = !ClientPrefs.data.hideHud;
-			judgementTxt.x += ClientPrefs.data.hudJudgementX;
-			judgementTxt.y += ClientPrefs.data.hudJudgementY;
-			uiGroup.add(judgementTxt);
-		}
-
+		// The NPS counter lives in the HUD text column, right under the score line.
 		if (ClientPrefs.data.showNPS)
 		{
-			npsTxt = new FlxText(10, 10, 160, "", 18);
-			npsTxt.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, LEFT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			npsTxt = new FlxText(0, scoreTxt.y + 22, FlxG.width, "", 18);
+			npsTxt.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
 			npsTxt.scrollFactor.set();
 			npsTxt.borderSize = 1.25;
 			npsTxt.visible = !ClientPrefs.data.hideHud;
 			npsTxt.x += ClientPrefs.data.hudNpsX;
 			npsTxt.y += ClientPrefs.data.hudNpsY;
 			uiGroup.add(npsTxt);
-		}
-
-		if (ClientPrefs.data.showHitTiming)
-		{
-			hitTimingTxt = new FlxText(FlxG.width - 130, 10, 120, "", 18);
-			hitTimingTxt.setFormat(Paths.font("vcr.ttf"), 18, FlxColor.WHITE, RIGHT, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-			hitTimingTxt.scrollFactor.set();
-			hitTimingTxt.borderSize = 1.25;
-			hitTimingTxt.visible = !ClientPrefs.data.hideHud;
-			hitTimingTxt.x += ClientPrefs.data.hudTimingX;
-			hitTimingTxt.y += ClientPrefs.data.hudTimingY;
-			uiGroup.add(hitTimingTxt);
 		}
 
 		debugOverlay = new FlxText(10, FlxG.height * 0.25, 560, '', 14);
@@ -1357,28 +1332,19 @@ class PlayState extends MusicBeatState
 		updateHudStats();
 	}
 
-	/** Refreshes the optional judgement counters, NPS and hit timing readouts. */
+	/** Refreshes the optional NPS readout. */
 	public function updateHudStats():Void
 	{
-		if (judgementTxt != null)
-		{
-			judgementTxt.text = Language.getPhrase('hud_judgements', 'SICK: {1} | GOOD: {2} | BAD: {3} | SHIT: {4} | MISS: {5}',
-				[ratingsData[0].hits, ratingsData[1].hits, ratingsData[2].hits, ratingsData[3].hits, songMisses]);
-		}
-
 		if (npsTxt != null)
-			npsTxt.text = Language.getPhrase('hud_nps', 'NPS: {1}', [CoolUtil.floorDecimal(currentNPS, 1)]);
-
-		if (hitTimingTxt != null && totalPlayed > 0)
 		{
-			var rounded:Int = Math.round(lastHitDiff);
-			hitTimingTxt.text = Language.getPhrase('hud_hit_ms', '{1}ms', [(rounded > 0 ? '+' : '') + rounded]);
-			hitTimingTxt.color = switch (noteHitRating()) {
-				case 'sick': 0xFF66FF99;
-				case 'good': 0xFF99CCFF;
-				case 'bad': 0xFFFFCC66;
-				default: 0xFFFF8888;
-			}
+			//Only the hits from the last second count, so the number drops back down when
+			//the section stops feeding notes.
+			var cutoff:Float = Conductor.songPosition - 1000;
+			while (npsHitTimes.length > 0 && npsHitTimes[0] < cutoff)
+				npsHitTimes.shift();
+
+			currentNPS = npsHitTimes.length;
+			npsTxt.text = Language.getPhrase('hud_nps', 'NPS: {1}', [currentNPS]);
 		}
 	}
 
@@ -3135,6 +3101,36 @@ class PlayState extends MusicBeatState
 		comboSpr.updateHitbox();
 		rating.updateHitbox();
 
+		//Hit time rides just under the rating, moving with it
+		if (ClientPrefs.data.showHitTiming && !ClientPrefs.data.hideHud)
+		{
+			var rounded:Int = Math.round(lastHitDiff);
+			var timingSpr:FlxText = new FlxText(0, 0, 0, Language.getPhrase('hud_hit_ms', '{1}ms', [(rounded > 0 ? '+' : '') + rounded]), 20);
+			timingSpr.setFormat(Paths.font('vcr.ttf'), 20, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+			timingSpr.borderSize = 1.25;
+			timingSpr.antialiasing = antialias;
+			timingSpr.scrollFactor.set();
+			timingSpr.color = switch (daRating.name) {
+				case 'sick': 0xFF66FF99;
+				case 'good': 0xFF99CCFF;
+				case 'bad': 0xFFFFCC66;
+				default: 0xFFFF8888;
+			}
+			timingSpr.x = rating.x + (rating.width - timingSpr.width) * 0.5;
+			timingSpr.y = rating.y + rating.height + 4;
+			timingSpr.acceleration.y = rating.acceleration.y;
+			timingSpr.velocity.y = rating.velocity.y;
+			timingSpr.velocity.x = rating.velocity.x;
+			comboGroup.add(timingSpr);
+			FlxTween.tween(timingSpr, {alpha: 0}, 0.2 / playbackRate, {
+				onComplete: function(tween:FlxTween)
+				{
+					timingSpr.destroy();
+				},
+				startDelay: Conductor.crochet * 0.001 / playbackRate
+			});
+		}
+
 		var daLoop:Int = 0;
 		var xThing:Float = 0;
 		if (showCombo)
@@ -3597,9 +3593,6 @@ class PlayState extends MusicBeatState
 				if(combo > 9999) combo = 9999;
 				if(combo > maxCombo) maxCombo = combo;
 				popUpScore(note);
-			// Killer judgements: a hit this bad ends the run, like gbPsych's opt-in strict mode.
-			if (ClientPrefs.data.killerJudgements && !cpuControlled && note.rating == 'shit')
-				health = 0;
 			}
 			var gainHealth:Bool = true; // prevent health gain, *if* sustains are treated as a singular note
 			if (guitarHeroSustains && note.isSustainNote) gainHealth = false;

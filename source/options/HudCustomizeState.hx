@@ -9,13 +9,11 @@ import backend.Language;
  */
 class HudCustomizeState extends MusicBeatState
 {
-	static inline var ELEMENT_COUNT:Int = 4;
+	static inline var ELEMENT_COUNT:Int = 2;
 
 	var names:Array<String> = [
 		Language.getPhrase('hudcustom_score', 'Score Text'),
-		Language.getPhrase('hudcustom_judgements', 'Judgement Counters'),
-		Language.getPhrase('hudcustom_nps', 'NPS Counter'),
-		Language.getPhrase('hudcustom_timing', 'Hit Timing Readout')
+		Language.getPhrase('hudcustom_nps', 'NPS Counter')
 	];
 	var texts:Array<FlxText> = [];
 	var baseX:Array<Float> = [];
@@ -44,16 +42,13 @@ class HudCustomizeState extends MusicBeatState
 		bg.scrollFactor.set();
 		add(bg);
 
-		offsetsX = [ClientPrefs.data.hudScoreX, ClientPrefs.data.hudJudgementX, ClientPrefs.data.hudNpsX, ClientPrefs.data.hudTimingX];
-		offsetsY = [ClientPrefs.data.hudScoreY, ClientPrefs.data.hudJudgementY, ClientPrefs.data.hudNpsY, ClientPrefs.data.hudTimingY];
+		offsetsX = [ClientPrefs.data.hudScoreX, ClientPrefs.data.hudNpsX];
+		offsetsY = [ClientPrefs.data.hudScoreY, ClientPrefs.data.hudNpsY];
 
 		var scoreY:Float = FlxG.height - 100;
 		addElement(0, 0, scoreY, FlxG.width, 20, CENTER,
 			Language.getPhrase('score_text', 'Score: {1} | Misses: {2} | Rating: {3}', [123456, 2, 'SICK! (98.5%) - FC']));
-		addElement(1, 0, scoreY + 24, FlxG.width, 18, CENTER,
-			Language.getPhrase('hud_judgements', 'SICK: {1} | GOOD: {2} | BAD: {3} | SHIT: {4} | MISS: {5}', [240, 12, 3, 1, 2]));
-		addElement(2, 10, 10, 160, 18, LEFT, Language.getPhrase('hud_nps', 'NPS: {1}', [8.4]));
-		addElement(3, FlxG.width - 130, 10, 120, 18, RIGHT, Language.getPhrase('hud_hit_ms', '{1}ms', ['-12']));
+		addElement(1, 0, scoreY + 22, FlxG.width, 18, CENTER, Language.getPhrase('hud_nps', 'NPS: {1}', [8]));
 
 		highlight = new FlxSprite().makeGraphic(1, 1, FlxColor.YELLOW);
 		highlight.alpha = 0.3;
@@ -190,12 +185,8 @@ class HudCustomizeState extends MusicBeatState
 	{
 		ClientPrefs.data.hudScoreX = offsetsX[0];
 		ClientPrefs.data.hudScoreY = offsetsY[0];
-		ClientPrefs.data.hudJudgementX = offsetsX[1];
-		ClientPrefs.data.hudJudgementY = offsetsY[1];
-		ClientPrefs.data.hudNpsX = offsetsX[2];
-		ClientPrefs.data.hudNpsY = offsetsY[2];
-		ClientPrefs.data.hudTimingX = offsetsX[3];
-		ClientPrefs.data.hudTimingY = offsetsY[3];
+		ClientPrefs.data.hudNpsX = offsetsX[1];
+		ClientPrefs.data.hudNpsY = offsetsY[1];
 		ClientPrefs.saveSettings();
 	}
 
