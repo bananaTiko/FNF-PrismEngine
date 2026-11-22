@@ -146,7 +146,7 @@ class MallXmasErect extends BaseStage
 	
 			new FlxTimer().start(12.83, function(tmr)
 			{
-				camGame.shake(0.005, 0.2);
+				if(ClientPrefs.data.screenShake) camGame.shake(0.005, 0.2);
 				camFollow_set(erectSanta.x + 160, erectSanta.y + 80);
 			});
 	

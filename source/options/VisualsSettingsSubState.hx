@@ -1,5 +1,6 @@
 package options;
 
+import backend.Transitions;
 import objects.Note;
 import objects.StrumNote;
 import objects.NoteSplash;
@@ -157,6 +158,12 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			BOOL);
 		addOption(option);
 
+		var option:Option = new Option('Screen Shake',
+			"If unchecked, songs and stages stop shaking the screen.",
+			'screenShake',
+			BOOL);
+		addOption(option);
+
 		var option:Option = new Option('Score Text Grow on Hit',
 			"If unchecked, disables the Score text growing\neverytime you hit a note.",
 			'scoreZoom',
@@ -183,6 +190,17 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		option.onChange = onChangeFPSCounter;
 		#end
 		
+		var transitions:Array<String> = Transitions.names();
+		if(!transitions.contains(ClientPrefs.data.transition))
+			ClientPrefs.data.transition = ClientPrefs.defaultData.transition; //Saved transition script is gone
+
+		var option:Option = new Option('Transition:',
+			"What plays when you go to another menu or start a song.\nAny script in data/transitions/ shows up here, None skips transitions entirely.",
+			'transition',
+			STRING,
+			transitions);
+		addOption(option);
+
 		var option:Option = new Option('Pause Music:',
 			"What song do you prefer for the Pause Screen?",
 			'pauseMusic',
@@ -205,6 +223,16 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			'discordRPC',
 			BOOL);
 		addOption(option);
+		#end
+
+		#if (cpp && windows)
+		var option:Option = new Option('Window Title Bar:',
+			'Dark or light title bar and window border.',
+			'windowColorMode',
+			STRING,
+			['Dark', 'Light']);
+		addOption(option);
+		option.onChange = onChangeWindowColorMode;
 		#end
 
 		var option:Option = new Option('Combo Stacking',
@@ -339,6 +367,11 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 		Note.globalRgbShaders = [];
 		super.destroy();
 	}
+
+	#if (cpp && windows)
+	function onChangeWindowColorMode()
+		Main.applyWindowColorMode();
+	#end
 
 	#if !mobile
 	function onChangeFPSCounter()

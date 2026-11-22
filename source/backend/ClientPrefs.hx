@@ -25,6 +25,7 @@ import states.TitleState;
 	public var cacheOnGPU:Bool = #if !switch false #else true #end; // GPU Caching made by Raltyro
 	public var framerate:Int = 60;
 	public var camZooms:Bool = true;
+	public var screenShake:Bool = true;
 	public var hideHud:Bool = false;
 	public var noteOffset:Int = 0;
 	public var arrowRGB:Array<Array<FlxColor>> = [
@@ -103,6 +104,8 @@ import states.TitleState;
 	public var guitarHeroSustains:Bool = true;
 	public var discordRPC:Bool = true;
 	public var loadingScreen:Bool = true;
+	public var windowColorMode:String = 'Dark'; // title bar color, Windows only
+	public var transition:String = 'Fade'; // state change transition, see backend/Transitions
 	public var language:String = 'en-US';
 	public var favorites:Array<String> = [];
 	public var freeplaySort:String = 'Name';
