@@ -436,7 +436,11 @@ class StoryMenuState extends MusicBeatState
 			bgSprite.visible = false;
 		} else {
 			bgSprite.loadGraphic(Paths.image('menubackgrounds/menu_' + assetName));
-			MusicBeatState.coverScreen(bgSprite);
+			//Week art is a 1280x386 strip under the top bar, so it follows the window
+			//width proportionally instead of being stretched or blown up to full screen.
+			var bgScale:Float = FlxG.width / bgSprite.frameWidth;
+			bgSprite.scale.set(bgScale, bgScale);
+			bgSprite.updateHitbox();
 		}
 		PlayState.storyWeek = curWeek;
 

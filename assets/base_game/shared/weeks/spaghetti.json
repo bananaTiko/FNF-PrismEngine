@@ -2,13 +2,13 @@
 	"storyName": "LE SSERAFUN",
 	"difficulties": "Easy,Normal,Hard",
 	"hideFreeplay": false,
-	"weekBackground": "",
+	"weekBackground": "sserafim",
 	"weekBefore": "weekend1",
 	"startUnlocked": true,
-	"hideStoryMode": true,
+	"hideStoryMode": false,
 	"weekCharacters": [
 		"",
-		"spaghetti",
+		"",
 		""
 	],
 	"songs": [

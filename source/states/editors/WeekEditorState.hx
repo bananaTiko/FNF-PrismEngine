@@ -291,7 +291,9 @@ class WeekEditorState extends MusicBeatState implements PsychUIEventHandler.Psyc
 			if( #if MODS_ALLOWED FileSystem.exists(Paths.modsImages('menubackgrounds/menu_' + assetName)) || #end
 			Assets.exists(Paths.getPath('images/menubackgrounds/menu_' + assetName + '.png', IMAGE), IMAGE)) {
 				bgSprite.loadGraphic(Paths.image('menubackgrounds/menu_' + assetName));
-				MusicBeatState.coverScreen(bgSprite);
+				var bgScale:Float = FlxG.width / bgSprite.frameWidth;
+				bgSprite.scale.set(bgScale, bgScale);
+				bgSprite.updateHitbox();
 				isMissing = false;
 			}
 		}
