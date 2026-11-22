@@ -162,7 +162,45 @@ class Song
 		#end
 			rawData = Assets.getText(_lastPath);
 
-		return rawData != null ? parseJSON(rawData, jsonInput) : null;
+		if(rawData == null) return null;
+
+		var songJson:SwagSong = parseJSON(rawData, jsonInput);
+		if(songJson != null) mergeEventFile(songJson, formattedFolder);
+		return songJson;
+	}
+
+	/**
+	 * Songs can keep their events in a file next to the chart (`data/<song>/events.json`) instead of
+	 * inside it, which is how P-Slice ships them. Charts that already carry events keep their own.
+	 */
+	static function mergeEventFile(songJson:SwagSong, folder:String):Void
+	{
+		if(songJson.events != null && songJson.events.length > 0) return;
+
+		var path:String = Paths.json('$folder/events');
+		var raw:String = null;
+		#if MODS_ALLOWED
+		if(FileSystem.exists(path)) raw = File.getContent(path);
+		else
+		#end
+		try raw = Assets.getText(path) catch(e:Dynamic) raw = null;
+
+		if(raw == null || raw.length < 1) return;
+
+		var parsed:Dynamic = null;
+		try parsed = Json.parse(raw) catch(e:Dynamic) parsed = null;
+		if(parsed == null) return;
+
+		var extra:Array<Dynamic> = Reflect.field(parsed, 'events');
+		if(extra == null || extra.length < 1) return;
+
+		songJson.events = extra;
+		songJson.events.sort(function(a:Dynamic, b:Dynamic):Int
+		{
+			var timeA:Float = a[0];
+			var timeB:Float = b[0];
+			return timeA < timeB ? -1 : (timeA > timeB ? 1 : 0);
+		});
 	}
 
 	public static function parseJSON(rawData:String, ?nameForError:String = null, ?convertTo:String = 'psych_v1'):SwagSong
