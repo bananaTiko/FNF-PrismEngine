@@ -388,6 +388,9 @@ class AlphaCharacter extends FlxSprite
 	}
 	
 	public var curLetter:Letter = null;
+	//Weight the Alphabet asked for. Atlas frames of a different weight may be drawn
+	//instead (see setupAlphaCharacter), and the baseline still has to follow this one.
+	public var boldLetter:Bool = false;
 	public function setupAlphaCharacter(x:Float, y:Float, ?character:String = null, ?bold:Null<Bool> = null)
 	{
 		this.x = x;
@@ -400,6 +403,7 @@ class AlphaCharacter extends FlxSprite
 			this.scale.x = parent.scaleX;
 			this.scale.y = parent.scaleY;
 		}
+		boldLetter = bold == true;
 		
 		if(character != null)
 		{
@@ -427,9 +431,31 @@ class AlphaCharacter extends FlxSprite
 			if(curLetter != null && curLetter.anim != null) alphaAnim = curLetter.anim;
 
 			var anim:String = alphaAnim + postfix;
-			animation.addByPrefix(anim, anim, 24);
-			animation.play(anim, true);
-			if(animation.curAnim == null)
+
+			//Atlases aren't always complete: the Cyrillic ones only have "lowercase", "uppercase"
+			//and "bold" frames (never "normal"), and a few letters have no bold frame at all.
+			//Any of the letter's own variants beats the "?" placeholder.
+			var caseAnim:String = (lowercase != this.character) ? ' uppercase' : ' lowercase';
+			var variants:Array<String> = [
+				anim,
+				alphaAnim + caseAnim,
+				alphaAnim + ' uppercase',
+				alphaAnim + ' lowercase',
+				alphaAnim + ' normal',
+				alphaAnim + ' bold'
+			];
+
+			var played:Bool = false;
+			for (variant in variants)
+			{
+				animation.addByPrefix(variant, variant, 24);
+				if (!animation.exists(variant)) continue;
+				animation.play(variant, true);
+				played = true;
+				break;
+			}
+
+			if(!played)
 			{
 				if(postfix != ' bold') postfix = ' normal';
 				anim = 'question' + postfix;
@@ -489,7 +515,7 @@ class AlphaCharacter extends FlxSprite
 		}
 
 		var add:Float = 110;
-		if(animation.curAnim.name.endsWith('bold'))
+		if(boldLetter)
 		{
 			if(curLetter != null && curLetter.offsetsBold != null)
 			{

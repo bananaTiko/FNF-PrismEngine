@@ -1025,6 +1025,9 @@ class PlayState extends MusicBeatState
 		#else
 		else FlxG.log.error(Language.getPhrase('debug_video_not_found', 'Video not found: {1}', [fileName]));
 		#end
+		//Nothing was played, so the song must not stay stuck in cutscene mode.
+		inCutscene = false;
+		canPause = true;
 		#else
 		FlxG.log.warn('Platform not supported!');
 		startAndEnd();

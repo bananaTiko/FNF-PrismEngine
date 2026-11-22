@@ -9,7 +9,16 @@ class VideoCutscene
 		if (videoName != null)
 		{
 			#if VIDEOS_ALLOWED
-			game.startVideo(videoName);
+			//startVideo returns null when the file isn't in the build, so there is nothing to
+			//attach callbacks to; just carry on with whatever came after the cutscene.
+			if (game.startVideo(videoName) == null)
+			{
+				new FlxTimer().start(0.0, function(tmr:FlxTimer)
+				{
+					onEnd();
+				});
+				return;
+			}
 			game.videoCutscene.finishCallback = game.videoCutscene.onSkip = function()
 			{
 				game.videoCutscene = null;

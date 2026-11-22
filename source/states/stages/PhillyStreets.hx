@@ -213,7 +213,14 @@ class PhillyStreets extends BaseStage
 		if(!videoEnded && videoName != null)
 		{
 			#if VIDEOS_ALLOWED
-			game.startVideo(videoName);
+			//A missing video leaves videoCutscene null; go on with the cutscene's own outro
+			//instead of dereferencing it.
+			if(game.startVideo(videoName) == null)
+			{
+				videoEnded = true;
+				videoCutscene();
+				return;
+			}
 			game.videoCutscene.finishCallback = game.videoCutscene.onSkip = function()
 			{
 				videoEnded = true;
