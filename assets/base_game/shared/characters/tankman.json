@@ -120,6 +120,28 @@
 			"anim": "singRIGHTmiss",
 			"loop": false,
 			"name": "Tankman Note Left MISS"
+		},
+		{
+			"loop": false,
+			"offsets": [
+				5,
+				-40
+			],
+			"anim": "ugh",
+			"fps": 24,
+			"name": "TANKMAN UGH",
+			"indices": []
+		},
+		{
+			"loop": false,
+			"offsets": [
+				5,
+				-40
+			],
+			"anim": "hehPrettyGood",
+			"fps": 24,
+			"name": "PRETTY GOOD tankman",
+			"indices": []
 		}
 	],
 	"no_antialiasing": false,

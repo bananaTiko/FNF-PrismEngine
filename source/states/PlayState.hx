@@ -2486,6 +2486,7 @@ class PlayState extends MusicBeatState
 	}
 
 	public function triggerEvent(eventName:String, value1:String, value2:String, strumTime:Float) {
+		eventName = normalizeEventName(eventName);
 		var flValue1:Null<Float> = Std.parseFloat(value1);
 		var flValue2:Null<Float> = Std.parseFloat(value2);
 		if(Math.isNaN(flValue1)) flValue1 = null;
@@ -2742,6 +2743,29 @@ class PlayState extends MusicBeatState
 
 		stagesFunc(function(stage:BaseStage) stage.eventCalled(eventName, value1, value2, flValue1, flValue2, strumTime));
 		callOnScripts('onEvent', [eventName, value1, value2, strumTime]);
+	}
+
+	/**
+	 * Charts converted from V-Slice kept some event names in another casing (`ZOOM_CAMERA`,
+	 * `SET_CAMERA_BOP`), and a couple of old typos. Every handler is case sensitive, so the
+	 * names are folded to their canonical spelling before anything sees them.
+	 */
+	static function normalizeEventName(eventName:String):String
+	{
+		if(eventName == null) return '';
+
+		switch(eventName.trim().toLowerCase())
+		{
+			case 'zoom_camera': return 'Zoom Camera';
+			case 'target_camera': return 'Target Camera';
+			case 'set_camera_bop' | 'setcamerabop' | 'set camera bop': return 'Set Camera Bopping';
+			case 'trgger bg ghouls': return 'Trigger BG Ghouls';
+			case 'camera follow pos': return 'Camera Follow Pos';
+			case 'play animation': return 'Play Animation';
+			case 'change character': return 'Change Character';
+			case 'add camera zoom': return 'Add Camera Zoom';
+		}
+		return eventName;
 	}
 
 	public function moveCameraSection(?sec:Null<Int>):Void {

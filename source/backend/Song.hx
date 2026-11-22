@@ -171,12 +171,13 @@ class Song
 
 	/**
 	 * Songs can keep their events in a file next to the chart (`data/<song>/events.json`) instead of
-	 * inside it, which is how P-Slice ships them. Charts that already carry events keep their own.
+	 * inside it, which is how P-Slice ships them. When both exist the file is the newer list.
 	 */
 	static function mergeEventFile(songJson:SwagSong, folder:String):Void
 	{
-		if(songJson.events != null && songJson.events.length > 0) return;
-
+		//`events.json` is the V-Slice event list. Charts converted from it kept their own
+		//older copy, often with stale names such as `ZOOM_CAMERA` that no handler answers,
+		//so the event file wins whenever the song ships one.
 		var path:String = Paths.json('$folder/events');
 		var raw:String = null;
 		#if MODS_ALLOWED

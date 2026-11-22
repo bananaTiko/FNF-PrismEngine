@@ -33,8 +33,15 @@ class CutsceneHandler extends FlxBasic
 		{
 			if(music != null)
 			{
-				FlxG.sound.playMusic(Paths.music(music), 0, false);
-				FlxG.sound.music.fadeIn();
+				//A missing track used to fall through to flixel's default beep, which sounds
+				//exactly like the game being broken: skip the music and say what is missing.
+				var hasTrack:Bool = Paths.fileExists('music/$music.ogg', SOUND) || Paths.fileExists('music/$music.mp3', SOUND);
+				if(hasTrack)
+				{
+					FlxG.sound.playMusic(Paths.music(music), 0, false);
+					FlxG.sound.music.fadeIn();
+				}
+				else FlxG.log.warn('Cutscene music "$music" is missing');
 			}
 			if(onStart != null) onStart();
 		});

@@ -462,6 +462,15 @@ class Character extends FlxSprite
 		specialAnim = false;
 		if(!isAnimateAtlas)
 		{
+			//Alt/censored notes ask for `singX-alt`, but several characters only ship the
+			//plain animation; fall back to it so the singer keeps moving instead of freezing.
+			if(!animation.exists(AnimName))
+			{
+				var base:String = AnimName;
+				if(StringTools.endsWith(base, '-alt')) base = base.substr(0, base.length - 4);
+				else if(StringTools.endsWith(base, '-censor')) base = base.substr(0, base.length - 7);
+				if(animation.exists(base)) AnimName = base;
+			}
 			animation.play(AnimName, Force, Reversed, Frame);
 		}
 		else
