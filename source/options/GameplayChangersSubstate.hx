@@ -245,7 +245,7 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 						}
 						else if(curOption.type != STRING)
 						{
-							holdValue = Math.max(curOption.minValue, Math.min(curOption.maxValue, holdValue + curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1)));
+							holdValue = MathUtils.clamp(holdValue + curOption.scrollSpeed * elapsed * (controls.UI_LEFT ? -1 : 1), curOption.minValue, curOption.maxValue);
 
 							switch(curOption.type)
 							{
@@ -253,7 +253,7 @@ class GameplayChangersSubstate extends MusicBeatSubstate
 									curOption.setValue(Math.round(holdValue));
 								
 								case FLOAT, PERCENT:
-									var blah:Float = Math.max(curOption.minValue, Math.min(curOption.maxValue, holdValue + curOption.changeValue - (holdValue % curOption.changeValue)));
+									var blah:Float = MathUtils.clamp(holdValue + curOption.changeValue - (holdValue % curOption.changeValue), curOption.minValue, curOption.maxValue);
 									curOption.setValue(FlxMath.roundDecimal(blah, curOption.decimals));
 
 								default:

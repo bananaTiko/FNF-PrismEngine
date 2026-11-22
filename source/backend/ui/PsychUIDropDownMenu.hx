@@ -132,7 +132,7 @@ class PsychUIDropDownMenu extends PsychUIInputText
 			_curFilter = null;
 		}
 
-		curScroll = Std.int(Math.max(0, Math.min(onlyAllowed != null ? (onlyAllowed.length - 1) : (list.length - 1), scroll)));
+		curScroll = MathUtils.clampInt(scroll, 0, onlyAllowed != null ? (onlyAllowed.length - 1) : (list.length - 1));
 		if(vis)
 		{
 			var n:Int = 0;

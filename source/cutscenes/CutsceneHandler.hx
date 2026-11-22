@@ -75,7 +75,7 @@ class CutsceneHandler extends FlxBasic
 		if(_canSkip && cutsceneTime > 0.1)
 		{
 			if(Controls.instance.pressed('accept'))
-				holdingTime = Math.max(0, Math.min(_timeToSkip, holdingTime + elapsed));
+				holdingTime = MathUtils.clamp(holdingTime + elapsed, 0, _timeToSkip);
 			else if (holdingTime > 0)
 				holdingTime = Math.max(0, FlxMath.lerp(holdingTime, -0.1, FlxMath.bound(elapsed * 3, 0, 1)));
 
@@ -109,7 +109,7 @@ class CutsceneHandler extends FlxBasic
 	{
 		if(skipSprite == null) return;
 
-		skipSprite.amount = Math.min(1, Math.max(0, (holdingTime / _timeToSkip) * 1.025));
+		skipSprite.amount = MathUtils.clamp((holdingTime / _timeToSkip) * 1.025, 0, 1);
 		skipSprite.alpha = FlxMath.remapToRange(skipSprite.amount, 0.025, 1, 0, 1);
 	}
 

@@ -20,7 +20,7 @@ class BackgroundTank extends BGSprite
 
 		tankAngle += elapsed * tankSpeed;
 		angle = tankAngle - 90 + 15;
-		x = offsetX + 1500 * Math.cos(Math.PI / 180 * (tankAngle + 180));
-		y = offsetY + 1100 * Math.sin(Math.PI / 180 * (tankAngle + 180));
+		x = offsetX + 1500 * MathUtils.cosDeg(tankAngle + 180);
+		y = offsetY + 1100 * MathUtils.sinDeg(tankAngle + 180);
 	}
 }

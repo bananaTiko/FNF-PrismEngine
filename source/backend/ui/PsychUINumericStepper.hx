@@ -75,7 +75,7 @@ class PsychUINumericStepper extends PsychUIInputText
 
 	function set_value(v:Float)
 	{
-		value = Math.max(min, Math.min(max, v));
+		value = MathUtils.clamp(v, min, max);
 		text = Std.string(isPercent ? (value * 100) : value);
 		_updateValue();
 		return value;

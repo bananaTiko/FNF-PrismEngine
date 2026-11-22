@@ -203,7 +203,8 @@ class MainMenuState extends MusicBeatState
 						var memb:FlxSprite = menuItems.members[i];
 						if(FlxG.mouse.overlaps(memb))
 						{
-							var distance:Float = Math.sqrt(Math.pow(memb.getGraphicMidpoint().x - FlxG.mouse.screenX, 2) + Math.pow(memb.getGraphicMidpoint().y - FlxG.mouse.screenY, 2));
+							var midpoint:FlxPoint = memb.getGraphicMidpoint();
+							var distance:Float = MathUtils.distance(midpoint.x, midpoint.y, FlxG.mouse.screenX, FlxG.mouse.screenY);
 							if (dist < 0 || distance < dist)
 							{
 								dist = distance;

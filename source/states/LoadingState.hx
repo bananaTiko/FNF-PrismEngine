@@ -253,7 +253,7 @@ class LoadingState extends MusicBeatState
 				pressedTimes++;
 			}
 			shakeMult = Math.max(0, shakeMult - elapsed * 5);
-			logo.offset.x = Math.sin(shakeFl * Math.PI / 180) * shakeMult * 100;
+			logo.offset.x = MathUtils.sinDeg(shakeFl) * shakeMult * 100;
 
 			if(pressedTimes >= 5)
 			{

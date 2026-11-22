@@ -18,10 +18,10 @@ class TimeSignature
 	public static inline var DEFAULT_DENOMINATOR:Int = 4;
 
 	public static function clampNumerator(value:Int):Int
-		return Std.int(Math.max(1, Math.min(MAX_NUMERATOR, value)));
+		return MathUtils.clampInt(value, 1, MAX_NUMERATOR);
 
 	public static function clampDenominator(value:Int):Int
-		return Std.int(Math.max(1, Math.min(MAX_DENOMINATOR, value)));
+		return MathUtils.clampInt(value, 1, MAX_DENOMINATOR);
 
 	/** Beats in one measure, e.g. 7/8 -> 3.5. */
 	public static function beatsPerMeasure(numerator:Int, denominator:Int):Float

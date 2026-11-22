@@ -515,7 +515,7 @@ class Note extends FlxSprite
 		distance = (0.45 * (Conductor.songPosition - strumTime) * songSpeed * multSpeed);
 		if (!myStrum.downScroll) distance *= -1;
 
-		var angleDir = strumDirection * Math.PI / 180;
+		var angleDir:Float = MathUtils.degToRad(strumDirection);
 		if (copyAngle)
 			angle = strumDirection - 90 + strumAngle + offsetAngle;
 

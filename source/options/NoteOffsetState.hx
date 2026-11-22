@@ -291,8 +291,8 @@ class NoteOffsetState extends MusicBeatState
 					analogMoved = (analogX != 0 || analogY != 0);
 					if(analogMoved) break;
 				}
-				controllerPointer.x = Math.max(0, Math.min(FlxG.width, controllerPointer.x + analogX * 1000 * elapsed));
-				controllerPointer.y = Math.max(0, Math.min(FlxG.height, controllerPointer.y + analogY * 1000 * elapsed));
+				controllerPointer.x = MathUtils.clamp(controllerPointer.x + analogX * 1000 * elapsed, 0, FlxG.width);
+				controllerPointer.y = MathUtils.clamp(controllerPointer.y + analogY * 1000 * elapsed, 0, FlxG.height);
 				gamepadPressed = !FlxG.gamepads.anyJustPressed(START) && controls.ACCEPT;
 				gamepadReleased = !FlxG.gamepads.anyJustReleased(START) && controls.justReleased('accept');
 			}
@@ -359,12 +359,12 @@ class NoteOffsetState extends MusicBeatState
 		{
 			if(controls.UI_LEFT_P)
 			{
-				barPercent = Math.max(delayMin, Math.min(ClientPrefs.data.noteOffset - 1, delayMax));
+				barPercent = MathUtils.clamp(ClientPrefs.data.noteOffset - 1, delayMin, delayMax);
 				updateNoteDelay();
 			}
 			else if(controls.UI_RIGHT_P)
 			{
-				barPercent = Math.max(delayMin, Math.min(ClientPrefs.data.noteOffset + 1, delayMax));
+				barPercent = MathUtils.clamp(ClientPrefs.data.noteOffset + 1, delayMin, delayMax);
 				updateNoteDelay();
 			}
 
@@ -380,7 +380,7 @@ class NoteOffsetState extends MusicBeatState
 			if(holdTime > 0.5)
 			{
 				barPercent += 100 * addNum * elapsed * mult;
-				barPercent = Math.max(delayMin, Math.min(barPercent, delayMax));
+				barPercent = MathUtils.clamp(barPercent, delayMin, delayMax);
 				updateNoteDelay();
 			}
 

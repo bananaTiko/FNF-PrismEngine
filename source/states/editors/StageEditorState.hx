@@ -486,7 +486,7 @@ class StageEditorState extends MusicBeatState implements PsychUIEventHandler.Psy
 
 	function insertMeta(meta, insertOffset:Int = 0)
 	{
-		var num:Int = Std.int(Math.max(0, Math.min(spriteListRadioGroup.labels.length, spriteListRadioGroup.labels.length - spriteListRadioGroup.checked - 1 + insertOffset)));
+		var num:Int = MathUtils.clampInt(spriteListRadioGroup.labels.length - spriteListRadioGroup.checked - 1 + insertOffset, 0, spriteListRadioGroup.labels.length);
 		stageSprites.insert(num, meta);
 		updateSpriteListRadio();
 		createPopup.visible = createPopup.active = false;

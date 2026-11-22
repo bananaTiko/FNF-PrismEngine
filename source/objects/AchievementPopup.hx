@@ -125,7 +125,7 @@ class AchievementPopup extends openfl.display.Sprite {
 		countedTime += elapsed;
 		if(countedTime < 3)
 		{
-			lerpTime = Math.min(1, lerpTime + elapsed);
+			lerpTime = MathUtils.clamp(lerpTime + elapsed, 0, 1);
 			y = ((FlxEase.elasticOut(lerpTime) * (intendedY + 130)) - 130) * lastScale;
 		}
 		else

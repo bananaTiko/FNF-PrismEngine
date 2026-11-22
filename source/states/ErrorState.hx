@@ -37,7 +37,7 @@ class ErrorState extends MusicBeatState
 	override function update(elapsed:Float)
 	{
 		errorSine += 180 * elapsed;
-		errorText.alpha = 1 - Math.sin((Math.PI * errorSine) / 180);
+		errorText.alpha = 1 - MathUtils.sinDeg(errorSine);
 
 		if(controls.ACCEPT && acceptCallback != null)
 			acceptCallback();

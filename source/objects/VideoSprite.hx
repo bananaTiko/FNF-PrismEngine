@@ -111,7 +111,7 @@ class VideoSprite extends FlxSpriteGroup {
 		{
 			if(Controls.instance.pressed('accept'))
 			{
-				holdingTime = Math.max(0, Math.min(_timeToSkip, holdingTime + elapsed));
+				holdingTime = MathUtils.clamp(holdingTime + elapsed, 0, _timeToSkip);
 			}
 			else if (holdingTime > 0)
 			{
@@ -159,7 +159,7 @@ class VideoSprite extends FlxSpriteGroup {
 	{
 		if(skipSprite == null) return;
 
-		skipSprite.amount = Math.min(1, Math.max(0, (holdingTime / _timeToSkip) * 1.025));
+		skipSprite.amount = MathUtils.clamp((holdingTime / _timeToSkip) * 1.025, 0, 1);
 		skipSprite.alpha = FlxMath.remapToRange(skipSprite.amount, 0.025, 1, 0, 1);
 	}
 

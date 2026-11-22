@@ -264,7 +264,7 @@ class PsychUIBox extends FlxSpriteGroup
 
 	private function set_selectedIndex(v:Int)
 	{
-		v = Std.int(Math.max(Math.min(v, tabs.length-1), -1));
+		v = MathUtils.clampInt(v, -1, tabs.length-1);
 		if(v > -1) selectedTab = tabs[v];
 		else selectedTab = null;
 		return v;

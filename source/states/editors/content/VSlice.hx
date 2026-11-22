@@ -383,7 +383,7 @@ class VSlice
 		else if(Reflect.hasField(songData, 'composer')) composer = Reflect.field(songData, 'composer');
 		
 		var charter:String = 'Unknown';
-		if(Reflect.hasField(songData, 'charter')) composer = Reflect.field(songData, 'charter');
+		if(Reflect.hasField(songData, 'charter')) charter = Reflect.field(songData, 'charter');
 
 		// Has to add all difficulties or it might crash on V-Slice's Freeplay
 		var diffs:Array<String> = null;

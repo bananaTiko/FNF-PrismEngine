@@ -237,8 +237,8 @@ class NotesColorSubState extends MusicBeatSubstate
 				analogMoved = (analogX != 0 || analogY != 0);
 				if(analogMoved) break;
 			}
-			controllerPointer.x = Math.max(0, Math.min(FlxG.width, controllerPointer.x + analogX * 1000 * elapsed));
-			controllerPointer.y = Math.max(0, Math.min(FlxG.height, controllerPointer.y + analogY * 1000 * elapsed));
+			controllerPointer.x = MathUtils.clamp(controllerPointer.x + analogX * 1000 * elapsed, 0, FlxG.width);
+			controllerPointer.y = MathUtils.clamp(controllerPointer.y + analogY * 1000 * elapsed, 0, FlxG.height);
 		}
 		var controllerPressed:Bool = (controls.controllerMode && controls.ACCEPT);
 		//
@@ -687,7 +687,7 @@ class NotesColorSubState extends MusicBeatSubstate
 		colorWheelSelector.setPosition(colorWheel.x + colorWheel.width/2, colorWheel.y + colorWheel.height/2);
 		if(wheelColor.brightness != 0)
 		{
-			var hueWrap:Float = wheelColor.hue * Math.PI / 180;
+			var hueWrap:Float = MathUtils.degToRad(wheelColor.hue);
 			colorWheelSelector.x += Math.sin(hueWrap) * colorWheel.width/2 * wheelColor.saturation;
 			colorWheelSelector.y -= Math.cos(hueWrap) * colorWheel.height/2 * wheelColor.saturation;
 		}

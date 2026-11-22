@@ -479,7 +479,7 @@ class PsychUIInputText extends FlxSpriteGroup
 			caret.y = textObj.y + 2;
 			caret.x = textObj.x + 1 - textObj.textField.scrollH;
 			if(caretIndex > 0)
-				caret.x += _boundaries[Std.int(Math.max(0, Math.min(_boundaries.length-1, caretIndex-1)))];
+				caret.x += _boundaries[MathUtils.clampInt(caretIndex-1, 0, _boundaries.length-1)];
 		}
 		
 		if(selection != null && selection.exists)
@@ -487,7 +487,7 @@ class PsychUIInputText extends FlxSpriteGroup
 			selection.y = textObj.y + 2;
 			selection.x = textObj.x + 1 - textObj.textField.scrollH;
 			if(selectIndex > 0)
-				selection.x += _boundaries[Std.int(Math.max(0, Math.min(_boundaries.length-1, selectIndex-1)))];
+				selection.x += _boundaries[MathUtils.clampInt(selectIndex-1, 0, _boundaries.length-1)];
 
 			selection.scale.y = textField.textHeight;
 			selection.scale.x = caret.x - selection.x;
