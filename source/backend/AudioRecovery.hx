@@ -15,30 +15,48 @@ import flixel.FlxG;
  * playing into a device that no longer exists, and nothing tells the game about
  * it: the session stays silent until it is restarted. Windows has no event we
  * can listen to, so the cheapest reliable moment to look the default device up
- * again is a state change.
+ * again is a state change -- this is the fix Codename Engine ships.
  *
- * Only a changed device is rebuilt. Doing it on every state change tore down
+ * Only a changed device is rebuilt. Rebuilding on every state change tore down
  * every sound each time, which restarted the menu track from the beginning
  * whenever a menu was opened.
- *
- * The order matters. Every FlxSound and every Sound cached by OpenFL is torn
- * down first, while its OpenAL source and buffer are still valid, because those
- * handles belong to the context that is about to be destroyed. Only then is the
- * device closed and reopened, so the next sound is decoded onto whatever device
- * the system now reports as the default.
  */
 class AudioRecovery
 {
+	/** Default output device as last seen, or null before the first check. */
 	static var knownDevice:String = null;
 
+	/** Rebuilds the backend if the default output device changed since the last check. */
+	public static function checkDevice():Bool
+	{
+		var device:String = currentDevice();
+		if (device == null)
+			return false; // the platform cannot tell us; leave audio alone
+
+		var changed:Bool = knownDevice != null && device != knownDevice;
+		knownDevice = device;
+		if (!changed)
+			return false;
+
+		reset();
+
+		// reopening the device can make OpenAL report it differently (OpenAL Soft
+		// falls back to a generic name when the device is gone), so the baseline is
+		// what it reports now, not what it reported before the rebuild
+		var reopened:String = currentDevice();
+		if (reopened != null)
+			knownDevice = reopened;
+
+		return true;
+	}
+
 	/** Name of the system's default output device, or null where it cannot be read. */
-	public static function currentDevice():String
+	static function currentDevice():String
 	{
 		#if (lime_openal && !macro)
+		// the _ALL_ query is the one that carries the friendly device name, but it
+		// only answers when OpenAL has its device enumerator extension
 		var name:String = ALC.getString(null, ALC.DEFAULT_ALL_DEVICES_SPECIFIER);
-
-		// OpenAL only answers the _ALL_ query when its enumerator extension is
-		// present; the plain specifier is what every other implementation has.
 		if (name == null || name.length < 1)
 			name = ALC.getString(null, ALC.DEFAULT_DEVICE_SPECIFIER);
 
@@ -50,34 +68,15 @@ class AudioRecovery
 	}
 
 	/**
-	 * Rebuilds the backend if the default output device changed since the last
-	 * check. Returns whether it rebuilt, because that kills the current music.
+	 * Drops and rebuilds the whole sound backend.
 	 *
-	 * When the platform cannot report a device name nothing is rebuilt: silence
-	 * after a device change is better than losing the music on every state change.
+	 * The order matters. Every FlxSound and every Sound cached by OpenFL is torn
+	 * down first, while its OpenAL source and buffer are still valid, because those
+	 * handles belong to the context that is about to be destroyed. Only then is the
+	 * device closed and reopened, so the next sound is decoded onto whatever device
+	 * the system now reports as the default.
 	 */
-	public static function checkDevice():Bool
-	{
-		var device:String = currentDevice();
-		if (device == null)
-			return false;
-
-		if (knownDevice == null)
-		{
-			// first state after launch: the backend was initialised by OpenFL already
-			knownDevice = device;
-			return false;
-		}
-
-		if (device == knownDevice)
-			return false;
-
-		knownDevice = device;
-		reset();
-		return true;
-	}
-
-	public static function reset():Void
+	static function reset():Void
 	{
 		#if (desktop || mobile)
 		FlxG.sound.destroy(true);
