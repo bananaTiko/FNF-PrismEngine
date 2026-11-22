@@ -122,13 +122,32 @@
 	<haxelib name="hscript-iris" if="HSCRIPT_ALLOWED" version="1.1.3"/>
 	<haxelib name="hxvlc" if="VIDEOS_ALLOWED" version="2.0.1"/>
 	<haxelib name="hxflac" if="desktop"/> <!-- FLAC playback: Lime only ships OGG and WAV decoders -->
-	<haxelib name="hxdiscord_rpc" version="1.2.4" if="DISCORD_ALLOWED"/>
+	<!-- Discord Rich Presence, Freak-Crew fork: https://github.com/Freak-Crew/hxdiscord_rpc -->
+	<haxelib name="freak_discord_rpc" version="1.0.0" if="DISCORD_ALLOWED"/>
+	<!-- Dark/light window title bar and frame colors: https://github.com/TBar09/hxWindowColorMode-main -->
+	<haxelib name="hxWindowColorMode" version="0.2.1" if="windows"/>
+	<!-- Windows API bindings for scripts and engine code: https://github.com/Slushi-Github/SL-Windows-API -->
+	<haxelib name="sl-windows-api" version="1.4.0" if="windows"/>
+	<!-- Runtime C++ JIT: https://github.com/ThomasDarkson/hxcpp_JIT
+		Opt-in because it bundles an LLVM/Clang runtime and its setup asks for admin rights
+		on first run. Install the haxelib, then build with -DPRISM_JIT. -->
+	<haxelib name="hxcpp_JIT" if="PRISM_JIT"/>
 	<haxelib name="flxanimate"/>
 	<!-- chart format importing/converting, using the Prism fork: https://github.com/bananaTiko/moonchart-prism -->
 	<haxelib name="moonchart"/>
+	<!-- Animated .gif support (FlxGifSprite), used for animated mod icons: https://github.com/MAJigsaw77/flxgif -->
+	<haxelib name="flxgif" version="1.0.3"/>
+	<!-- Assorted math, colour and interpolation helpers, available to engine code and scripts: https://github.com/ramchale/quick-haxe -->
+	<haxelib name="quick-haxe" version="0.0.1"/>
 
 	<!-- Disable Discord IO Thread -->
-	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="hxdiscord_rpc" />
+	<haxedef name="DISCORD_DISABLE_IO_THREAD" if="freak_discord_rpc" />
+
+	<!-- Keep script-only libraries in the build so HScript/Lua can reach them at runtime.
+		sl-windows-api gates its own link libraries on HX_WINDOWS, so backend/Native.hx
+		declares the system libraries this needs instead of relying on that guard. -->
+	<haxeflag name="--macro" value="keep('winapi.WindowsAPI')" if="windows" />
+	<haxeflag name="--macro" value="keep('hxcpp_jit.Cpp')" if="PRISM_JIT" />
 	<haxedef name="NO_PRECOMPILED_HEADERS" if="linux" />
 
 	<!-- Enables a terminal log prompt on debug builds -->

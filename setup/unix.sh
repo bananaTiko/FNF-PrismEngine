@@ -12,9 +12,15 @@ haxelib install flixel-addons 3.2.2
 haxelib install flixel-tools 1.5.1
 haxelib install hscript-iris 1.1.3
 haxelib install tjson 1.4.0
-haxelib install hxdiscord_rpc 1.2.4
+haxelib install freak_discord_rpc 1.0.0
+haxelib install hxWindowColorMode 0.2.1
+haxelib install sl-windows-api 1.4.0
+# Optional runtime C++ JIT (bundles LLVM and asks for admin rights on first run):
+# haxelib install hxcpp_JIT 0.1.3
 haxelib install hxvlc 2.0.1 --skip-dependencies
 haxelib install hxflac 1.1.0
+haxelib install flxgif 1.0.3
+haxelib install quick-haxe 0.0.1
 haxelib install lime 8.1.2
 haxelib install openfl 9.3.3
 haxelib git moonchart https://github.com/bananaTiko/moonchart-prism

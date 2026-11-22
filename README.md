@@ -18,6 +18,19 @@ To start you off, disabling *Video Cutscenes* should be simple, simply delete th
 
 Same goes for *Lua Scripts*, comment out or delete the line with `LUA_ALLOWED`, this and other customization options are all available within the `Project.xml` file.
 
+## Audio formats:
+
+Instruments, vocals, menu music and sound effects can be `OGG`, `WAV` or `FLAC`. The engine looks for each file in this order and uses the first one it finds, so an `.ogg` copy always beats a `.wav` or `.flac` copy sitting next to it:
+
+* Song instrumental: `songs/<song>/Inst.<ext>`
+* Song vocals: `songs/<song>/Voices-Player.<ext>` and `Voices-Opponent.<ext>` (character specific files like `Voices-<character>.<ext>`, or a single `Voices.<ext>`, also work)
+* Menu music: `music/<name>.<ext>`
+* Sound effects: `sounds/<name>.<ext>`
+
+`FLAC` is desktop only (Windows, Linux, Mac): it is decoded by hxflac, which does not build for Android, iOS or HTML5. Those targets never look for FLAC, so a song that only ships `Inst.flac` is reported as missing there — keep an OGG or WAV copy if you target them. (On HTML5, `MP3` is also accepted, and is searched first.)
+
+Song-length audio, meaning the instrumental and vocals, is decoded while it plays instead of being unpacked into memory first. The one cost to know about: seeking inside a streamed FLAC — "Skip Time" in the pause menu, or resyncing after unpausing mid-song — has to decode from the start of the file, so it is slower than seeking in an OGG or WAV, which the system seeks instantly. Short effects in `sounds/` are always fully decoded, so shipping those as FLAC costs more memory and buys nothing over OGG.
+
 ## Softcoding (.lua/.hx)
 For this you can head over to [the wiki](https://shadowmario.github.io/psychengine.lua)
 

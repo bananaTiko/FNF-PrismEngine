@@ -87,6 +87,29 @@ It depends on your operating system. For Windows, run `windows.bat`, for anythin
 
 Sit back, relax, and wait for haxelib to do its magic. You will be done when you see the word "**Finished!**"
 
+The setup files also install `hxflac`, which provides FLAC playback on desktop. If you manage haxelibs by hand, install it with `haxelib install hxflac 1.1.0`; it is excluded from Android, iOS and HTML5 builds, so those do not need it.
+
+The setup files install five more libraries:
+
+* `freak_discord_rpc` (`hxdiscord_rpc` package) - Discord Rich Presence on desktop.
+* `hxWindowColorMode` - dark/light title bar and frame colors, Windows only.
+* `sl-windows-api` - Windows API bindings exposed as `winapi.WindowsAPI`, Windows only.
+* `flxgif` (`FlxGifSprite`, pulls `yagp`) - animated `.gif` mod icons in the mods menu.
+* `quick-haxe` (`quick_haxe.Mathematics`, `Colour`, `Interpolation`) - small helper classes available to engine code.
+
+The two Windows libraries are skipped automatically on other targets, so Linux and Mac builds do not need them.
+
+### Optional: runtime C++ JIT
+
+`hxcpp_JIT` compiles and runs C++ at runtime. It is not installed by default: the haxelib bundles an LLVM/Clang runtime and its embedded setup asks for administrator rights the first time a built game runs. To use it, install it and build with the `PRISM_JIT` define:
+
+```
+haxelib install hxcpp_JIT 0.1.3
+lime test windows -D PRISM_JIT
+```
+
+It supports Windows x64 and Linux x86_64 (glibc 2.28 or newer). Without the define the library is not part of the build.
+
 To build the game, run `lime test cpp`.
 
 ---
