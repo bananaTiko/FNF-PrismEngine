@@ -383,6 +383,10 @@ class PhillyStreets extends BaseStage
 			boyfriend.dance();
 			dad.animation.finishCallback = null;
 			gf.animation.finishCallback = null;
+			// Pico was still flagged as doing a special anim, so his annoyed face snapped back
+			// instead of blending out with the rest of him.
+			boyfriend.specialAnim = false;
+			boyfriend.animation.finishCallback = null;
 			
 			game.moveCameraSection();
 			game.cameraSpeed = 1;
