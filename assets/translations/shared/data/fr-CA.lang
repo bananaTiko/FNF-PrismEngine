@@ -1,50 +1,50 @@
 Français (Canada)
 
 // Français du Canada — seuls quelques termes diffèrent du français standard (fr.lang)
-// L'art de la traduction française vit dans assets/translations/shared/images/french
+// L'art de la traduction française vit dans assets/translations/shared/images/fr
 // Les touches ci-dessous remplacent les images de l'anglais par les nôtres.
 images/titleEnter: "images/fr-CA/titleEnter"
-images/sick: "images/french/sick"
-images/good: "images/french/good"
-images/bad: "images/french/bad"
-images/shit: "images/french/shit"
-images/ready: "images/french/ready"
-images/set: "images/french/set"
-images/go: "images/french/go"
+images/sick: "images/fr/sick"
+images/good: "images/fr/good"
+images/bad: "images/fr/bad"
+images/shit: "images/fr/shit"
+images/ready: "images/fr/ready"
+images/set: "images/fr/set"
+images/go: "images/fr/go"
 
 // Les boutons du menu principal et les bannières de semaine se routent de la même
-// façon : décommentez ces lignes une fois l'art déposé dans le dossier french.
-// images/mainmenu/menu_story_mode: "images/french/mainmenu/menu_story_mode"
-// images/mainmenu/menu_freeplay: "images/french/mainmenu/menu_freeplay"
-// images/mainmenu/menu_options: "images/french/mainmenu/menu_options"
-// images/mainmenu/menu_credits: "images/french/mainmenu/menu_credits"
-// images/mainmenu/menu_mods: "images/french/mainmenu/menu_mods"
-// images/storymenu/tutorial: "images/french/storymenu/tutorial"
-// images/storymenu/week1: "images/french/storymenu/week1"
-// images/storymenu/week2: "images/french/storymenu/week2"
-// images/storymenu/week3: "images/french/storymenu/week3"
-// images/storymenu/week4: "images/french/storymenu/week4"
-// images/storymenu/week5: "images/french/storymenu/week5"
-// images/storymenu/week6: "images/french/storymenu/week6"
-// images/storymenu/week7: "images/french/storymenu/week7"
+// façon : décommentez ces lignes une fois l'art déposé dans le dossier fr.
+// images/mainmenu/menu_story_mode: "images/fr/mainmenu/menu_story_mode"
+// images/mainmenu/menu_freeplay: "images/fr/mainmenu/menu_freeplay"
+// images/mainmenu/menu_options: "images/fr/mainmenu/menu_options"
+// images/mainmenu/menu_credits: "images/fr/mainmenu/menu_credits"
+// images/mainmenu/menu_mods: "images/fr/mainmenu/menu_mods"
+// images/storymenu/tutorial: "images/fr/storymenu/tutorial"
+// images/storymenu/week1: "images/fr/storymenu/week1"
+// images/storymenu/week2: "images/fr/storymenu/week2"
+// images/storymenu/week3: "images/fr/storymenu/week3"
+// images/storymenu/week4: "images/fr/storymenu/week4"
+// images/storymenu/week5: "images/fr/storymenu/week5"
+// images/storymenu/week6: "images/fr/storymenu/week6"
+// images/storymenu/week7: "images/fr/storymenu/week7"
 
 // Gameplay
-// Francais: images live in assets/translations/shared/images/french
-images/pixelUI/sick-pixel: "images/french/pixelUI/sick-pixel"
-images/pixelUI/good-pixel: "images/french/pixelUI/good-pixel"
-images/pixelUI/bad-pixel: "images/french/pixelUI/bad-pixel"
-images/pixelUI/shit-pixel: "images/french/pixelUI/shit-pixel"
-images/pixelUI/ready-pixel: "images/french/pixelUI/ready-pixel"
-images/pixelUI/set-pixel: "images/french/pixelUI/set-pixel"
-images/pixelUI/date-pixel: "images/french/pixelUI/date-pixel"
-images/pixelUI/combo-pixel: "images/french/pixelUI/combo-pixel"
-images/mainmenu/menu_story_mode: "images/french/mainmenu/menu_story_mode"
-images/mainmenu/menu_freeplay: "images/french/mainmenu/menu_freeplay"
-images/mainmenu/menu_credits: "images/french/mainmenu/menu_credits"
-images/mainmenu/menu_mods: "images/french/mainmenu/menu_mods"
-images/menudifficulties/easy: "images/french/menudifficulties/easy"
-images/menudifficulties/normal: "images/french/menudifficulties/normal"
-images/menudifficulties/hard: "images/french/menudifficulties/hard"
+// Francais: images live in assets/translations/shared/images/fr
+images/pixelUI/sick-pixel: "images/fr/pixelUI/sick-pixel"
+images/pixelUI/good-pixel: "images/fr/pixelUI/good-pixel"
+images/pixelUI/bad-pixel: "images/fr/pixelUI/bad-pixel"
+images/pixelUI/shit-pixel: "images/fr/pixelUI/shit-pixel"
+images/pixelUI/ready-pixel: "images/fr/pixelUI/ready-pixel"
+images/pixelUI/set-pixel: "images/fr/pixelUI/set-pixel"
+images/pixelUI/date-pixel: "images/fr/pixelUI/date-pixel"
+images/pixelUI/combo-pixel: "images/fr/pixelUI/combo-pixel"
+images/mainmenu/menu_story_mode: "images/fr/mainmenu/menu_story_mode"
+images/mainmenu/menu_freeplay: "images/fr/mainmenu/menu_freeplay"
+images/mainmenu/menu_credits: "images/fr/mainmenu/menu_credits"
+images/mainmenu/menu_mods: "images/fr/mainmenu/menu_mods"
+images/menudifficulties/easy: "images/fr/menudifficulties/easy"
+images/menudifficulties/normal: "images/fr/menudifficulties/normal"
+images/menudifficulties/hard: "images/fr/menudifficulties/hard"
 
 
 score_text: "Score : {1} | Ratés : {2} | Note : {3}"
