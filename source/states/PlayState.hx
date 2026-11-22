@@ -624,10 +624,6 @@ class PlayState extends MusicBeatState
 		scoreTxt.visible = !ClientPrefs.data.hideHud && !ClientPrefs.data.hideScoreText;
 		uiGroup.add(scoreTxt);
 
-		// Positions edited from Options > Customize HUD.
-		scoreTxt.x += ClientPrefs.data.hudScoreX;
-		scoreTxt.y += ClientPrefs.data.hudScoreY;
-
 		// Optional HUD extras, inspired by Troll Engine's HUD customization options.
 		// The NPS counter lives in the HUD text column, right under the score line.
 		if (ClientPrefs.data.showNPS)
@@ -637,8 +633,6 @@ class PlayState extends MusicBeatState
 			npsTxt.scrollFactor.set();
 			npsTxt.borderSize = 1.25;
 			npsTxt.visible = !ClientPrefs.data.hideHud;
-			npsTxt.x += ClientPrefs.data.hudNpsX;
-			npsTxt.y += ClientPrefs.data.hudNpsY;
 			uiGroup.add(npsTxt);
 		}
 

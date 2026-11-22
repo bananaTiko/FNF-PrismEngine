@@ -56,11 +56,6 @@ import states.TitleState;
 	public var missSounds:Bool = false;
 	public var colorRatings:Bool = false;
 
-	// HUD element offsets, edited from Options > Customize HUD
-	public var hudScoreX:Float = 0;
-	public var hudScoreY:Float = 0;
-	public var hudNpsX:Float = 0;
-	public var hudNpsY:Float = 0;
 	public var noReset:Bool = false;
 	public var healthBarAlpha:Float = 1;
 	public var hitsoundVolume:Float = 0;
