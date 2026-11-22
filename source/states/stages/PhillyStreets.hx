@@ -61,7 +61,9 @@ class PhillyStreets extends BaseStage
 			add(phillySkyline);
 			darkenable.push(phillySkyline);
 
-			var phillyForegroundCity:BGSprite = new BGSprite('phillyStreets/phillyForegroundCity', 625, 94, 0.3, 0.3);
+			var phillyForegroundCity:BGSprite = new BGSprite('phillyStreets/phillyForegroundCity', 1865, 220, 0.3, 0.3);
+			phillyForegroundCity.flipX = true;
+			phillyForegroundCity.angle = 5;
 			add(phillyForegroundCity);
 			darkenable.push(phillyForegroundCity);
 		}
@@ -70,20 +72,20 @@ class PhillyStreets extends BaseStage
 		add(phillyConstruction);
 		darkenable.push(phillyConstruction);
 
-		var phillyHighwayLights:BGSprite = new BGSprite('phillyStreets/phillyHighwayLights', 284, 305, 1, 1);
+		var phillyHighwayLights:BGSprite = new BGSprite('phillyStreets/phillyHighwayLights', 122, 201, 0.8, 0.8);
 		add(phillyHighwayLights);
 		darkenable.push(phillyHighwayLights);
 
 		if(!ClientPrefs.data.lowQuality)
 		{
-			var phillyHighwayLightsLightmap:BGSprite = new BGSprite('phillyStreets/phillyHighwayLights_lightmap', 284, 305, 1, 1);
+			var phillyHighwayLightsLightmap:BGSprite = new BGSprite('phillyStreets/phillyHighwayLights_lightmap', 122, 201, 0.8, 0.8);
 			phillyHighwayLightsLightmap.blend = ADD;
 			phillyHighwayLightsLightmap.alpha = 0.6;
 			add(phillyHighwayLightsLightmap);
 			darkenable.push(phillyHighwayLightsLightmap);
 		}
 
-		var phillyHighway:BGSprite = new BGSprite('phillyStreets/phillyHighway', 139, 209, 1, 1);
+		var phillyHighway:BGSprite = new BGSprite('phillyStreets/phillyHighway', -23, 105, 0.8, 0.8);
 		add(phillyHighway);
 		darkenable.push(phillyHighway);
 

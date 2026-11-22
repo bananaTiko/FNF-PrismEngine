@@ -1,6 +1,5 @@
 package states.stages;
 
-
 enum HenchmenKillState
 {
 	WAIT;
@@ -16,13 +15,6 @@ class Limo extends BaseStage
 	var fastCar:BGSprite;
 	var fastCarCanDrive:Bool = true;
 
-	//The tunnel owns its own clock: it slides past every few seconds, well away from
-	//the car's 2 second one, so the two can share the screen without ever meeting.
-	var tunnel:BGSprite;
-	var tunnelTimer:FlxTimer;
-	static inline var TUNNEL_SPEED:Float = 1150;
-	static inline var TUNNEL_INTERVAL:Float = 6.5;
-
 	// event
 	var limoKillingState:HenchmenKillState = WAIT;
 	var limoMetalPole:BGSprite;
@@ -37,10 +29,6 @@ class Limo extends BaseStage
 	{
 		var skyBG:BGSprite = new BGSprite('limo/limoSunset', -120, -50, 0.1, 0.1);
 		add(skyBG);
-
-		tunnel = new BGSprite('limo/limoTunnel', -300, -100, 0.25, 0.25, ['Tunnel'], true);
-		tunnel.visible = false;
-		add(tunnel);
 
 		if(!ClientPrefs.data.lowQuality) {
 			limoMetalPole = new BGSprite('gore/metalPole', -500, 220, 0.4, 0.4);
@@ -90,8 +78,6 @@ class Limo extends BaseStage
 		resetFastCar();
 		addBehindGF(fastCar);
 
-		resetTunnel();
-		scheduleTunnel();
 		
 		var limo:BGSprite = new BGSprite('limo/limoDrive', -120, 550, 1, 1, ['Limo stage'], true);
 		//GF dances behind the car, so the body and speaker cover her legs
@@ -202,7 +188,6 @@ class Limo extends BaseStage
 		if(paused)
 		{
 			if(carTimer != null) carTimer.active = true;
-			if(tunnelTimer != null) tunnelTimer.active = true;
 		}
 	}
 
@@ -211,7 +196,6 @@ class Limo extends BaseStage
 		if(paused)
 		{
 			if(carTimer != null) carTimer.active = false;
-			if(tunnelTimer != null) tunnelTimer.active = false;
 		}
 	}
 
@@ -264,42 +248,6 @@ class Limo extends BaseStage
 		{
 			resetFastCar();
 			carTimer = null;
-		});
-	}
-
-	function resetTunnel():Void
-	{
-		if(tunnel == null) return;
-		tunnel.velocity.x = 0;
-		tunnel.x = -300;
-		tunnel.y = -100;
-		tunnel.visible = false;
-	}
-
-	function scheduleTunnel():Void
-	{
-		tunnelTimer = new FlxTimer().start(FlxG.random.float(TUNNEL_INTERVAL, TUNNEL_INTERVAL + 2.5), function(tmr:FlxTimer)
-		{
-			slideTunnel();
-		});
-	}
-
-	function slideTunnel():Void
-	{
-		if(tunnel == null) return;
-
-		//Enters from the right, the opposite way to the car, and the timer puts it back
-		//off screen once it has crossed.
-		tunnel.x = FlxG.width + 60;
-		tunnel.y = -100;
-		tunnel.visible = true;
-		tunnel.velocity.x = -TUNNEL_SPEED;
-
-		var crossing:Float = (tunnel.x + Math.max(FlxG.width, tunnel.width) + 60) / TUNNEL_SPEED;
-		tunnelTimer = new FlxTimer().start(crossing, function(tmr:FlxTimer)
-		{
-			resetTunnel();
-			scheduleTunnel();
 		});
 	}
 

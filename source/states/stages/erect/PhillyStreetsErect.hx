@@ -67,20 +67,20 @@ class PhillyStreetsErect extends BaseStage
             add(phillyConstruction);
             darkenable.push(phillyConstruction);
     
-            var phillyHighwayLights:BGSprite = new BGSprite('phillyStreets/erect/phillyHighwayLights', 122, 201, 1, 1);
+            var phillyHighwayLights:BGSprite = new BGSprite('phillyStreets/erect/phillyHighwayLights', 122, 201, 0.8, 0.8);
             add(phillyHighwayLights);
             darkenable.push(phillyHighwayLights);
     
             if (!VsliceOptions.LOW_QUALITY)
             {
-                var phillyHighwayLightsLightmap:BGSprite = new BGSprite('phillyStreets/phillyHighwayLights_lightmap', 122, 201, 1, 1);
+                var phillyHighwayLightsLightmap:BGSprite = new BGSprite('phillyStreets/phillyHighwayLights_lightmap', 122, 201, 0.8, 0.8);
                 phillyHighwayLightsLightmap.blend = ADD;
                 phillyHighwayLightsLightmap.alpha = 0.6;
                 add(phillyHighwayLightsLightmap);
                 darkenable.push(phillyHighwayLightsLightmap);
             }
     
-            var phillyHighway:BGSprite = new BGSprite('phillyStreets/erect/phillyHighway', 139, 209, 1, 1);
+            var phillyHighway:BGSprite = new BGSprite('phillyStreets/erect/phillyHighway', -23, 105, 0.8, 0.8);
             add(phillyHighway);
             darkenable.push(phillyHighway);
     

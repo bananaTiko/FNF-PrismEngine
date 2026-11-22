@@ -85,6 +85,11 @@ class FreeplayState extends MusicBeatState
 	static var songOrder:Array<String> = [];
 	static var songCategories:Map<String, String> = [];
 
+	//The erect mixes aren't their own rows: a song's erect chart is picked with the
+	//difficulty (Hard -> Erect -> Nightmare), the same way V-Slice does it.
+	static var erectSongs:Map<String, String> = [];
+	static var erectBaseSongs:Map<String, String> = [];
+
 	//Every freeplay song, in the order it shows up in its mix and the section it belongs to.
 	static function buildSongTable():Void
 	{
@@ -120,7 +125,40 @@ class FreeplayState extends MusicBeatState
 		{
 			songOrder.push(name);
 			songCategories.set(name, category);
+
+			if (name.endsWith(' erect'))
+			{
+				var base:String = name.substr(0, name.length - ' erect'.length);
+				erectSongs.set(base, name);
+				erectBaseSongs.set(name, base);
+			}
 		}
+	}
+
+	//The erect chart a song can switch to, if it has one.
+	static function getErectName(songName:String):String
+	{
+		return (songName == null) ? null : erectSongs.get(songName.toLowerCase());
+	}
+
+	static function isErectDifficulty(diff:Int):Bool
+	{
+		var diffName:String = Difficulty.getString(diff, false);
+		return diffName == 'Erect' || diffName == 'Nightmare';
+	}
+
+	//The chart a song actually plays at the given difficulty.
+	static function chartSongName(song:SongMetadata, diff:Int):String
+	{
+		var erectName:String = getErectName(song.songName);
+		if (erectName != null && isErectDifficulty(diff)) return erectName;
+		return song.songName;
+	}
+
+	function currentChartSongName():String
+	{
+		if (songs.length < 1 || curSelected < 0 || curSelected >= songs.length) return '';
+		return chartSongName(songs[curSelected], curDifficulty);
 	}
 	static inline var CATEGORY_GAP:Float = 95;
 	var grpCategories:FlxTypedGroup<Alphabet> = null;
@@ -464,8 +502,9 @@ class FreeplayState extends MusicBeatState
 				if (FlxG.sound.music != null) FlxG.sound.music.volume = 0;
 
 				Mods.currentModDirectory = songs[curSelected].folder;
-				var poop:String = Highscore.formatSong(songs[curSelected].songName.toLowerCase(), curDifficulty);
-				Song.loadFromJson(poop, songs[curSelected].songName.toLowerCase());
+				var previewSong:String = currentChartSongName().toLowerCase();
+				var poop:String = Highscore.formatSong(previewSong, curDifficulty);
+				Song.loadFromJson(poop, previewSong);
 				if (PlayState.SONG.needsVoices)
 				{
 					vocals = new FlxSound();
@@ -544,7 +583,7 @@ class FreeplayState extends MusicBeatState
 		else if (controls.ACCEPT && !player.playingMusic && !typing && songs.length > 0)
 		{
 			persistentUpdate = false;
-			var songLowercase:String = Paths.formatToSongPath(songs[curSelected].songName);
+			var songLowercase:String = Paths.formatToSongPath(currentChartSongName());
 			var poop:String = Highscore.formatSong(songLowercase, curDifficulty);
 
 			try
@@ -593,7 +632,7 @@ class FreeplayState extends MusicBeatState
 		else if(controls.RESET && !player.playingMusic && !typing && songs.length > 0)
 		{
 			persistentUpdate = false;
-			openSubState(new ResetScoreSubState(songs[curSelected].songName, curDifficulty, songs[curSelected].songCharacter));
+			openSubState(new ResetScoreSubState(currentChartSongName(), curDifficulty, songs[curSelected].songCharacter));
 			FlxG.sound.play(Paths.sound('scrollMenu'));
 		}
 
@@ -655,8 +694,8 @@ class FreeplayState extends MusicBeatState
 
 		curDifficulty = FlxMath.wrap(curDifficulty + change, 0, Difficulty.list.length-1);
 		#if !switch
-		intendedScore = Highscore.getScore(songs[curSelected].songName, curDifficulty);
-		intendedRating = Highscore.getRating(songs[curSelected].songName, curDifficulty);
+		intendedScore = Highscore.getScore(currentChartSongName(), curDifficulty);
+		intendedRating = Highscore.getRating(currentChartSongName(), curDifficulty);
 		#end
 
 		lastDifficultyName = Difficulty.getString(curDifficulty, false);
@@ -704,6 +743,12 @@ class FreeplayState extends MusicBeatState
 		Mods.currentModDirectory = songs[curSelected].folder;
 		PlayState.storyWeek = songs[curSelected].week;
 		Difficulty.loadFromWeek();
+		//Erect and Nightmare only exist for songs that shipped an erect chart.
+		if (getErectName(songs[curSelected].songName) != null)
+		{
+			for (extra in ['Erect', 'Nightmare'])
+				if (!Difficulty.list.contains(extra)) Difficulty.list.push(extra);
+		}
 		
 		var savedDiff:String = songs[curSelected].lastDifficulty;
 		var lastDiff:Int = Difficulty.list.indexOf(lastDifficultyName);
@@ -838,6 +883,7 @@ class FreeplayState extends MusicBeatState
 		for (song in allSongs)
 		{
 			if (!allowed.contains(song.category)) continue;
+			if (erectBaseSongs.exists(song.songName.toLowerCase())) continue;
 			if (query.length > 0 && !song.songName.toLowerCase().contains(query))
 				continue;
 			filtered.push(song);
@@ -1136,7 +1182,7 @@ class FreeplayState extends MusicBeatState
 		cardTitle.text = song.songName;
 
 		var weekName:String = (song.week >= 0 && song.week < WeekData.weeksList.length) ? WeekData.weeksList[song.week] : '?';
-		var scoreKey:String = Highscore.formatSong(song.songName, curDifficulty);
+		var scoreKey:String = Highscore.formatSong(chartSongName(song, curDifficulty), curDifficulty);
 		var bestScore:Int = Highscore.songScores.exists(scoreKey) ? Highscore.songScores.get(scoreKey) : 0;
 		var bestRating:Float = Highscore.songRating.exists(scoreKey) ? Highscore.songRating.get(scoreKey) : 0;
 		var bestText:String = bestScore > 0
