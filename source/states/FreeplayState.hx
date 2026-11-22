@@ -270,7 +270,7 @@ class FreeplayState extends MusicBeatState
 		bottomBG.alpha = 0.6;
 		add(bottomBG);
 
-		var leText:String = Language.getPhrase("freeplay_tip", "Press SPACE to listen to the Song / Press CTRL to open the Gameplay Changers Menu / Press RESET to Reset your Score and Accuracy.");
+		var leText:String = Language.getPhrase("freeplay_tip", "Press SPACE to listen to the Song / Press CTRL to open the Gameplay Changers Menu / Press RESET twice to Reset your Score and Accuracy.");
 		bottomString = leText;
 		var size:Int = 16;
 		bottomText = new FlxText(bottomBG.x, bottomBG.y + 4, FlxG.width, leText, size);
@@ -631,9 +631,18 @@ class FreeplayState extends MusicBeatState
 		}
 		else if(controls.RESET && !player.playingMusic && !typing && songs.length > 0)
 		{
-			persistentUpdate = false;
-			openSubState(new ResetScoreSubState(currentChartSongName(), curDifficulty, songs[curSelected].songCharacter));
-			FlxG.sound.play(Paths.sound('scrollMenu'));
+			//R is the random song key, so a score reset has to be asked for twice instead
+			//of stealing the first press.
+			var now:Float = FlxG.game.ticks / 1000;
+			if(lastResetPress >= 0 && now - lastResetPress <= RESET_DOUBLE_PRESS)
+			{
+				lastResetPress = -1;
+				resetPromptThisFrame = true;
+				persistentUpdate = false;
+				openSubState(new ResetScoreSubState(currentChartSongName(), curDifficulty, songs[curSelected].songCharacter));
+				FlxG.sound.play(Paths.sound('scrollMenu'));
+			}
+			else lastResetPress = now;
 		}
 
 		if (!typing && !player.playingMusic)
@@ -642,8 +651,9 @@ class FreeplayState extends MusicBeatState
 				cycleSort();
 			if (FlxG.keys.justPressed.F && songs.length > 0)
 				toggleFavourite();
-			if (FlxG.keys.justPressed.R && songs.length > 1)
+			if (FlxG.keys.justPressed.R && songs.length > 1 && !resetPromptThisFrame)
 				randomSong();
+			resetPromptThisFrame = false;
 			if (FlxG.keys.justPressed.Q)
 				switchMix(-1);
 			if (FlxG.keys.justPressed.E)
@@ -1031,6 +1041,11 @@ class FreeplayState extends MusicBeatState
 		stopSongPreview();
 		refreshList();
 	}
+
+	/** Second `RESET` press within this many seconds opens the reset score prompt. */
+	static inline var RESET_DOUBLE_PRESS:Float = 0.4;
+	var lastResetPress:Float = -1;
+	var resetPromptThisFrame:Bool = false;
 
 	function randomSong():Void
 	{
