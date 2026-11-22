@@ -31,6 +31,15 @@ class HScript extends Iris
 	public var filePath:String;
 	public var modFolder:String;
 	public var returnValue:Dynamic;
+	/** Lower runs first. Prism scripts set it from `//@priority`. */
+	public var priority:Int = 0;
+	public var scriptTimers:ScriptTimers = new ScriptTimers();
+	/** Scripts this one expects to exist, from `//@requires`. */
+	public var requires:Array<String> = [];
+
+	/** Adds a global usable from the script. Used by PrismAPI. */
+	public function defineGlobal(name:String, value:Dynamic):Void
+		set(name, value);
 
 	#if LUA_ALLOWED
 	public var parentLua:FunkinLua;
@@ -82,7 +91,7 @@ class HScript extends Iris
 	#end
 
 	public var origin:String;
-	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false)
+	override public function new(?parent:Dynamic, ?file:String, ?varsToBring:Any = null, ?manualRun:Bool = false, ?codeOverride:String = null)
 	{
 		if (file == null)
 			file = '';
@@ -107,6 +116,7 @@ class HScript extends Iris
 				scriptName = f;
 			}
 		}
+		if(codeOverride != null) scriptThing = codeOverride;
 		#if LUA_ALLOWED
 		if (scriptName == null && parent != null)
 			scriptName = parent.scriptName;
@@ -215,6 +225,19 @@ class HScript extends Iris
 			}
 			return LuaUtils.getModSetting(saveTag, modName);
 		});
+
+		// Script messaging, shared with the Lua backend
+		set('dispatchEvent', function(name:String, ?data:Dynamic) {
+			if(PlayState.instance != null) PlayState.instance.dispatchScriptEvent(name, data, [origin]);
+		});
+		set('callScript', function(script:String, func:String, ?args:Array<Dynamic>) {
+			return PlayState.instance == null ? null : PlayState.instance.callNamedScript(script, func, args);
+		});
+		set('getScriptName', function() return origin);
+		set('scriptExists', function(name:String) {
+			return PlayState.instance != null && PlayState.instance.hasScriptNamed(name);
+		});
+		set('MathUtils', backend.MathUtils);
 
 		// Keyboard & Gamepads
 		set('keyboardJustPressed', function(name:String) return Reflect.getProperty(FlxG.keys.justPressed, name));
@@ -461,6 +484,7 @@ class HScript extends Iris
 
 	override public function destroy()
 	{
+		if(scriptTimers != null) scriptTimers.clear();
 		origin = null;
 		#if LUA_ALLOWED parentLua = null; #end
 		super.destroy();

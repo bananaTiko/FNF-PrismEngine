@@ -50,6 +50,11 @@ class FunkinLua {
 	public var scriptName:String = '';
 	public var modFolder:String = null;
 	public var closed:Bool = false;
+	/** Lower runs first. Set by `--@priority` in the file header. */
+	public var priority:Int = 0;
+	/** Scripts this one expects to exist, from `--@requires`. */
+	public var requires:Array<String> = [];
+	public var scriptTimers:ScriptTimers = new ScriptTimers();
 
 	#if HSCRIPT_ALLOWED
 	public var hscript:HScript = null;
@@ -76,6 +81,8 @@ class FunkinLua {
 		if(myFolder[0] + '/' == Paths.mods() && (Mods.currentModDirectory == myFolder[1] || Mods.getGlobalMods().contains(myFolder[1]))) //is inside mods folder
 			this.modFolder = myFolder[1];
 		#end
+
+		loadScriptHeader();
 
 		// Lua shit
 		set('Function_StopLua', LuaUtils.Function_StopLua);
@@ -1592,6 +1599,7 @@ class FunkinLua {
 
 		addLocalCallback("close", function() {
 			closed = true;
+			scriptTimers.clear();
 			trace('Closing script $scriptName');
 			return closed;
 		});
@@ -1613,6 +1621,8 @@ class FunkinLua {
 			if(func != null)
 				Lua_helper.add_callback(lua, name, func);
 		}
+
+		registerScriptExtras();
 
 		try{
 			var isString:Bool = !FileSystem.exists(scriptName);
@@ -1838,6 +1848,71 @@ class FunkinLua {
 	{
 		callbacks.set(name, myFunction);
 		Lua_helper.add_callback(lua, name, null); //just so that it gets called
+	}
+
+	/** Reads `--@priority` and `--@requires` from the top of the script file. */
+	function loadScriptHeader():Void
+	{
+		#if sys
+		if(scriptName == null || scriptName.length < 1 || !FileSystem.exists(scriptName)) return;
+
+		for (line in File.getContent(scriptName).split('\n'))
+		{
+			var trimmed:String = line.trim();
+			if(!trimmed.startsWith('--@')) continue;
+
+			var space:Int = trimmed.indexOf(' ');
+			var key:String = (space < 0 ? trimmed.substr(3) : trimmed.substring(3, space)).toLowerCase().trim();
+			var value:String = space < 0 ? '' : trimmed.substr(space + 1).trim();
+
+			switch(key)
+			{
+				case 'priority':
+					priority = Std.parseInt(value);
+				case 'requires':
+					for (required in value.split(','))
+					{
+						var req:String = required.trim();
+						if(req.length > 0) requires.push(req);
+					}
+			}
+		}
+		#end
+	}
+
+	/** Timers, script messaging and the header metadata, exposed to this script. */
+	function registerScriptExtras():Void
+	{
+		Lua_helper.add_callback(lua, 'setTimeout', function(name:String, ms:Float, funcName:String) {
+			scriptTimers.setTimeout(name, ms / 1000, function() call(funcName, []));
+			return true;
+		});
+		Lua_helper.add_callback(lua, 'setInterval', function(name:String, ms:Float, funcName:String) {
+			scriptTimers.setInterval(name, ms / 1000, function() call(funcName, []));
+			return true;
+		});
+		Lua_helper.add_callback(lua, 'cancelTimer', function(name:String) return scriptTimers.cancel(name));
+		Lua_helper.add_callback(lua, 'clearTimers', function() {
+			scriptTimers.clear();
+			return true;
+		});
+		Lua_helper.add_callback(lua, 'timerCount', function() return scriptTimers.count());
+
+		Lua_helper.add_callback(lua, 'dispatchEvent', function(name:String, ?data:Dynamic) {
+			if(PlayState.instance != null) PlayState.instance.dispatchScriptEvent(name, data, [scriptName]);
+		});
+		Lua_helper.add_callback(lua, 'callScript', function(script:String, func:String, ?args:Array<Dynamic>) {
+			return PlayState.instance == null ? null : PlayState.instance.callNamedScript(script, func, args);
+		});
+		Lua_helper.add_callback(lua, 'getScriptName', function() return scriptName);
+		Lua_helper.add_callback(lua, 'getScriptPriority', function() return priority);
+		Lua_helper.add_callback(lua, 'scriptExists', function(name:String) {
+			return PlayState.instance != null && PlayState.instance.hasScriptNamed(name);
+		});
+
+		for (req in requires)
+			if(PlayState.instance == null || !PlayState.instance.hasScriptNamed(req))
+				luaTrace('Missing required script: $req', true, false, FlxColor.YELLOW);
 	}
 
 	#if (!flash && sys)

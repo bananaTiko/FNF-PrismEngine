@@ -490,10 +490,12 @@ class PlayState extends MusicBeatState
 				#end
 
 				#if HSCRIPT_ALLOWED
-				if(file.toLowerCase().endsWith('.hx'))
+				if(file.toLowerCase().endsWith('.hx') || file.toLowerCase().endsWith('.prism'))
 					initHScript(folder + file);
 				#end
 			}
+
+		sortScriptsByPriority();
 		#end
 			
 		var camPos:FlxPoint = FlxPoint.get(girlfriendCameraOffset[0], girlfriendCameraOffset[1]);
@@ -714,10 +716,12 @@ class PlayState extends MusicBeatState
 				#end
 
 				#if HSCRIPT_ALLOWED
-				if(file.toLowerCase().endsWith('.hx'))
+				if(file.toLowerCase().endsWith('.hx') || file.toLowerCase().endsWith('.prism'))
 					initHScript(folder + file);
 				#end
 			}
+
+		sortScriptsByPriority();
 		#end
 
 		if(eventNotes.length > 0)
@@ -3814,6 +3818,7 @@ class PlayState extends MusicBeatState
 				if(script.scriptName == luaToLoad) return false;
 
 			new FunkinLua(luaToLoad);
+			sortScriptsByPriority();
 			return true;
 		}
 		return false;
@@ -3836,6 +3841,7 @@ class PlayState extends MusicBeatState
 			if (Iris.instances.exists(scriptToLoad)) return false;
 
 			initHScript(scriptToLoad);
+			sortScriptsByPriority();
 			return true;
 		}
 		return false;
@@ -3846,7 +3852,7 @@ class PlayState extends MusicBeatState
 		var newScript:HScript = null;
 		try
 		{
-			newScript = new HScript(null, file, varsToBring);
+			newScript = file.toLowerCase().endsWith('.prism') ? new PrismScript(null, file, varsToBring) : new HScript(null, file, varsToBring);
 			if (newScript.exists('onCreate')) newScript.call('onCreate');
 			trace('initialized hscript interp successfully: $file');
 			hscriptArray.push(newScript);
@@ -3940,6 +3946,81 @@ class PlayState extends MusicBeatState
 		var result:Dynamic = callOnLuas(funcToCall, args, ignoreStops, exclusions, excludeValues);
 		if(result == null || excludeValues.contains(result)) result = callOnHScript(funcToCall, args, ignoreStops, exclusions, excludeValues);
 		return result;
+	}
+
+	/**
+	 * Sends a custom event to every script except the sender, which listens for it with
+	 * `onScriptEvent(name, data)`. This is how scripts talk to each other.
+	 */
+	public function dispatchScriptEvent(name:String, ?data:Dynamic, ?exclusion:Array<String> = null):Void
+	{
+		callOnScripts('onScriptEvent', [name, data], true, exclusion);
+	}
+
+	/** Calls `func` on one named script, matching by file name or path. */
+	public function callNamedScript(scriptName:String, func:String, ?args:Array<Dynamic>):Dynamic
+	{
+		var target:Dynamic = findScriptNamed(scriptName);
+		if(target == null) return null;
+
+		#if LUA_ALLOWED
+		if(Std.isOfType(target, FunkinLua)) return (cast target : FunkinLua).call(func, args == null ? [] : args);
+		#end
+		#if HSCRIPT_ALLOWED
+		if(Std.isOfType(target, HScript)) return (cast target : HScript).call(func, args);
+		#end
+		return null;
+	}
+
+	public function hasScriptNamed(scriptName:String):Bool
+		return findScriptNamed(scriptName) != null;
+
+	public function findScriptNamed(scriptName:String):Dynamic
+	{
+		if(scriptName == null || scriptName.length < 1) return null;
+
+		#if LUA_ALLOWED
+		for (script in luaArray)
+			if(script != null && !script.closed && matchesScriptName(script.scriptName, scriptName)) return script;
+		#end
+		#if HSCRIPT_ALLOWED
+		for (script in hscriptArray)
+		{
+			if(script == null) continue;
+			var path:String = script.filePath != null ? script.filePath : script.origin;
+			if(matchesScriptName(path, scriptName)) return script;
+		}
+		#end
+		return null;
+	}
+
+	static function matchesScriptName(path:String, wanted:String):Bool
+	{
+		if(path == null || wanted == null) return false;
+
+		var filePath:String = path.replace('\\', '/').toLowerCase();
+		var name:String = wanted.replace('\\', '/').toLowerCase();
+		if(filePath == name || filePath.endsWith('/' + name)) return true;
+		if(name.contains('.')) return false;
+
+		for (ext in ['.lua', '.hx', '.prism'])
+			if(filePath.endsWith('/' + name + ext)) return true;
+		return false;
+	}
+
+	/** Order scripts by their `@priority` header so dependencies load before their dependants. */
+	public function sortScriptsByPriority():Void
+	{
+		#if LUA_ALLOWED
+		luaArray.sort(function(a, b) return a.priority - b.priority);
+		#end
+		#if HSCRIPT_ALLOWED
+		hscriptArray.sort(function(a, b) return a.priority - b.priority);
+
+		for (script in hscriptArray)
+			for (req in script.requires)
+				if(!hasScriptNamed(req)) trace('Missing required script: $req (required by ${script.origin})');
+		#end
 	}
 
 	public function callOnLuas(funcToCall:String, args:Array<Dynamic> = null, ignoreStops = false, exclusions:Array<String> = null, excludeValues:Array<Dynamic> = null):Dynamic {
