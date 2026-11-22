@@ -247,8 +247,13 @@ class Paths
 	static public function video(key:String)
 	{
 		#if MODS_ALLOWED
-		var file:String = modsVideo(key);
-		if(FileSystem.exists(file)) return file;
+		var modFile:String = modsVideo(key);
+		if(FileSystem.exists(modFile)) return modFile;
+	#end
+		// V-Slice ships some of its cutscenes as .mkv, so look for those too.
+		#if sys
+		if(!FileSystem.exists('assets/videos/$key.$VIDEO_EXT') && FileSystem.exists('assets/videos/$key.mkv'))
+			return 'assets/videos/$key.mkv';
 		#end
 		return 'assets/videos/$key.$VIDEO_EXT';
 	}
