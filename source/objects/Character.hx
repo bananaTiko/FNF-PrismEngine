@@ -551,6 +551,10 @@ class Character extends FlxSprite
 	public var isAnimateAtlas(default, null):Bool = false;
 	#if flxanimate
 	public var atlas:FlxAnimate;
+
+	// Set when an atlas throws while drawing, so a broken mod atlas hides its character
+	// instead of taking the whole song down.
+	var atlasBroken:Bool = false;
 	public override function draw()
 	{
 		var lastAlpha:Float = alpha;
@@ -563,10 +567,22 @@ class Character extends FlxSprite
 
 		if(isAnimateAtlas)
 		{
+			if(atlasBroken) return;
 			if(atlas.anim.curInstance != null)
 			{
 				copyAtlasValues();
-				atlas.draw();
+				try
+				{
+					atlas.draw();
+				}
+				catch(e:haxe.Exception)
+				{
+					atlasBroken = true;
+					alpha = lastAlpha;
+					color = lastColor;
+					FlxG.log.error('Hiding "$curCharacter", its Animate atlas could not be drawn: $e');
+					return;
+				}
 				alpha = lastAlpha;
 				color = lastColor;
 				if(missingCharacter && visible)

@@ -681,6 +681,12 @@ class Paths
 		//trace(spriteJson);
 		//trace(animationJson);
 		spr.loadAtlasEx(folderOrImg, spriteJson, animationJson);
+
+		// Animate's clipped layers and filters are drawn through a render-to-texture path that
+		// null-refs on draw (Spaghetti's GF has nine clipped layers and took the song down on
+		// its first frame), so every atlas is drawn without them.
+		if(spr.anim != null && spr.anim.metadata != null)
+			spr.anim.metadata.skipFilters = true;
 	}
 	#end
 }
