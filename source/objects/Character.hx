@@ -12,6 +12,16 @@ import haxe.Json;
 import backend.Song;
 import states.stages.objects.TankmenBG;
 
+import psychlua.LuaUtils;
+
+#if LUA_ALLOWED
+import psychlua.FunkinLua;
+#end
+
+#if HSCRIPT_ALLOWED
+import psychlua.HScript;
+#end
+
 typedef CharacterFile = {
 	var animations:Array<AnimArray>;
 	var image:String;
@@ -73,6 +83,25 @@ class Character extends FlxSprite
 	public var missingText:FlxText;
 	public var hasMissAnimations:Bool = false;
 	public var vocalsFile:String = '';
+
+	// Scripts loaded for this character by PlayState.startCharacterScripts
+	#if LUA_ALLOWED
+	public var luaScripts:Array<FunkinLua> = [];
+
+	public function addLuaScript(script:FunkinLua):Void
+	{
+		if(script != null && !luaScripts.contains(script)) luaScripts.push(script);
+	}
+	#end
+
+	#if HSCRIPT_ALLOWED
+	public var hScripts:Array<HScript> = [];
+
+	public function addHScript(script:HScript):Void
+	{
+		if(script != null && !hScripts.contains(script)) hScripts.push(script);
+	}
+	#end
 
 	//Used on Character Editor
 	public var imageFile:String = '';
@@ -142,6 +171,52 @@ class Character extends FlxSprite
 		hasMissAnimations = hasAnimation('singLEFTmiss') || hasAnimation('singDOWNmiss') || hasAnimation('singUPmiss') || hasAnimation('singRIGHTmiss');
 		recalculateDanceIdle();
 		dance();
+	}
+
+	// Calls only this character's scripts, unlike the song-wide callOnScripts
+	public function callOnScripts(func:String, ?args:Array<Dynamic>):Dynamic
+	{
+		if(args == null) args = [];
+
+		var result:Dynamic = null;
+
+		#if LUA_ALLOWED
+		for (script in luaScripts)
+		{
+			var value:Dynamic = script.call(func, args);
+			if(value != null && value != LuaUtils.Function_Continue) result = value;
+		}
+		#end
+
+		#if HSCRIPT_ALLOWED
+		for (script in hScripts)
+		{
+			if(!script.exists(func)) continue;
+
+			var callValue:Dynamic = script.call(func, args);
+			if(callValue != null && callValue.returnValue != null && callValue.returnValue != LuaUtils.Function_Continue)
+				result = callValue.returnValue;
+		}
+		#end
+
+		return result;
+	}
+
+	/**
+	 * Camera offset for this character. A character script can replace it by returning
+	 * `{x = ..., y = ...}` from onGetCamPos (Lua) or `{x: ..., y: ...}` / a FlxPoint (HScript).
+	 */
+	public function getCameraPosition():Array<Float>
+	{
+		var scriptPos:Dynamic = callOnScripts('onGetCamPos');
+		if(scriptPos != null)
+		{
+			var posX:Dynamic = Reflect.field(scriptPos, 'x');
+			var posY:Dynamic = Reflect.field(scriptPos, 'y');
+			if(posX != null && posY != null)
+				return [cast posX, cast posY];
+		}
+		return cameraPosition;
 	}
 
 	public function loadCharacterFile(json:Dynamic)
@@ -364,6 +439,8 @@ class Character extends FlxSprite
 	{
 		if (!debugMode && !skipDance && !specialAnim)
 		{
+			callOnScripts('onDance');
+
 			if(danceIdle)
 			{
 				danced = !danced;
@@ -380,6 +457,8 @@ class Character extends FlxSprite
 
 	public function playAnim(AnimName:String, Force:Bool = false, Reversed:Bool = false, Frame:Int = 0):Void
 	{
+		callOnScripts('onPlayAnim', [AnimName, Force]);
+
 		specialAnim = false;
 		if(!isAnimateAtlas)
 		{

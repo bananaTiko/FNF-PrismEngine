@@ -499,8 +499,9 @@ class PlayState extends MusicBeatState
 		var camPos:FlxPoint = FlxPoint.get(girlfriendCameraOffset[0], girlfriendCameraOffset[1]);
 		if(gf != null)
 		{
-			camPos.x += gf.getGraphicMidpoint().x + gf.cameraPosition[0];
-			camPos.y += gf.getGraphicMidpoint().y + gf.cameraPosition[1];
+			var gfCam:Array<Float> = gf.getCameraPosition();
+			camPos.x += gf.getGraphicMidpoint().x + gfCam[0];
+			camPos.y += gf.getGraphicMidpoint().y + gfCam[1];
 		}
 
 		if(dad.curCharacter.startsWith('gf')) {
@@ -515,9 +516,9 @@ class PlayState extends MusicBeatState
 		#if HSCRIPT_ALLOWED startHScriptsNamed('stages/' + curStage + '.hx'); #end
 
 		// CHARACTER SCRIPTS
-		if(gf != null) startCharacterScripts(gf.curCharacter);
-		startCharacterScripts(dad.curCharacter);
-		startCharacterScripts(boyfriend.curCharacter);
+		if(gf != null) startCharacterScripts(gf.curCharacter, gf);
+		startCharacterScripts(dad.curCharacter, dad);
+		startCharacterScripts(boyfriend.curCharacter, boyfriend);
 		#end
 
 		uiGroup = new FlxSpriteGroup();
@@ -850,7 +851,7 @@ class PlayState extends MusicBeatState
 					boyfriendGroup.add(newBoyfriend);
 					startCharacterPos(newBoyfriend);
 					newBoyfriend.alpha = 0.00001;
-					startCharacterScripts(newBoyfriend.curCharacter);
+					startCharacterScripts(newBoyfriend.curCharacter, newBoyfriend);
 				}
 
 			case 1:
@@ -860,7 +861,7 @@ class PlayState extends MusicBeatState
 					dadGroup.add(newDad);
 					startCharacterPos(newDad, true);
 					newDad.alpha = 0.00001;
-					startCharacterScripts(newDad.curCharacter);
+					startCharacterScripts(newDad.curCharacter, newDad);
 				}
 
 			case 2:
@@ -871,76 +872,79 @@ class PlayState extends MusicBeatState
 					gfGroup.add(newGf);
 					startCharacterPos(newGf);
 					newGf.alpha = 0.00001;
-					startCharacterScripts(newGf.curCharacter);
+					startCharacterScripts(newGf.curCharacter, newGf);
 				}
 		}
 	}
 
-	function startCharacterScripts(name:String)
+	function startCharacterScripts(name:String, ?character:Character)
 	{
 		// Lua
 		#if LUA_ALLOWED
-		var doPush:Bool = false;
-		var luaFile:String = 'characters/$name.lua';
-		#if MODS_ALLOWED
-		var replacePath:String = Paths.modFolders(luaFile);
-		if(FileSystem.exists(replacePath))
-		{
-			luaFile = replacePath;
-			doPush = true;
-		}
-		else
-		{
-			luaFile = Paths.getSharedPath(luaFile);
-			if(FileSystem.exists(luaFile))
-				doPush = true;
-		}
-		#else
-		luaFile = Paths.getSharedPath(luaFile);
-		if(Assets.exists(luaFile)) doPush = true;
-		#end
+		var luaFile:Null<String> = findCharacterScriptFile('characters/$name.lua');
+		if(luaFile == null) luaFile = findCharacterScriptFile('data/characters/$name.lua');
 
-		if(doPush)
+		if(luaFile != null)
 		{
-			for (script in luaArray)
+			var script:FunkinLua = null;
+			for (loaded in luaArray)
 			{
-				if(script.scriptName == luaFile)
+				if(loaded.scriptName == luaFile)
 				{
-					doPush = false;
+					script = loaded;
 					break;
 				}
 			}
-			if(doPush) new FunkinLua(luaFile);
+
+			if(script == null) script = new FunkinLua(luaFile);
+
+			if(character != null) character.addLuaScript(script);
 		}
 		#end
 
 		// HScript
 		#if HSCRIPT_ALLOWED
-		var doPush:Bool = false;
-		var scriptFile:String = 'characters/' + name + '.hx';
-		#if MODS_ALLOWED
-		var replacePath:String = Paths.modFolders(scriptFile);
-		if(FileSystem.exists(replacePath))
-		{
-			scriptFile = replacePath;
-			doPush = true;
-		}
-		else
-		#end
-		{
-			scriptFile = Paths.getSharedPath(scriptFile);
-			if(FileSystem.exists(scriptFile))
-				doPush = true;
-		}
+		var scriptFile:Null<String> = findCharacterScriptFile('characters/' + name + '.hx');
+		if(scriptFile == null) scriptFile = findCharacterScriptFile('data/characters/' + name + '.hx');
 
-		if(doPush)
+		if(scriptFile != null)
 		{
+			var script:HScript = null;
 			if(Iris.instances.exists(scriptFile))
-				doPush = false;
+				script = cast Iris.instances.get(scriptFile);
+			else
+			{
+				// Passed before onCreate runs, so the script can use them right away
+				initHScript(scriptFile, character != null ? {character: character, characterName: name} : null);
+				if(Iris.instances.exists(scriptFile))
+					script = cast Iris.instances.get(scriptFile);
+			}
 
-			if(doPush) initHScript(scriptFile);
+			if(script != null && character != null)
+			{
+				// Lets the script talk about the character that loaded it
+				script.set('character', character);
+				script.set('characterName', name);
+				character.addHScript(script);
+			}
 		}
 		#end
+	}
+
+	// characters/<name> is where these files usually live, data/characters/<name> works too
+	function findCharacterScriptFile(file:String):Null<String>
+	{
+		#if MODS_ALLOWED
+		var path:String = Paths.modFolders(file);
+		if(FileSystem.exists(path)) return path;
+
+		path = Paths.getSharedPath(file);
+		if(FileSystem.exists(path)) return path;
+		#else
+		var path:String = Paths.getSharedPath(file);
+		if(Assets.exists(path)) return path;
+		#end
+		return null;
 	}
 
 	public function getLuaObject(tag:String):Dynamic
@@ -976,33 +980,41 @@ class PlayState extends MusicBeatState
 
 		if (foundFile)
 		{
-			videoCutscene = new VideoSprite(fileName, forMidSong, canSkip, loop);
-			if(forMidSong) videoCutscene.videoSprite.bitmap.rate = playbackRate;
+			var cutscene:VideoSprite = new VideoSprite(fileName, forMidSong, canSkip, loop);
+			videoCutscene = cutscene;
+			if(forMidSong) cutscene.videoSprite.bitmap.rate = playbackRate;
+			callOnScripts('onCutsceneStart', [name]);
 
-			// Finish callback
-			if (!forMidSong)
+			// Shared by the natural end and both skip paths. `finished` keeps a skip's
+			// onSkip + onEndReached pair from reporting the end twice.
+			var finished:Bool = false;
+			function onVideoEnd(skipped:Bool)
 			{
-				function onVideoEnd()
+				if (finished) return;
+				finished = true;
+
+				if (!forMidSong && !isDead && generatedMusic && PlayState.SONG.notes[Std.int(curStep / 16)] != null && !endingSong && !isCameraOnForcedPos)
 				{
-					if (!isDead && generatedMusic && PlayState.SONG.notes[Std.int(curStep / 16)] != null && !endingSong && !isCameraOnForcedPos)
-					{
-						moveCameraSection();
-						FlxG.camera.snapToTarget();
-					}
-					videoCutscene = null;
-					canPause = true;
-					inCutscene = false;
-					startAndEnd();
+					moveCameraSection();
+					FlxG.camera.snapToTarget();
 				}
-				videoCutscene.finishCallback = onVideoEnd;
-				videoCutscene.onSkip = onVideoEnd;
+				if (videoCutscene == cutscene) videoCutscene = null;
+				canPause = true;
+				inCutscene = false;
+
+				callOnScripts('onCutsceneEnd', [name, skipped]);
+
+				if (!forMidSong) startAndEnd();
 			}
-			if (GameOverSubstate.instance != null && isDead) GameOverSubstate.instance.add(videoCutscene);
-			else add(videoCutscene);
+			cutscene.finishCallback = () -> onVideoEnd(false);
+			cutscene.onSkip = () -> onVideoEnd(true);
+
+			if (GameOverSubstate.instance != null && isDead) GameOverSubstate.instance.add(cutscene);
+			else add(cutscene);
 
 			if (playOnLoad)
-				videoCutscene.play();
-			return videoCutscene;
+				cutscene.play();
+			return cutscene;
 		}
 		#if (LUA_ALLOWED || HSCRIPT_ALLOWED)
 		else addTextToDebug(Language.getPhrase('debug_video_not_found', 'Video not found: {1}', [fileName]), FlxColor.RED);
@@ -1212,6 +1224,8 @@ class PlayState extends MusicBeatState
 				stagesFunc(function(stage:BaseStage) stage.countdownTick(tick, swagCounter));
 				callOnLuas('onCountdownTick', [swagCounter]);
 				callOnHScript('onCountdownTick', [tick, swagCounter]);
+				// The number on screen: 3, 2, 1 then 0 for GO
+				if(swagCounter < 4) callOnScripts('onCountdown', [3 - swagCounter]);
 
 				swagCounter += 1;
 			}, 5);
@@ -1783,6 +1797,10 @@ class PlayState extends MusicBeatState
 				swagNote.scrollFactor.set();
 				unspawnNotes.push(swagNote);
 
+				// Only head notes, sustains are generated from them below
+				callOnLuas('onNoteCreation', [swagNote.noteData, swagNote.noteType, swagNote.strumTime, swagNote.mustPress]);
+				callOnHScript('onNoteCreation', [swagNote]);
+
 				var curStepCrochet:Float = 60 / daBpm * 1000 / 4.0;
 				final roundSus:Int = Math.round(swagNote.sustainLength / curStepCrochet);
 				if(roundSus > 0)
@@ -1963,6 +1981,10 @@ class PlayState extends MusicBeatState
 
 			strumLineNotes.add(babyArrow);
 			babyArrow.playerPosition();
+
+			// Objects can't cross into Lua, so it gets the direction and player instead
+			callOnLuas('onStrumCreation', [i, player]);
+			callOnHScript('onStrumCreation', [babyArrow]);
 		}
 	}
 
@@ -2095,7 +2117,7 @@ class PlayState extends MusicBeatState
 
 		if(botplayTxt != null && botplayTxt.visible) {
 			botplaySine += 180 * elapsed;
-			botplayTxt.alpha = 1 - Math.sin((Math.PI * botplaySine) / 180);
+			botplayTxt.alpha = 1 - MathUtils.sinDeg(botplaySine);
 		}
 
 		// `startedCountdown` is still false while a pre-song cutscene runs, hence inCutscene.
@@ -2745,9 +2767,10 @@ class PlayState extends MusicBeatState
 	
 	public function moveCameraToGirlfriend()
 	{
+		var gfCam:Array<Float> = gf.getCameraPosition();
 		camFollow.setPosition(gf.getMidpoint().x, gf.getMidpoint().y);
-		camFollow.x += gf.cameraPosition[0] + girlfriendCameraOffset[0];
-		camFollow.y += gf.cameraPosition[1] + girlfriendCameraOffset[1];
+		camFollow.x += gfCam[0] + girlfriendCameraOffset[0];
+		camFollow.y += gfCam[1] + girlfriendCameraOffset[1];
 		tweenCamIn();
 	}
 
@@ -2757,17 +2780,19 @@ class PlayState extends MusicBeatState
 		if(isDad)
 		{
 			if(dad == null) return;
+			var dadCam:Array<Float> = dad.getCameraPosition();
 			camFollow.setPosition(dad.getMidpoint().x + 150, dad.getMidpoint().y - 100);
-			camFollow.x += dad.cameraPosition[0] + opponentCameraOffset[0];
-			camFollow.y += dad.cameraPosition[1] + opponentCameraOffset[1];
+			camFollow.x += dadCam[0] + opponentCameraOffset[0];
+			camFollow.y += dadCam[1] + opponentCameraOffset[1];
 			tweenCamIn();
 		}
 		else
 		{
 			if(boyfriend == null) return;
+			var bfCam:Array<Float> = boyfriend.getCameraPosition();
 			camFollow.setPosition(boyfriend.getMidpoint().x - 100, boyfriend.getMidpoint().y - 100);
-			camFollow.x -= boyfriend.cameraPosition[0] - boyfriendCameraOffset[0];
-			camFollow.y += boyfriend.cameraPosition[1] + boyfriendCameraOffset[1];
+			camFollow.x -= bfCam[0] - boyfriendCameraOffset[0];
+			camFollow.y += bfCam[1] + boyfriendCameraOffset[1];
 
 			if (songName == 'tutorial' && cameraTwn == null && FlxG.camera.zoom != 1)
 			{
@@ -2856,6 +2881,7 @@ class PlayState extends MusicBeatState
 			var playedSeconds:Float = Conductor.songPosition / 1000;
 			if (playedSeconds < 0) playedSeconds = 0;
 			PlayStats.addSong(Std.int(Math.max(totalPlayed - songMisses, 0)), songMisses, playedSeconds);
+			PlayStats.recordRecent(Paths.formatToSongPath(SONG.song) + '|' + storyDifficulty);
 
 			var previousBestScore:Int = 0;
 			#if !switch
@@ -3762,6 +3788,14 @@ class PlayState extends MusicBeatState
 		callOnScripts('onSectionHit');
 	}
 
+	override function measureHit()
+	{
+		super.measureHit();
+
+		setOnScripts('curMeasure', curMeasure);
+		callOnScripts('onMeasureHit', [curMeasure]);
+	}
+
 	#if LUA_ALLOWED
 	public function startLuasNamed(luaFile:String)
 	{
@@ -3807,12 +3841,12 @@ class PlayState extends MusicBeatState
 		return false;
 	}
 
-	public function initHScript(file:String)
+	public function initHScript(file:String, ?varsToBring:Any = null)
 	{
 		var newScript:HScript = null;
 		try
 		{
-			newScript = new HScript(null, file);
+			newScript = new HScript(null, file, varsToBring);
 			if (newScript.exists('onCreate')) newScript.call('onCreate');
 			trace('initialized hscript interp successfully: $file');
 			hscriptArray.push(newScript);
@@ -4045,7 +4079,7 @@ class PlayState extends MusicBeatState
 			if(totalPlayed != 0) //Prevent divide by 0
 			{
 				// Rating Percent
-				ratingPercent = Math.min(1, Math.max(0, totalNotesHit / totalPlayed));
+				ratingPercent = MathUtils.clamp(totalNotesHit / totalPlayed, 0, 1);
 				//trace((totalNotesHit / totalPlayed) + ', Total: ' + totalPlayed + ', notes hit: ' + totalNotesHit);
 
 				// Rating Name
