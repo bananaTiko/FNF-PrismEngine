@@ -31,6 +31,9 @@ class Limo extends BaseStage
 		var skyBG:BGSprite = new BGSprite('limo/limoSunset', -120, -50, 0.1, 0.1);
 		add(skyBG);
 
+		var tunnel:BGSprite = new BGSprite('limo/limoTunnel', -300, -100, 0.25, 0.25, ['Tunnel'], true);
+		add(tunnel);
+
 		if(!ClientPrefs.data.lowQuality) {
 			limoMetalPole = new BGSprite('gore/metalPole', -500, 220, 0.4, 0.4);
 			add(limoMetalPole);

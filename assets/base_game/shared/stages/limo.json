@@ -16,6 +16,7 @@
 	"preload": {
 		"images/limo/limoDancer": 2,
 		"images/limo/limoDrive": 2,
+		"images/limo/limoTunnel": 2,
 		"images/gore/": 2,
 		"images/limo/fastCarLol": 3,
 		"images/limo/limoSunset": 3,

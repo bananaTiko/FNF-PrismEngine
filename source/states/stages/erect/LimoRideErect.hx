@@ -56,6 +56,9 @@ class LimoRideErect extends BaseStage
 		skyBG.updateHitbox();
 		add(skyBG);
 
+		var tunnel:BGSprite = new BGSprite('limo/erect/limoTunnel', -300, -100, 0.25, 0.25, ['Tunnel'], true);
+		add(tunnel);
+
 		star = new BGSprite('limo/erect/shooting_star', 200, 0, 1, 1, ['shooting star']);
 		star.blend = BlendMode.ADD;
 		add(star);
