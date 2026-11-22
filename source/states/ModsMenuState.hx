@@ -14,11 +14,14 @@ import options.ModSettingsSubState;
 
 import openfl.display.BitmapData;
 import lime.utils.Assets;
+import flxgif.FlxGifSprite;
 
 class ModsMenuState extends MusicBeatState
 {
 	var bg:FlxSprite;
 	var icon:FlxSprite;
+	var previewGif:FlxGifSprite = null; //plays the .gif icon of the selected mod in the big preview slot
+	var previewGifPath:String = null;
 	var modName:Alphabet;
 	var modDesc:FlxText;
 	var modRestartText:FlxText;
@@ -85,7 +88,7 @@ class ModsMenuState extends MusicBeatState
 			var modItem:ModItem = new ModItem(mod);
 			if(modsList.disabled.contains(mod))
 			{
-				modItem.icon.color = 0xFFFF6666;
+				modItem.setIconColor(0xFFFF6666);
 				modItem.text.color = FlxColor.GRAY;
 			}
 			modsGroup.add(modItem);
@@ -122,7 +125,7 @@ class ModsMenuState extends MusicBeatState
 				{
 					modsList.disabled.remove(mod.folder);
 					modsList.enabled.push(mod.folder);
-					mod.icon.color = FlxColor.WHITE;
+					mod.setIconColor(FlxColor.WHITE);
 					mod.text.color = FlxColor.WHITE;
 				}
 			}
@@ -142,7 +145,7 @@ class ModsMenuState extends MusicBeatState
 				{
 					modsList.enabled.remove(mod.folder);
 					modsList.disabled.push(mod.folder);
-					mod.icon.color = 0xFFFF6666;
+					mod.setIconColor(0xFFFF6666);
 					mod.text.color = FlxColor.GRAY;
 				}
 			}
@@ -266,7 +269,7 @@ class ModsMenuState extends MusicBeatState
 				modsList.disabled.remove(mod);
 				modsList.enabled.push(mod);
 			}
-			curMod.icon.color = modsList.disabled.contains(mod) ? 0xFFFF6666 : FlxColor.WHITE;
+			curMod.setIconColor(modsList.disabled.contains(mod) ? 0xFFFF6666 : FlxColor.WHITE);
 			curMod.text.color = modsList.disabled.contains(mod) ? FlxColor.GRAY : FlxColor.WHITE;
 
 			if(curMod.mustRestart) waitingToRestart = true;
@@ -429,9 +432,9 @@ class ModsMenuState extends MusicBeatState
 								{
 									var factor:Float = -1;
 									if(FlxG.mouse.y < bgList.y)
-										factor = Math.abs(Math.max(0.2, Math.min(0.5, 0.5 - (bgList.y - FlxG.mouse.y) / 100)));
+										factor = Math.abs(MathUtils.clamp(0.5 - (bgList.y - FlxG.mouse.y) / 100, 0.2, 0.5));
 									else if(FlxG.mouse.y > bgList.y + bgList.height)
-										factor = Math.abs(Math.max(0.2, Math.min(0.5, 0.5 - (FlxG.mouse.y - bgList.y - bgList.height) / 100)));
+										factor = Math.abs(MathUtils.clamp(0.5 - (FlxG.mouse.y - bgList.y - bgList.height) / 100, 0.2, 0.5));
 		
 									if(factor >= 0)
 									{
@@ -442,7 +445,7 @@ class ModsMenuState extends MusicBeatState
 											var newPos = curSelectedMod;
 											if(FlxG.mouse.y < bgList.y) newPos--;
 											else newPos++;
-											moveModToPosition(Std.int(Math.max(0, Math.min(modsGroup.length - 1, newPos))));
+											moveModToPosition(MathUtils.clampInt(newPos, 0, modsGroup.length - 1));
 										}
 									}
 								}
@@ -536,7 +539,7 @@ class ModsMenuState extends MusicBeatState
 		else
 		{
 			noModsSine += 180 * elapsed;
-			noModsTxt.alpha = 1 - Math.sin((Math.PI * noModsSine) / 180);
+			noModsTxt.alpha = 1 - MathUtils.sinDeg(noModsSine);
 			
 			// Keep refreshing mods list every 2 seconds until you add a mod on the folder
 			nextAttempt -= elapsed;
@@ -597,7 +600,7 @@ class ModsMenuState extends MusicBeatState
 		}
 
 		if(modsList.all.length < 1) return buttonReload; //prevent possible crash from my irresponsibility
-		return buttons[Std.int(Math.max(0, Math.min(buttons.length-1, curSelectedButton)))];
+		return buttons[MathUtils.clampInt(curSelectedButton, 0, buttons.length-1)];
 	}
 
 	function changeSelectedMod(add:Int = 0, isMouseWheel:Bool = false)
@@ -677,14 +680,39 @@ class ModsMenuState extends MusicBeatState
 		}
 		updateItemPositions();
 
-		icon.loadGraphic(curMod.icon.graphic, true, 150, 150);
-		icon.antialiasing = curMod.icon.antialiasing;
-
-		if(curMod.totalFrames > 0)
+		if(curMod.gifIcon != null) //Animated .gif icon: the preview plays its own copy of the file
 		{
-			icon.animation.add("icon", [for (i in 0...curMod.totalFrames) i], curMod.iconFps);
-			icon.animation.play("icon");
-			icon.animation.curAnim.curFrame = curMod.icon.animation.curAnim.curFrame;
+			icon.visible = false;
+			if(previewGif == null)
+			{
+				previewGif = new FlxGifSprite(icon.x, icon.y);
+				previewGif.antialiasing = ClientPrefs.data.antialiasing;
+				add(previewGif);
+			}
+			previewGif.visible = true;
+			previewGif.color = curMod.gifIcon.color;
+			if(previewGifPath != curMod.gifPath) //decoding is not free, only reload when the mod changes
+			{
+				previewGif.loadGif(File.getBytes(curMod.gifPath));
+				previewGif.updateHitbox();
+				previewGifPath = curMod.gifPath;
+			}
+		}
+		else
+		{
+			icon.visible = true;
+			if(previewGif != null) previewGif.visible = false;
+			previewGifPath = null;
+
+			icon.loadGraphic(curMod.icon.graphic, true, 150, 150);
+			icon.antialiasing = curMod.icon.antialiasing;
+
+			if(curMod.totalFrames > 0)
+			{
+				icon.animation.add("icon", [for (i in 0...curMod.totalFrames) i], curMod.iconFps);
+				icon.animation.play("icon");
+				icon.animation.curAnim.curFrame = curMod.icon.animation.curAnim.curFrame;
+			}
 		}
 
 		if(modName.scaleX != 0.8) modName.setScale(0.8);
@@ -804,11 +832,21 @@ class ModItem extends FlxSpriteGroup
 	public var name:String = Language.getPhrase('mods_unknown_name', 'Unknown Mod');
 	public var desc:String = Language.getPhrase('mods_no_description', 'No description provided.');
 	public var iconFps:Int = 10;
+
+	//Animated .gif icon (mods/<folder>/pack.gif), loaded through flxgif
+	public var gifIcon:FlxGifSprite = null;
+	public var gifPath:String = null;
 	public var bgColor:FlxColor = 0xFF665AFF;
 	public var pack:Dynamic = null;
 	public var folder:String = 'unknownMod';
 	public var mustRestart:Bool = false;
 	public var settings:Array<Dynamic> = null;
+
+	public function setIconColor(color:FlxColor):Void
+	{
+		icon.color = color;
+		if(gifIcon != null) gifIcon.color = color;
+	}
 
 	public function new(folder:String)
 	{
@@ -851,26 +889,48 @@ class ModItem extends FlxSpriteGroup
 		text.y -= Std.int(text.height / 2);
 		add(text);
 
-		var isPixel = false;
-		var file:String = Paths.mods('$folder/pack.png');
-		if (!FileSystem.exists(file))
+		//An animated gif icon takes priority over the 150x150 framed sprite sheets below
+		gifPath = Paths.mods('$folder/pack.gif');
+		if(FileSystem.exists(gifPath))
 		{
-			file = Paths.mods('$folder/pack-pixel.png');
-			isPixel = true;
+			gifIcon = new FlxGifSprite(5, 5);
+			gifIcon.loadGif(File.getBytes(gifPath));
+			gifIcon.antialiasing = ClientPrefs.data.antialiasing;
+			gifIcon.scale.set(0.5, 0.5);
+			gifIcon.updateHitbox();
+			add(gifIcon);
+			icon.visible = false;
 		}
-		
-		var bmp:BitmapData = null;
-		if (FileSystem.exists(file)) bmp = BitmapData.fromFile(file);
-		else isPixel = false;
+		else
+		{
+			var isPixel = false;
+			var file:String = Paths.mods('$folder/pack.png');
+			if (!FileSystem.exists(file))
+			{
+				file = Paths.mods('$folder/pack-pixel.png');
+				isPixel = true;
+			}
+			
+			var bmp:BitmapData = null;
+			if (FileSystem.exists(file)) bmp = BitmapData.fromFile(file);
+			else isPixel = false;
 
-		if(FileSystem.exists(file))
-		{
-			icon.loadGraphic(Paths.cacheBitmap(file, bmp), true, 150, 150);
-			if(isPixel) icon.antialiasing = false;
+			if(FileSystem.exists(file))
+			{
+				icon.loadGraphic(Paths.cacheBitmap(file, bmp), true, 150, 150);
+				if(isPixel) icon.antialiasing = false;
+			}
+			else icon.loadGraphic(Paths.image('unknownMod'), true, 150, 150);
+			icon.scale.set(0.5, 0.5);
+			icon.updateHitbox();
+
+			if(bmp != null)
+			{
+				totalFrames = Math.floor(bmp.width / 150) * Math.floor(bmp.height / 150);
+				icon.animation.add("icon", [for (i in 0...totalFrames) i], iconFps);
+				icon.animation.play("icon");
+			}
 		}
-		else icon.loadGraphic(Paths.image('unknownMod'), true, 150, 150);
-		icon.scale.set(0.5, 0.5);
-		icon.updateHitbox();
 		
 		this.name = folder;
 		if(pack != null)
@@ -888,12 +948,6 @@ class ModItem extends FlxSpriteGroup
 		}
 		text.text = this.name;
 
-		if(bmp != null)
-		{
-			totalFrames = Math.floor(bmp.width / 150) * Math.floor(bmp.height / 150);
-			icon.animation.add("icon", [for (i in 0...totalFrames) i], iconFps);
-			icon.animation.play("icon");
-		}
 		selectBg.scale.set(width + 5, height + 5);
 		selectBg.updateHitbox();
 	}
