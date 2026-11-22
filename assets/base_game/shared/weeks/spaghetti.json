@@ -1,21 +1,27 @@
 {
-	"songs": [
-		["Spaghetti", "sserafim-kazuha", [146, 113, 253]]
-	],
-
-	"weekCharacters": [
-		"sserafim-kazuha",
-		"sserafim-sakura",
-		"sserafim-gf"
-	],
-	"weekBackground": "stage",
-
-	"storyName": "Spaghetti",
-	"weekBefore": "weekend1",
-	"weekName": "Spaghetti",
+	"storyName": "LE SSERAFUN",
 	"difficulties": "Easy,Normal,Hard",
+	"hideFreeplay": false,
+	"weekBackground": "",
+	"weekBefore": "weekend1",
 	"startUnlocked": true,
+	"hideStoryMode": true,
+	"weekCharacters": [
+		"",
+		"spaghetti",
+		""
+	],
+	"songs": [
+		[
+			"Spaghetti",
+			"sserafim-kazuha",
+			[
+				206,
+				30,
+				120
+			]
+		]
+	],
 	"hiddenUntilUnlocked": false,
-	"hideStoryMode": false,
-	"hideFreeplay": false
+	"weekName": "collab1"
 }
