@@ -1,0 +1,62 @@
+// Prism scripts (.prism)
+//
+// Haxe syntax, like HScript, but with the Lua API available as globals and a Python/Lua-flavoured
+// preprocessor on top. Use the real classes (FlxSprite, PlayState, Paths) for anything structural,
+// and the short helpers below for the things you would otherwise write five lines for.
+//
+// Preprocessor:
+//   # comment            becomes a // comment   (#if/#elseif/#else/#end are left for Haxe)
+//   local x = 1          becomes var x = 1
+//   nil                  becomes null
+//   elif                 becomes else if
+//   string literals and existing // comments are never rewritten
+//
+//
+// Header, anywhere in the file:
+//   //@priority 10        scripts run in ascending priority (default 0)
+//   //@requires other.prism, common/helpers.lua
+
+function onCreate()
+{
+	var bg = getProperty('bg');                 // a sprite the stage or another script made
+	setProperty('bg.alpha', 0.5);
+
+	var dad = object('dad');
+	print('created prism script: ' + getScriptName());
+}
+
+function onScriptEvent(name, data)
+{
+	// Fired by another script calling dispatchEvent('name', data)
+	if (name == 'flash') FlxG.camera.flash(0xFFFFFFFF, 0.4);
+}
+
+function onUpdate(elapsed)
+{
+	// Timers take closures, so no need to name a Lua function:
+	// setTimeout('once', 500, function() print('half a second later'); });
+
+	// Or ask another script to do something:
+	// callScript('ui.prism', 'hide', []);
+}
+
+// ---------------------------------------------------------------------------
+// Hooks: same list as TemplateScript.hx / TemplateScript.lua (onCreate, onCreatePost,
+// onUpdate, onUpdatePost, onBeatHit, onStepHit, onSectionHit, onMeasureHit, onCountdown,
+// onSongStart, onEndSong, onPause, onResume, onScriptEvent, onDestroy, ...)
+//
+// Helpers injected on top of HScript:
+//   getProperty(name[, variable]) / setProperty(name, variable, value)
+//   getPropertyFromClass(class, variable) / setPropertyFromClass(class, variable, value)
+//   object(name)                     -> whatever getProperty(name) would return
+//   note(id) / noteCount()
+//   playSound(name[, volume]) / playMusic(name[, volume])
+//   setTimeout(name, ms, fn) / setInterval(name, ms, fn)
+//   cancelTimer(name) / clearTimers()
+//   dispatchEvent(name[, data]) / callScript(script, function[, args])
+//   getScriptName() / scriptExists(name)
+//   print(value) / len(value) / str(value) / int(value) / float(value) / range(n)
+//   MathUtils, Function_Continue, Function_Stop, Function_StopLua, Function_StopAll
+//
+// And everything HScript already gives you: FlxG, PlayState, Paths, ClientPrefs, Conductor,
+// Character, Note, FlxSprite, FlxTween, FlxTimer, ShaderFilter, addHaxeLibrary, ...

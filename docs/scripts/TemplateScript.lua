@@ -114,6 +114,17 @@ function onStateSwitch(nextState)
 end
 
 
+-- Script messaging
+-- Header at the top of the file: --@priority 10   and   --@requires other.lua, common.lua
+function onScriptEvent(name, data)
+	-- Fired by another script's dispatchEvent('name', data) (the sender is skipped)
+end
+
+-- setTimeout('name', 500, 'onHalfSecond') runs a function of this script once
+-- setInterval('name', 1000, 'onEverySecond'), cancelTimer('name'), clearTimers()
+-- dispatchEvent('flash', {'colour': 'red'}), callScript('other.lua', 'functionName', {})
+
+
 -- Window hooks
 function onFocus()
 	-- The game window has focus again

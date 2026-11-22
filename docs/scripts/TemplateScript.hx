@@ -102,6 +102,12 @@ function onNoteCreation(note:Note)
 	// Use onSpawnNote when you need the note as it enters the screen
 }
 
+function onScriptEvent(name:String, data:Dynamic)
+{
+	// Fired by another script's dispatchEvent('name', data) (the sender is skipped)
+	// Send with dispatchEvent() or callScript('other.hx', 'functionName', [])
+}
+
 function onSongStart()
 {
 	// Inst and Vocals start playing, songPosition = 0
