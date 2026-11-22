@@ -56,7 +56,6 @@ class FreeplayState extends MusicBeatState
 
 	//Mic'd Up-style spinning disc, with a Plus-style song card in front of it
 	var disc:FlxSprite;
-	static var discAnimations:Array<String> = ['dad', 'gf', 'mom', 'monster', 'parents-christmas', 'pico', 'senpai', 'spirit', 'spooky'];
 	var cardSlideTargets:Array<FlxSprite> = [];
 	var cardSlideBaseX:Array<Float> = [];
 	var lastCardSongKey:String = '';
@@ -950,9 +949,9 @@ class FreeplayState extends MusicBeatState
 		//Disc art from FNF: Mic'd Up (Verwex), 'Freeplay_Discs' sparrow sheet
 		disc = new FlxSprite();
 		disc.frames = Paths.getSparrowAtlas('Freeplay_Discs');
-		for (name in discAnimations)
-			disc.animation.addByPrefix(name, name, 24);
-		disc.animation.play('dad');
+		disc.animation.addByPrefix('disc', 'dad', 24);
+		disc.animation.play('disc');
+		if(songs.length > 0) disc.color = songs[curSelected].color;
 		disc.setGraphicSize(330, 330);
 		disc.updateHitbox();
 		disc.antialiasing = ClientPrefs.data.antialiasing;
@@ -1035,8 +1034,7 @@ class FreeplayState extends MusicBeatState
 			? Language.getPhrase('freeplay_fav_yes', 'Favourite: YES (F to remove)')
 			: Language.getPhrase('freeplay_fav_no', 'Favourite: NO (F to add)');
 
-		var animName:String = discAnimations.contains(song.songCharacter) ? song.songCharacter : 'dad';
-		if(disc.animation.name != animName) disc.animation.play(animName);
+		disc.color = song.color;
 
 		var cardKey:String = song.folder + ':' + song.songName;
 		if(lastCardSongKey != cardKey)
