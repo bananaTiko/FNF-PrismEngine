@@ -221,6 +221,10 @@ class FreeplayState extends MusicBeatState
 
 		bg = new FlxSprite().loadGraphic(Paths.image('menuDesat'));
 		bg.antialiasing = ClientPrefs.data.antialiasing;
+		//Wide windows are wider than the menu art, so stretch it to cover instead of
+		//centering it and leaving black strips down the sides.
+		bg.setGraphicSize(FlxG.width, FlxG.height);
+		bg.updateHitbox();
 		add(bg);
 		bg.screenCenter();
 
@@ -286,6 +290,10 @@ class FreeplayState extends MusicBeatState
 		add(searchBG);
 
 		searchBox = new PsychUIInputText(14, 12, 312, '', 24);
+		//The input fills its field with opaque white/black sprites; keep both dark so the
+		//search box sits in the black panel above instead of flashing a white slab.
+		searchBox.bg.color = FlxColor.BLACK;
+		searchBox.behindText.color = FlxColor.BLACK;
 		searchBox.maxLength = 40;
 		searchBox.onChange = function(old:String, newText:String) onSearchChange(newText);
 		add(searchBox);
