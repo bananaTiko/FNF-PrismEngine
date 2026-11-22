@@ -1,5 +1,6 @@
 package states;
 
+import backend.Language;
 import backend.WeekData;
 
 import flixel.input.keyboard.FlxKey;
@@ -128,7 +129,7 @@ class TitleState extends MusicBeatState
 		Conductor.bpm = musicBPM;
 
 		logoBl = new FlxSprite(logoPosition.x, logoPosition.y);
-		logoBl.frames = Paths.getSparrowAtlas('logoBumpin');
+		logoBl.frames = Paths.getSparrowAtlas(getTranslatedImageKey('logoBumpin'));
 		logoBl.antialiasing = ClientPrefs.data.antialiasing;
 
 		logoBl.animation.addByPrefix('bump', 'logo bumpin', 24, false);
@@ -145,7 +146,7 @@ class TitleState extends MusicBeatState
 			logoBl.shader = swagShader.shader;
 		}
 		
-		gfDance.frames = Paths.getSparrowAtlas(characterImage);
+		gfDance.frames = Paths.getSparrowAtlas(getTranslatedImageKey(characterImage));
 		if(!useIdle)
 		{
 			gfDance.animation.addByIndices('danceLeft', animationName, danceLeftFrames, "", 24, false);
@@ -294,6 +295,24 @@ class TitleState extends MusicBeatState
 				danceLeftFrames = [29, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14];
 				danceRightFrames = [15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28];
 		}
+	}
+
+	/**
+	 * A language pack can ship its own title art, e.g. `images/zh-CN/logoBumpin.png` + `.xml`,
+	 * or point `images/logoBumpin` at it from its `.lang` file. Falls back to the usual art.
+	 */
+	function getTranslatedImageKey(key:String):String
+	{
+		if(Language.getFileTranslation('images/$key') != 'images/$key')
+			return key; // the language file already redirects this image
+
+		var lang:String = ClientPrefs.data.language;
+		if(lang == null || lang.length < 1 || lang == ClientPrefs.defaultData.language) return key;
+
+		var langKey:String = '$lang/$key';
+		if(Paths.fileExists('images/$langKey.png', IMAGE)) return langKey;
+
+		return key;
 	}
 
 	function getIntroTextShit():Array<Array<String>>
@@ -464,6 +483,9 @@ class TitleState extends MusicBeatState
 	{
 		for (i in 0...textArray.length)
 		{
+			// Languages whose sentence needs fewer lines leave them empty
+			if(textArray[i] == null || textArray[i].length < 1) continue;
+
 			var money:Alphabet = new Alphabet(0, 0, textArray[i], true);
 			money.screenCenter(X);
 			money.y += (i * 60) + 200 + offset;
@@ -477,6 +499,9 @@ class TitleState extends MusicBeatState
 
 	function addMoreText(text:String, ?offset:Float = 0)
 	{
+		// Languages whose title or sentence needs fewer lines leave them empty
+		if(text == null || text.length < 1) return;
+
 		if(textGroup != null && credGroup != null) {
 			var coolText:Alphabet = new Alphabet(0, 0, text, true);
 			coolText.screenCenter(X);
@@ -529,14 +554,14 @@ class TitleState extends MusicBeatState
 				case 2:
 					createCoolText(['Prism Engine'], 40);
 				case 4:
-					addMoreText('a Psych Engine fork by', 40);
+					addMoreText(Language.getPhrase('title_fork_by', 'a Psych Engine fork by'), 40);
 					addMoreText('Shadow Mario', 40);
 				case 5:
 					deleteCoolText();
 				case 6:
-					createCoolText(['Not associated', 'with'], -40);
+					createCoolText([Language.getPhrase('title_not_associated', 'Not associated'), Language.getPhrase('title_with', 'with')], -40);
 				case 8:
-					addMoreText('newgrounds', -40);
+					addMoreText(Language.getPhrase('title_newgrounds', 'newgrounds'), -40);
 					ngSpr.visible = true;
 				case 9:
 					deleteCoolText();
@@ -548,11 +573,11 @@ class TitleState extends MusicBeatState
 				case 13:
 					deleteCoolText();
 				case 14:
-					addMoreText('Friday');
+					addMoreText(Language.getPhrase('title_game_name_1', 'Friday'));
 				case 15:
-					addMoreText('Night');
+					addMoreText(Language.getPhrase('title_game_name_2', 'Night'));
 				case 16:
-					addMoreText('Funkin'); // credTextShit.text += '\nFunkin';
+					addMoreText(Language.getPhrase('title_game_name_3', 'Funkin')); // credTextShit.text += '\nFunkin';
 
 				case 17:
 					skipIntro();

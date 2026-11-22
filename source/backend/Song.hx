@@ -8,6 +8,10 @@ import objects.Note;
 typedef SwagSong =
 {
 	var song:String;
+	/** Who made the music. V-Slice metadata calls this `artist`. */
+	@:optional var artist:String;
+	/** Who made the chart. V-Slice metadata calls this `charter`. */
+	@:optional var charter:String;
 	var notes:Array<SwagSection>;
 	var events:Array<Dynamic>;
 	var bpm:Float;

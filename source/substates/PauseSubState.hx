@@ -86,19 +86,30 @@ class PauseSubState extends MusicBeatSubstate
 		levelInfo.updateHitbox();
 		add(levelInfo);
 
-		var levelDifficulty:FlxText = new FlxText(20, 15 + 32, 0, Difficulty.getString().toUpperCase(), 32);
+		// Only charts that actually credit someone get this extra line, so vanilla charts keep their layout
+		var creditLine:Bool = hasSongCredit();
+		showingCharter = getSongCreditValue(false) == null; // a chart that only credits its charter starts on that
+
+		songInfoTxt = new FlxText(20, 15 + 32, 0, getSongCreditText(showingCharter), 32);
+		songInfoTxt.scrollFactor.set();
+		songInfoTxt.setFormat(Paths.font('vcr.ttf'), 32);
+		songInfoTxt.updateHitbox();
+		songInfoTxt.visible = creditLine;
+		add(songInfoTxt);
+
+		var levelDifficulty:FlxText = new FlxText(20, 15 + (creditLine ? 64 : 32), 0, Difficulty.getString().toUpperCase(), 32);
 		levelDifficulty.scrollFactor.set();
 		levelDifficulty.setFormat(Paths.font('vcr.ttf'), 32);
 		levelDifficulty.updateHitbox();
 		add(levelDifficulty);
 
-		var blueballedTxt:FlxText = new FlxText(20, 15 + 64, 0, Language.getPhrase("blueballed", "Blueballed: {1}", [PlayState.deathCounter]), 32);
+		var blueballedTxt:FlxText = new FlxText(20, 15 + (creditLine ? 96 : 64), 0, Language.getPhrase("blueballed", "Blueballed: {1}", [PlayState.deathCounter]), 32);
 		blueballedTxt.scrollFactor.set();
 		blueballedTxt.setFormat(Paths.font('vcr.ttf'), 32);
 		blueballedTxt.updateHitbox();
 		add(blueballedTxt);
 
-		practiceText = new FlxText(20, 15 + 101, 0, Language.getPhrase("Practice Mode").toUpperCase(), 32);
+		practiceText = new FlxText(20, 15 + (creditLine ? 133 : 101), 0, Language.getPhrase("Practice Mode").toUpperCase(), 32);
 		practiceText.scrollFactor.set();
 		practiceText.setFormat(Paths.font('vcr.ttf'), 32);
 		practiceText.x = FlxG.width - (practiceText.width + 20);
@@ -118,15 +129,18 @@ class PauseSubState extends MusicBeatSubstate
 		blueballedTxt.alpha = 0;
 		levelDifficulty.alpha = 0;
 		levelInfo.alpha = 0;
+		songInfoTxt.alpha = 0;
 
 		levelInfo.x = FlxG.width - (levelInfo.width + 20);
+		songInfoTxt.x = Math.max(20, FlxG.width - (songInfoTxt.width + 20));
 		levelDifficulty.x = FlxG.width - (levelDifficulty.width + 20);
 		blueballedTxt.x = FlxG.width - (blueballedTxt.width + 20);
 
 		FlxTween.tween(bg, {alpha: 0.6}, 0.4, {ease: FlxEase.quartInOut});
 		FlxTween.tween(levelInfo, {alpha: 1, y: 20}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.3});
-		FlxTween.tween(levelDifficulty, {alpha: 1, y: levelDifficulty.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.5});
-		FlxTween.tween(blueballedTxt, {alpha: 1, y: blueballedTxt.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.7});
+		if(creditLine) FlxTween.tween(songInfoTxt, {alpha: 1, y: songInfoTxt.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: 0.4});
+		FlxTween.tween(levelDifficulty, {alpha: 1, y: levelDifficulty.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: creditLine ? 0.6 : 0.5});
+		FlxTween.tween(blueballedTxt, {alpha: 1, y: blueballedTxt.y + 5}, 0.4, {ease: FlxEase.quartInOut, startDelay: creditLine ? 0.8 : 0.7});
 
 		grpMenuShit = new FlxTypedGroup<Alphabet>();
 		add(grpMenuShit);
@@ -150,6 +164,58 @@ class PauseSubState extends MusicBeatSubstate
 		super.create();
 	}
 	
+	var songInfoTxt:FlxText;
+	static final SONG_CREDIT_INTERVAL:Float = 8;
+	var creditTimer:Float = 0;
+	var showingCharter:Bool = false;
+	var creditTween:Null<FlxTween> = null;
+
+	/** The chart's artist or charter, or null when the chart has no real credit to show. */
+	static function getSongCreditValue(charter:Bool):String
+	{
+		if(PlayState.SONG == null) return null;
+
+		var value:String = charter ? PlayState.SONG.charter : PlayState.SONG.artist;
+		if(value == null) return null;
+
+		value = value.trim();
+		if(value.length < 1 || value == 'Unknown' || value == 'None') return null;
+		return value;
+	}
+
+	static inline function hasSongCredit():Bool
+		return getSongCreditValue(false) != null || getSongCreditValue(true) != null;
+
+	static inline function canCycleSongCredit():Bool
+		return getSongCreditValue(false) != null && getSongCreditValue(true) != null;
+
+	function getSongCreditText(charter:Bool):String
+	{
+		var value:String = getSongCreditValue(charter);
+		if(value == null) value = Language.getPhrase('unknown', 'Unknown');
+
+		return charter
+			? Language.getPhrase('charter', 'Charter: {1}', [value])
+			: Language.getPhrase('artist', 'Artist: {1}', [value]);
+	}
+
+	function toggleSongCredit():Void
+	{
+		creditTimer = 0;
+		creditTween = FlxTween.tween(songInfoTxt, {alpha: 0}, 0.4, {ease: FlxEase.quartOut, onComplete: function(twn:FlxTween)
+		{
+			creditTween = null;
+			if(songInfoTxt == null) return;
+
+			showingCharter = !showingCharter;
+			songInfoTxt.text = getSongCreditText(showingCharter);
+			songInfoTxt.updateHitbox();
+			songInfoTxt.x = Math.max(20, FlxG.width - (songInfoTxt.width + 20));
+
+			FlxTween.tween(songInfoTxt, {alpha: 1}, 0.4, {ease: FlxEase.quartOut});
+		}});
+	}
+
 	function getPauseSong()
 	{
 		var formattedSongName:String = (songName != null ? Paths.formatToSongPath(songName) : '');
@@ -166,6 +232,13 @@ class PauseSubState extends MusicBeatSubstate
 		cantUnpause -= elapsed;
 		if (pauseMusic.volume < 0.5)
 			pauseMusic.volume += 0.01 * elapsed;
+
+		// Alternate between who made the music and who made the chart
+		if(songInfoTxt != null && songInfoTxt.visible && creditTween == null && canCycleSongCredit())
+		{
+			creditTimer += elapsed;
+			if(creditTimer >= SONG_CREDIT_INTERVAL) toggleSongCredit();
+		}
 
 		super.update(elapsed);
 
@@ -396,6 +469,10 @@ class PauseSubState extends MusicBeatSubstate
 
 	override function destroy()
 	{
+		if(creditTween != null) creditTween.cancel();
+		creditTween = null;
+		songInfoTxt = null;
+
 		pauseMusic.destroy();
 		super.destroy();
 	}
