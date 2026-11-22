@@ -3,7 +3,9 @@ package objects;
 import flixel.text.FlxText.FlxTextAlign;
 import flixel.text.FlxText.FlxTextBorderStyle;
 import openfl.utils.Assets;
-#if MODS_ALLOWED
+
+import backend.ClientPrefs;
+#if sys
 import sys.FileSystem;
 import sys.io.File;
 #end
@@ -81,13 +83,41 @@ class Subtitles extends FlxSpriteGroup
 		if(sound == null) return;
 		if(filePath == null || filePath.length < 1) return;
 
-		var raw:String = readText(Paths.srt(filePath));
-		if(raw == null || raw.length < 1) return;
+		var raw:String = null;
+		for (candidate in candidatePaths(filePath))
+		{
+			raw = readText(Paths.srt(candidate));
+			if(raw != null && raw.length > 0) break;
+		}
+
+		if(raw == null || raw.length < 1)
+		{
+			FlxG.log.warn('No subtitle file for $filePath');
+			return;
+		}
 
 		subtitlesData = parseSRT(raw);
 		if(subtitlesData.length < 1) return;
 
 		assignedSound = sound;
+	}
+
+	/**
+	 * `.srt` files ship per locale (`song-lyrics-fr-CA.srt`) next to the plain one, so a
+	 * translated cue list is used when the game language has one.
+	 */
+	static function candidatePaths(filePath:String):Array<String>
+	{
+		var paths:Array<String> = [];
+		var lang:String = (ClientPrefs.data != null) ? ClientPrefs.data.language : null;
+		if(lang != null && lang.length > 1 && lang != 'en-US')
+		{
+			paths.push('$filePath-$lang');
+			var dash:Int = lang.indexOf('-');
+			if(dash > 0) paths.push('$filePath-' + lang.substr(0, dash));
+		}
+		paths.push(filePath);
+		return paths;
 	}
 
 	/**
@@ -97,13 +127,26 @@ class Subtitles extends FlxSpriteGroup
 	 */
 	static function readText(path:String):String
 	{
-		#if MODS_ALLOWED
+		if(path == null || path.length < 1) return null;
+
+		#if sys
 		if(FileSystem.exists(path)) return File.getContent(path);
+
+		//Let the asset system resolve the game folder, which is not always the working directory
+		var resolved:String = Assets.getPath(path);
+		if(resolved != null && resolved != path && FileSystem.exists(resolved)) return File.getContent(resolved);
 		#end
 
 		try
 		{
 			if(Assets.exists(path)) return Assets.getText(path);
+		}
+		catch(e:Dynamic) {}
+
+		//Binary-typed assets still carry their bytes, so decode those as text
+		try
+		{
+			if(Assets.exists(path)) return Assets.getBytes(path).toString();
 		}
 		catch(e:Dynamic) {}
 

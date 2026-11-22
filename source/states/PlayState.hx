@@ -31,6 +31,7 @@ import substates.PauseSubState;
 import substates.GameOverSubstate;
 import backend.PlayStats;
 import backend.StreamedSound;
+import backend.Widescreen;
 import substates.ResultsSubState;
 
 #if !flash
@@ -249,6 +250,24 @@ class PlayState extends MusicBeatState
 	public static var campaignMisses:Int = 0;
 	public static var seenCutscene:Bool = false;
 	public static var deathCounter:Int = 0;
+
+	/**
+	 * V-Slice stages are drawn for the 1280x720 canvas, so a widescreen window would show
+	 * empty space past their edges. Zooming the game camera by the extra aspect ratio keeps
+	 * the stage filling the window: same framing, no bars, the stage crops top and bottom.
+	 */
+	public static function stageZoomFill():Float
+	{
+		#if desktop
+		if(Widescreen.isActive() && FlxG.width > 0 && FlxG.height > 0)
+		{
+			var windowRatio:Float = FlxG.width / FlxG.height;
+			var designRatio:Float = 1280 / 720;
+			if(windowRatio > designRatio) return windowRatio / designRatio;
+		}
+		#end
+		return 1;
+	}
 
 	public var defaultCamZoom:Float = 1.05;
 
@@ -588,7 +607,7 @@ class PlayState extends MusicBeatState
 		add(camFollow);
 
 		FlxG.camera.follow(camFollow, LOCKON, 0);
-		FlxG.camera.zoom = defaultCamZoom;
+		FlxG.camera.zoom = defaultCamZoom * stageZoomFill();
 		FlxG.camera.snapToTarget();
 
 		FlxG.worldBounds.set(0, 0, FlxG.width, FlxG.height);
@@ -2147,7 +2166,7 @@ class PlayState extends MusicBeatState
 
 		if (camZooming)
 		{
-			FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom, FlxG.camera.zoom, Math.exp(-elapsed * 3.125 * camZoomingDecay * playbackRate));
+			FlxG.camera.zoom = FlxMath.lerp(defaultCamZoom * stageZoomFill(), FlxG.camera.zoom, Math.exp(-elapsed * 3.125 * camZoomingDecay * playbackRate));
 			camHUD.zoom = FlxMath.lerp(1, camHUD.zoom, Math.exp(-elapsed * 3.125 * camZoomingDecay * playbackRate));
 		}
 
@@ -2532,8 +2551,21 @@ class PlayState extends MusicBeatState
 
 				if (char != null)
 				{
-					char.playAnim(value1, true);
-					char.specialAnim = true;
+					//Some events target a slot a stage has swapped out (Stress swaps the opponent
+					//mid-song), so play on whichever character actually owns the animation.
+					if(!char.hasAnimation(value1))
+					{
+						if(boyfriend.hasAnimation(value1)) char = boyfriend;
+						else if(dad.hasAnimation(value1)) char = dad;
+						else if(gf.hasAnimation(value1)) char = gf;
+					}
+
+					if(char.hasAnimation(value1))
+					{
+						char.playAnim(value1, true);
+						char.specialAnim = true;
+					}
+					else FlxG.log.warn('Play Animation: ${char.curCharacter} has no "$value1" animation');
 				}
 
 			case 'Camera Follow Pos':
@@ -4333,7 +4365,7 @@ class PlayState extends MusicBeatState
 
 		KillOldCountdown();
 
-		camGame.zoom = defaultCamZoom;
+		camGame.zoom = defaultCamZoom * stageZoomFill();
 
 		// resets the camera because this isn't an actual restart, it just restarts the music beat state
 		cast(camGame, backend.PsychCamera).GoZero();
@@ -4435,7 +4467,7 @@ class PlayState extends MusicBeatState
 		songLength = 0;
 		songPercent = 0;
 
-		FlxG.camera.zoom = defaultCamZoom;
+		FlxG.camera.zoom = defaultCamZoom * stageZoomFill();
 
 		camHUD.zoom = 1;
 
