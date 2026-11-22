@@ -149,6 +149,37 @@ class Paths
 		}
 	}
 
+	/**
+	 * Drops the oldest cached images once the cache passes `assetCacheLimit`.
+	 * Graphics the current state is using (`localTrackedAssets`) and dump exclusions are kept,
+	 * so this only reclaims images left over from earlier songs, mods or screens.
+	 * Returns how many graphics were freed.
+	 */
+	public static function trimAssetCache():Int
+	{
+		var keep:Int = assetCacheLimit;
+		if(keep <= 0) return 0;
+
+		var total:Int = 0;
+		for (_ in currentTrackedAssets.keys()) total++;
+
+		var dropped:Int = 0;
+		var i:Int = 0;
+		while(i < assetInsertOrder.length && total - dropped > keep)
+		{
+			var key:String = assetInsertOrder[i];
+			if(currentTrackedAssets.exists(key) && !localTrackedAssets.contains(key) && !dumpExclusions.contains(key))
+			{
+				destroyGraphic(currentTrackedAssets.get(key));
+				currentTrackedAssets.remove(key);
+				assetInsertOrder.splice(i, 1);
+				dropped++;
+			}
+			else i++;
+		}
+		return dropped;
+	}
+
 	inline static function destroyGraphic(graphic:FlxGraphic)
 	{
 		// free some gpu memory
@@ -252,6 +283,9 @@ class Paths
 		return sound(key + FlxG.random.int(min, max), modsAllowed);
 
 	public static var currentTrackedAssets:Map<String, FlxGraphic> = [];
+	/** Opt-in: images kept cached before the oldest unused ones are dropped. 0 (default) never evicts. */
+	public static var assetCacheLimit:Int = 0;
+	static var assetInsertOrder:Array<String> = [];
 	static public function image(key:String, ?parentFolder:String = null, ?allowGPU:Bool = true):FlxGraphic
 	{
 		key = Language.getFileTranslation('images/$key') + '.png';
@@ -303,6 +337,11 @@ class Paths
 
 		currentTrackedAssets.set(key, graph);
 		localTrackedAssets.push(key);
+		if(assetCacheLimit > 0)
+		{
+			if(!assetInsertOrder.contains(key)) assetInsertOrder.push(key);
+			trimAssetCache();
+		}
 		return graph;
 	}
 
