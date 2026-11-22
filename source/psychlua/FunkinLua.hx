@@ -4,6 +4,7 @@ package psychlua;
 import backend.WeekData;
 import backend.Highscore;
 import backend.Song;
+import backend.TimeSignature;
 
 import openfl.Lib;
 import openfl.utils.Assets;
@@ -93,7 +94,8 @@ class FunkinLua {
 		set('scrollSpeed', PlayState.SONG.speed);
 		set('crochet', Conductor.crochet);
 		set('stepCrochet', Conductor.stepCrochet);
-		set('songLength', FlxG.sound.music.length);
+		// Scripts can be created before the song's audio exists (character scripts load with the character)
+		set('songLength', FlxG.sound.music != null ? FlxG.sound.music.length : 0);
 		set('songName', PlayState.SONG.song);
 		set('songPath', Paths.formatToSongPath(PlayState.SONG.song));
 		set('loadedSongName', Song.loadedSongName);
@@ -776,6 +778,33 @@ class FunkinLua {
 			return Conductor.songPosition;
 		});
 
+		// A section is one measure, so the section's own length is the measure's length.
+		Lua_helper.add_callback(lua, "getTimeSignature", function(?section:Int = -1) {
+			var song = PlayState.SONG;
+			var index:Int = (section == null || section < 0) ? 0 : section;
+			if((section == null || section < 0) && game != null) @:privateAccess index = game.curSection;
+			var beats:Float = TimeSignature.songBeatsPerMeasure(song);
+
+			if(song != null && song.notes != null && index >= 0 && index < song.notes.length)
+			{
+				var sectionData = song.notes[index];
+				var sectionBeats:Null<Float> = sectionData != null ? cast sectionData.sectionBeats : null;
+				if(sectionBeats != null && !Math.isNaN(sectionBeats))
+					beats = sectionBeats;
+			}
+
+			return {
+				num: TimeSignature.numeratorOf(song),
+				den: TimeSignature.denominatorOf(song),
+				beats: beats
+			};
+		});
+		Lua_helper.add_callback(lua, "getMeasure", function() {
+			var measure:Int = 0;
+			if(game != null) @:privateAccess measure = game.curMeasure;
+			return measure;
+		});
+
 		Lua_helper.add_callback(lua, "getCharacterX", function(type:String) {
 			switch(type.toLowerCase()) {
 				case 'dad' | 'opponent':
@@ -844,10 +873,10 @@ class FunkinLua {
 			LuaUtils.cameraFromString(camera).shake(intensity, duration);
 		});
 
-		Lua_helper.add_callback(lua, "cameraFlash", function(camera:String, color:String, duration:Float,forced:Bool) {
+		Lua_helper.add_callback(lua, "cameraFlash", function(camera:String, color:String, duration:Float, forced:Bool = false) {
 			LuaUtils.cameraFromString(camera).flash(CoolUtil.colorFromString(color), duration, null, forced);
 		});
-		Lua_helper.add_callback(lua, "cameraFade", function(camera:String, color:String, duration:Float, forced:Bool, ?fadeOut:Bool = false) {
+		Lua_helper.add_callback(lua, "cameraFade", function(camera:String, color:String, duration:Float, forced:Bool = false, ?fadeOut:Bool = false) {
 			LuaUtils.cameraFromString(camera).fade(CoolUtil.colorFromString(color), duration, fadeOut, null, forced);
 		});
 		Lua_helper.add_callback(lua, "setRatingPercent", function(value:Float) {
@@ -1317,6 +1346,15 @@ class FunkinLua {
 			#end
 		});
 
+		Lua_helper.add_callback(lua, "skipCutscene", function() {
+			if(game == null || game.videoCutscene == null) return false;
+			game.skipCutscene();
+			return true;
+		});
+		Lua_helper.add_callback(lua, "isCutscenePlaying", function() {
+			return game != null && (game.inCutscene || game.videoCutscene != null || game.psychDialogue != null);
+		});
+
 		Lua_helper.add_callback(lua, "playMusic", function(sound:String, ?volume:Float = 1, ?loop:Bool = false) {
 			FlxG.sound.playMusic(Paths.music(sound), volume, loop);
 		});
@@ -1460,6 +1498,14 @@ class FunkinLua {
 				if(snd != null) snd.volume = value;
 			}
 		});
+		Lua_helper.add_callback(lua, "getSoundLength", function(tag:String) {
+			if(tag == null || tag.length < 1)
+				return FlxG.sound.music != null ? FlxG.sound.music.length : 0;
+
+			tag = LuaUtils.formatVariable('sound_$tag');
+			var snd:FlxSound = MusicBeatState.getVariables().get(tag);
+			return snd != null ? snd.length : 0;
+		});
 		Lua_helper.add_callback(lua, "getSoundTime", function(tag:String) {
 			if(tag == null || tag.length < 1)
 			{
@@ -1497,16 +1543,6 @@ class FunkinLua {
 		});
 		Lua_helper.add_callback(lua, "setSoundPitch", function(tag:String, value:Float, ?doPause:Bool = false) {
 			#if FLX_PITCH
-			tag = LuaUtils.formatVariable('sound_$tag');
-			var snd:FlxSound = MusicBeatState.getVariables().get(tag);
-			if(snd != null)
-			{
-				var wasResumed:Bool = snd.playing;
-				if (doPause) snd.pause();
-				snd.pitch = value;
-				if (doPause && wasResumed) snd.play();
-			}
-			
 			if(tag == null || tag.length < 1)
 			{
 				if(FlxG.sound.music != null)
@@ -1515,19 +1551,18 @@ class FunkinLua {
 					if (doPause) FlxG.sound.music.pause();
 					FlxG.sound.music.pitch = value;
 					if (doPause && wasResumed) FlxG.sound.music.play();
-					return;
 				}
+				return;
 			}
-			else
+
+			tag = LuaUtils.formatVariable('sound_$tag');
+			var snd:FlxSound = MusicBeatState.getVariables().get(tag);
+			if(snd != null)
 			{
-				var snd:FlxSound = MusicBeatState.getVariables().get(tag);
-				if(snd != null)
-				{
-					var wasResumed:Bool = snd.playing;
-					if (doPause) snd.pause();
-					snd.pitch = value;
-					if (doPause && wasResumed) snd.play();
-				}
+				var wasResumed:Bool = snd.playing;
+				if (doPause) snd.pause();
+				snd.pitch = value;
+				if (doPause && wasResumed) snd.play();
 			}
 			#else
 			luaTrace("setSoundPitch: Sound Pitch is not supported on this platform!", false, false, FlxColor.RED);

@@ -22,6 +22,13 @@ function onSectionHit()
 	// Triggered after it goes to the next section
 }
 
+function onMeasureHit(measure:Int)
+{
+	// Triggered once per measure of the song's time signature (4/4 = every 16 steps)
+	// Unlike onSectionHit this ignores how long the chart's sections are
+	// The measure the song starts on is 0 and doesn't fire, so the first call is 1
+}
+
 function onBeatHit()
 {
 	// Triggered 4 times per section
@@ -73,9 +80,26 @@ function onCountdownTick(tick:Countdown, counter:Int)
 	}
 }
 
+function onCountdown(number:Int)
+{
+	// The number on screen: 3, 2, 1 and then 0 for "Go!"
+	// Runs 4 times, onCountdownTick keeps ticking for the 5th
+}
+
 function onSpawnNote(note:Note)
 {
 	// Read the function name and you will understand what it does
+}
+
+function onStrumCreation(strum:StrumNote)
+{
+	// A strum note was just created, during the countdown
+}
+
+function onNoteCreation(note:Note)
+{
+	// A note was created while the chart was loading, before anything spawns
+	// Use onSpawnNote when you need the note as it enters the screen
 }
 
 function onSongStart()
@@ -102,6 +126,34 @@ function onPause()
 function onResume()
 {
 	// Called after the game has been resumed from a pause (WARNING: Not necessarily from the pause screen, but most likely is!!!)
+}
+
+function onOpenSubState(substate:String)
+{
+	// A substate is about to open, "substate" is its class name (e.g. "substates.PauseSubState")
+	// State transitions don't trigger this
+}
+
+function onStateSwitch(nextState:String)
+{
+	// A state switch was requested, "nextState" is the class name of the state being switched to
+}
+
+
+// Window hooks
+function onFocus()
+{
+	// The game window has focus again
+}
+
+function onFocusLost()
+{
+	// The game window lost focus (tabbed out, alt-tabbed...)
+}
+
+function onResize(width:Int, height:Int, oldWidth:Int, oldHeight:Int)
+{
+	// The game window was resized
 }
 
 function onGameOver()

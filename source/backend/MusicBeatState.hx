@@ -1,6 +1,7 @@
 package backend;
 
 import flixel.FlxState;
+import flixel.FlxSubState;
 import backend.PsychCamera;
 
 class MusicBeatState extends FlxState
@@ -10,6 +11,11 @@ class MusicBeatState extends FlxState
 
 	private var curStep:Int = 0;
 	private var curBeat:Int = 0;
+	private var curMeasure:Int = 0;
+
+	private var lastWidth:Int = 0;
+	private var lastHeight:Int = 0;
+	private var gameResizedCallback:Int->Int->Void;
 
 	private var curDecStep:Float = 0;
 	private var curDecBeat:Float = 0;
@@ -43,9 +49,12 @@ class MusicBeatState extends FlxState
 
 		super.create();
 
-		if(!skip) {
-			openSubState(new CustomFadeTransition(0.5, true));
-		}
+		lastWidth = FlxG.width;
+		lastHeight = FlxG.height;
+		gameResizedCallback = onGameResized; // keep the closure so destroy() can remove it
+		FlxG.signals.gameResized.add(gameResizedCallback);
+
+		if(!skip) Transitions.playIn();
 		FlxTransitionableState.skipNextTransOut = false;
 		timePassedOnState = 0;
 	}
@@ -84,6 +93,8 @@ class MusicBeatState extends FlxState
 			}
 		}
 
+		updateMeasure();
+
 		if(FlxG.save.data != null) FlxG.save.data.fullscreen = FlxG.fullscreen;
 		
 		stagesFunc(function(stage:BaseStage) {
@@ -91,6 +102,81 @@ class MusicBeatState extends FlxState
 		});
 
 		super.update(elapsed);
+	}
+
+	// Measures follow the song's time signature, unlike sections: a section can be 8 or 12
+	// beats long, while a 4/4 measure is always 4. Can be overridden to run state logic.
+	public function measureHit():Void {}
+
+	private function updateMeasure():Void
+	{
+		if(curStep < 0) return;
+
+		var perMeasure:Int = TimeSignature.stepsPerMeasure(TimeSignature.numeratorOf(PlayState.SONG), TimeSignature.denominatorOf(PlayState.SONG));
+		if(perMeasure < 1) perMeasure = 16;
+
+		var newMeasure:Int = Std.int(curStep / perMeasure);
+		if(newMeasure == curMeasure) return;
+
+		curMeasure = newMeasure;
+		measureHit();
+	}
+
+	// Lua and HScript only exist while a PlayState is loaded, so every other state asks
+	// it to dispatch for them instead of keeping its own list of scripts.
+	public function dispatchScripts(func:String, ?args:Array<Dynamic>):Dynamic
+	{
+		if(PlayState.instance == null) return null;
+		return PlayState.instance.callOnScripts(func, args);
+	}
+
+	override public function onFocus():Void
+	{
+		super.onFocus();
+		dispatchScripts('onFocus');
+	}
+
+	override public function onFocusLost():Void
+	{
+		super.onFocusLost();
+		dispatchScripts('onFocusLost');
+	}
+
+	private function onGameResized(width:Int, height:Int):Void
+	{
+		var oldWidth:Int = lastWidth;
+		var oldHeight:Int = lastHeight;
+		lastWidth = width;
+		lastHeight = height;
+
+		dispatchScripts('onResize', [width, height, oldWidth, oldHeight]);
+	}
+
+	// Both the fade and scripted transitions are engine plumbing, not a menu a script opened
+	static function isTransitionSubstate(SubState:FlxSubState):Bool
+	{
+		if(Std.isOfType(SubState, CustomFadeTransition)) return true;
+
+		#if HSCRIPT_ALLOWED
+		return Std.isOfType(SubState, backend.ScriptTransition);
+		#else
+		return false;
+		#end
+	}
+
+	override public function openSubState(SubState:FlxSubState)
+	{
+		if(SubState != null && !isTransitionSubstate(SubState))
+			dispatchScripts('onOpenSubState', [Type.getClassName(Type.getClass(SubState))]);
+
+		super.openSubState(SubState);
+	}
+
+	override function destroy():Void
+	{
+		FlxG.signals.gameResized.remove(gameResizedCallback);
+		gameResizedCallback = null;
+		super.destroy();
 	}
 
 	private function updateSection():Void
@@ -149,15 +235,25 @@ class MusicBeatState extends FlxState
 			return;
 		}
 
+		notifyStateSwitch(nextState);
 		if(FlxTransitionableState.skipNextTransIn) FlxG.switchState(nextState);
 		else startTransition(nextState);
 		FlxTransitionableState.skipNextTransIn = false;
 	}
 
 	public static function resetState() {
+		notifyStateSwitch(FlxG.state);
 		if(FlxTransitionableState.skipNextTransIn) FlxG.resetState();
 		else startTransition();
 		FlxTransitionableState.skipNextTransIn = false;
+	}
+
+	static function notifyStateSwitch(nextState:FlxState):Void
+	{
+		var state:MusicBeatState = getState();
+		if(state == null || nextState == null) return;
+
+		state.dispatchScripts('onStateSwitch', [Type.getClassName(Type.getClass(nextState))]);
 	}
 
 	// Custom made Trans in
@@ -166,11 +262,14 @@ class MusicBeatState extends FlxState
 		if(nextState == null)
 			nextState = FlxG.state;
 
-		FlxG.state.openSubState(new CustomFadeTransition(0.5, false));
-		if(nextState == FlxG.state)
-			CustomFadeTransition.finishCallback = function() FlxG.resetState();
-		else
-			CustomFadeTransition.finishCallback = function() FlxG.switchState(nextState);
+		// The transition decides when it is over; then the switch goes through
+		final target:FlxState = nextState;
+		Transitions.playOut(function() {
+			if(target == FlxG.state)
+				FlxG.resetState();
+			else
+				FlxG.switchState(target);
+		});
 	}
 
 	public static function getState():MusicBeatState {

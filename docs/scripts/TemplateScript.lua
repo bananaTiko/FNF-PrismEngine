@@ -18,6 +18,12 @@ function onSectionHit()
 	-- Triggered after it goes to the next section
 end
 
+function onMeasureHit(measure)
+	-- Triggered once per measure of the song's time signature (4/4 = every 16 steps)
+	-- Unlike onSectionHit this ignores how long the chart's sections are
+	-- The measure the song starts on is 0 and doesn't fire, so the first call is 1
+end
+
 function onBeatHit()
 	-- Triggered 4 times per section
 end
@@ -54,9 +60,26 @@ function onCountdownTick(counter)
 	-- counter = 4 -> Nothing happens lol, tho it is triggered at the same time as onSongStart i think
 end
 
+function onCountdown(number)
+	-- The number on screen: 3, 2, 1 and then 0 for "Go!"
+	-- Runs 4 times, onCountdownTick keeps ticking for the 5th
+end
+
 function onSpawnNote(id, data, type, isSustainNote, strumTime)
 	--You can use id to get other properties from notes, for example:
 	--getPropertyFromGroup('notes', id, 'texture')
+end
+
+function onStrumCreation(direction, player)
+	-- A strum note was just created, during the countdown
+	-- direction: 0 - left, 1 - down, 2 - up, 3 - right
+	-- player: 0 - opponent, 1 - player
+	-- The strum itself is strumLineNotes.members[player * 4 + direction]
+end
+
+function onNoteCreation(noteData, noteType, strumTime, mustPress)
+	-- A note was created while the chart was loading, before anything spawns
+	-- Use onSpawnNote when you need the note as it enters the screen
 end
 
 function onSongStart()
@@ -79,6 +102,29 @@ end
 
 function onResume()
 	-- Called after the game has been resumed from a pause (WARNING: Not necessarily from the pause screen, but most likely is!!!)
+end
+
+function onOpenSubState(substate)
+	-- A substate is about to open, "substate" is its class name (e.g. "substates.PauseSubState")
+	-- State transitions don't trigger this
+end
+
+function onStateSwitch(nextState)
+	-- A state switch was requested, "nextState" is the class name of the state being switched to
+end
+
+
+-- Window hooks
+function onFocus()
+	-- The game window has focus again
+end
+
+function onFocusLost()
+	-- The game window lost focus (tabbed out, alt-tabbed...)
+end
+
+function onResize(width, height, oldWidth, oldHeight)
+	-- The game window was resized
 end
 
 function onGameOver()
