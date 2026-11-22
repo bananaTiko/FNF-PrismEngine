@@ -12,7 +12,8 @@ class OptionsState extends MusicBeatState
 		'Graphics',
 		'Visuals',
 		'Gameplay',
-		'Customize HUD'
+		'Customize HUD',
+		'Records'
 		#if TRANSLATIONS_ALLOWED , 'Language' #end
 	];
 	private var grpOptions:FlxTypedGroup<Alphabet>;
@@ -37,6 +38,8 @@ class OptionsState extends MusicBeatState
 				MusicBeatState.switchState(new options.NoteOffsetState());
 			case 'Customize HUD':
 				MusicBeatState.switchState(new options.HudCustomizeState());
+			case 'Records':
+				MusicBeatState.switchState(new states.RecordsState());
 			case 'Language':
 				openSubState(new options.LanguageSubState());
 		}

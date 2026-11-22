@@ -13,6 +13,9 @@ class PlayStats
 	public static var notesHit:Int = 0;
 	public static var notesMissed:Int = 0;
 	public static var secondsPlayed:Float = 0;
+	/** "song|difficulty" keys, most recently played first. */
+	public static var recentKeys:Array<String> = [];
+	static inline var MAX_RECENT:Int = 30;
 
 	static var loaded:Bool = false;
 
@@ -29,6 +32,11 @@ class PlayStats
 		notesHit = intField(saved, 'notesHit');
 		notesMissed = intField(saved, 'notesMissed');
 		secondsPlayed = floatField(saved, 'secondsPlayed');
+
+		var recent:Dynamic = Reflect.field(saved, 'recentKeys');
+		if(recent != null && Std.isOfType(recent, Array))
+			for (entry in (recent:Array<Dynamic>))
+				if(entry != null) recentKeys.push(Std.string(entry));
 	}
 
 	/** Records a finished song run. */
@@ -41,14 +49,7 @@ class PlayStats
 		notesMissed += missed;
 		secondsPlayed += (seconds > 0 ? seconds : 0);
 
-		if (FlxG.save == null || FlxG.save.data == null) return;
-		Reflect.setField(FlxG.save.data, SAVE_KEY, {
-			songsPlayed: songsPlayed,
-			notesHit: notesHit,
-			notesMissed: notesMissed,
-			secondsPlayed: secondsPlayed
-		});
-		FlxG.save.flush();
+		save();
 	}
 
 	public static function totalNotes():Int
@@ -72,6 +73,38 @@ class PlayStats
 		if (hours > 0) return Language.getPhrase('playtime_hours', '{1}h {2}m', [hours, minutes]);
 		if (minutes > 0) return Language.getPhrase('playtime_minutes', '{1}m {2}s', [minutes, seconds]);
 		return Language.getPhrase('playtime_seconds', '{1}s', [seconds]);
+	}
+
+	/** Notes that a song was played, for Freeplay's "Recent" sort. */
+	public static function recordRecent(songKey:String):Void
+	{
+		if(songKey == null || songKey.length < 1) return;
+		load();
+
+		recentKeys.remove(songKey);
+		recentKeys.insert(0, songKey);
+		while(recentKeys.length > MAX_RECENT) recentKeys.pop();
+		save();
+	}
+
+	static function save():Void
+	{
+		if (FlxG.save == null || FlxG.save.data == null) return;
+
+		Reflect.setField(FlxG.save.data, SAVE_KEY, {
+			songsPlayed: songsPlayed,
+			notesHit: notesHit,
+			notesMissed: notesMissed,
+			secondsPlayed: secondsPlayed,
+			recentKeys: recentKeys.copy()
+		});
+		FlxG.save.flush();
+	}
+
+	public static function getRecentKeys():Array<String>
+	{
+		load();
+		return recentKeys;
 	}
 
 	static function intField(obj:Dynamic, field:String):Int
