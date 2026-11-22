@@ -46,12 +46,11 @@ class MusicBeatState extends FlxState
 
 	override function create() {
 		// a state change is also the moment to look the audio device up again:
-		// unplugging headphones kills OpenAL's device without telling anyone.
-		// The reset tears down every sound, music included, so the menu track is
-		// started again here: without this every state after the title screen ran
-		// with `FlxG.sound.music == null`, which crashed the menus.
-		AudioRecovery.reset();
-		ensureMenuMusic(0.7);
+		// unplugging headphones kills OpenAL's device without telling anyone. Only a
+		// changed device is rebuilt, so the menu track normally keeps playing; when it
+		// is rebuilt the track was torn down and has to start again.
+		var audioRebuilt:Bool = AudioRecovery.checkDevice();
+		ensureMenuMusic(audioRebuilt ? 0.7 : 0);
 
 		// idempotent, and the first state after the save is loaded is where the
 		// widescreen option actually takes effect
