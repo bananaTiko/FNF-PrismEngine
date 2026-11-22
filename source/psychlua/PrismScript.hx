@@ -22,14 +22,36 @@ class PrismScript extends HScript
 		loadHeader();
 	}
 
-	/** Reads the file (or the inline code) and hands back the Python-flavoured version. */
+	/** Raw and processed sources, keyed by path and kept current through a content hash. */
+	static var sourceCache:Map<String, {hash:Float, raw:String, code:String}> = new Map();
+
+	/**
+	 * Reads the file (or the inline code) and hands back the Python-flavoured version, keeping the
+	 * raw text so the header pass does not have to read the file a second time.
+	 */
 	static function readSource(file:String):String
 	{
 		if(file == null || file.length < 1) return null;
 
 		#if sys
 		if(!file.contains('\n') && FileSystem.exists(file))
-			return PrismPreprocessor.process(File.getContent(file));
+		{
+			var raw:String = File.getContent(file);
+			var hash:Float = PrismPreprocessor.hash(raw);
+
+			var cached = sourceCache.get(file);
+			if(cached != null && cached.hash == hash) return cached.code;
+
+			var problem:String = PrismPreprocessor.validate(raw);
+			if(problem.length > 0) trace('prism: $file: $problem');
+
+			for (warning in PrismPreprocessor.warnings(raw))
+				trace('prism: $file: $warning');
+
+			var processed:String = PrismPreprocessor.process(raw);
+			sourceCache.set(file, {hash: hash, raw: raw, code: processed});
+			return processed;
+		}
 		#end
 
 		return file.contains('\n') ? PrismPreprocessor.process(file) : null;
@@ -44,9 +66,13 @@ class PrismScript extends HScript
 	function loadHeader():Void
 	{
 		#if sys
-		if(filePath == null || filePath.length < 1 || !FileSystem.exists(filePath)) return;
+		if(filePath == null || filePath.length < 1) return;
 
-		for (line in File.getContent(filePath).split('\n'))
+		var cached = sourceCache.get(filePath);
+		var source:String = cached != null ? cached.raw : (FileSystem.exists(filePath) ? File.getContent(filePath) : null);
+		if(source == null) return;
+
+		for (line in source.split('\n'))
 		{
 			var trimmed:String = line.trim();
 			if(trimmed.startsWith(PRIORITY_TAG))
