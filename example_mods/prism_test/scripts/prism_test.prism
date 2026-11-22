@@ -1,0 +1,46 @@
+//@priority 5
+# Prism test script
+# Runs in every song while the "prism_test" mod is enabled.
+# Python-style lines work: # comments, local, nil. Haxe #if/#end still behaves normally.
+
+local loaded = false
+
+function onCreate()
+{
+	loaded = true
+
+	# Real engine classes and the Lua-style helpers can be mixed in one script
+	print('prism_test loaded on ' + PlayState.SONG.song)
+
+	var bf = nil
+	if (bf == nil) print('nil works like null')
+
+	setProperty('boyfriend', 'alpha', 1)
+	print('boyfriend alpha is ' + getProperty('boyfriend.alpha'))
+
+	# Timers take closures here, no function names needed
+	setTimeout('hello', 1200, function() {
+		print('timer fired 1.2 seconds in')
+	})
+
+	setInterval('beatlog', 4000, function() {
+		print('4 seconds passed, beat ' + Conductor.curBeat)
+	})
+}
+
+function onBeatHit()
+{
+	# Send an event that other scripts can listen for with onScriptEvent
+	if (Conductor.curBeat % 4 == 0) dispatchEvent('prism_beat', {beat: Conductor.curBeat})
+}
+
+function onScriptEvent(name, data)
+{
+	print('prism_test received event: ' + name)
+}
+
+function onDestroy()
+{
+	clearTimers()
+	print('prism_test destroyed')
+}
