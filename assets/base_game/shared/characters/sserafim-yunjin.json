@@ -148,9 +148,9 @@
 	"flip_x": false,
 	"no_antialiasing": false,
 	"healthbar_colors": [
-		161,
-		161,
-		161
+		249,
+		207,
+		81
 	],
 	"vocals_file": "",
 	"_editor_isPlayer": false
