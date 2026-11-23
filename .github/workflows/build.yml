@@ -3,27 +3,35 @@ name: Build
 on:
   push:
     branches: [main, experimental, Prism-Engine-Main]
+    # Docs-only pushes cannot change the binary, so they do not need three builds.
+    paths-ignore:
+      - '**.md'
+      - '.github/ISSUE_TEMPLATE/**'
 
   pull_request:
     branches: [main, experimental, Prism-Engine-Main]
+    paths-ignore:
+      - '**.md'
+      - '.github/ISSUE_TEMPLATE/**'
 
   workflow_dispatch:
 
+# A newer push makes the older run pointless: cancel it instead of letting three
+# full builds queue up behind each other.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Each platform is its own job with no shared setup step, so Linux starts compiling
+# as soon as its own dependencies are in place instead of waiting for Windows and
+# macOS to finish installing. Everything is restored from caches, so the install
+# runs only when Project.xml or the setup scripts change.
 jobs:
-  # Install all platform dependencies before compiling.
-  dependencies:
-    name: Setup All Dependencies
-    uses: ./.github/workflows/setup-dependencies.yml
-
   # Linux compilation.
   buildLinux:
     name: Build Linux
-    needs: dependencies
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -32,16 +40,14 @@ jobs:
         with:
           haxe-version: 4.3.4
 
-      - name: Setup Haxelib
-        run: haxelib setup ~/haxelib
-
-      - name: Download Haxelibs
-        uses: actions/download-artifact@v4
+      - name: Cache Haxelib
+        id: haxelib-cache
+        uses: actions/cache@v4
         with:
-          name: haxelibs-linux
-
-      - name: Restore Haxelibs
-        run: tar -xzf haxelibs.tar.gz -C "$HOME"
+          path: ~/haxelib
+          key: linux-haxelib-4.3.4-${{ hashFiles('Project.xml', 'setup/**') }}
+          restore-keys: |
+            linux-haxelib-4.3.4-
 
       # hxcpp keys every generated .cpp by an md5 of its contents and reads the cache
       # folder from this variable, so a push only compiles what actually changed.
@@ -56,6 +62,16 @@ jobs:
       - name: Enable hxcpp's object cache
         run: echo "HXCPP_COMPILE_CACHE=$HOME/.hxcpp_cache" >> "$GITHUB_ENV"
 
+      - name: Setup Haxelib
+        run: haxelib setup ~/haxelib
+
+      - name: Install Haxelibs
+        if: steps.haxelib-cache.outputs.cache-hit != 'true'
+        run: |
+          haxelib install hxcpp 4.3.2 --quiet
+          chmod +x ./setup/unix.sh
+          sh ./setup/unix.sh
+
       - name: Install Linux Dependencies
         run: |
           sudo apt-get update
@@ -67,8 +83,8 @@ jobs:
       - name: Create Version Tag
         run: echo "${{ github.run_id }}" > VERSION
 
-      # A full hxcpp build prints thousands of lines, so the log only comes out
-      # when something failed.
+      # A full hxcpp build prints thousands of lines, so the log only comes out when
+      # something failed.
       - name: Compile
         run: |
           set -o pipefail
@@ -93,8 +109,8 @@ jobs:
   # Windows compilation.
   buildWindows:
     name: Build Windows
-    needs: dependencies
     runs-on: windows-latest
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -103,18 +119,14 @@ jobs:
         with:
           haxe-version: 4.3.4
 
-      - name: Setup Haxelib
-        run: haxelib setup C:/haxelib
-        shell: cmd
-
-      - name: Download Haxelibs
-        uses: actions/download-artifact@v4
+      - name: Cache Haxelib
+        id: haxelib-cache
+        uses: actions/cache@v4
         with:
-          name: haxelibs-windows
-
-      - name: Restore Haxelibs
-        run: tar -xzf haxelibs.tar.gz -C C:/
-        shell: pwsh
+          path: C:/haxelib
+          key: windows-haxelib-4.3.4-${{ hashFiles('Project.xml', 'setup/**') }}
+          restore-keys: |
+            windows-haxelib-4.3.4-
 
       # Same md5-keyed object cache as the other platforms: this is what keeps a
       # Windows push from recompiling the whole engine.
@@ -130,6 +142,19 @@ jobs:
         run: echo HXCPP_COMPILE_CACHE=C:/hxcpp_cache>> %GITHUB_ENV%
         shell: cmd
 
+      - name: Setup Haxelib
+        run: haxelib setup C:/haxelib
+        shell: cmd
+
+      # The setup script ends on `pause`, so it gets an empty stdin instead of waiting
+      # for a key press that never comes.
+      - name: Install Haxelibs
+        if: steps.haxelib-cache.outputs.cache-hit != 'true'
+        shell: cmd
+        run: |
+          haxelib install hxcpp 4.3.2 --quiet
+          call .\setup\windows.bat < nul
+
       - name: Skip SScript setup mode
         run: echo oy9:showMacroty8:loopCosti25y10:includeAllfg >> %USERPROFILE%/settings.cocoa
         shell: cmd
@@ -138,7 +163,17 @@ jobs:
         run: echo "${{ github.run_id }}" > VERSION
 
       - name: Compile
-        run: haxelib run lime build windows --app-version="4.0.0-${{ github.run_id }}" -D officialBuild
+        run: |
+          haxelib run lime build windows --app-version="4.0.0-${{ github.run_id }}" -D officialBuild > build.log 2>&1
+          if ($LASTEXITCODE -ne 0) {
+            Write-Output '::group::Compile errors'
+            Select-String -Path build.log -Pattern 'error|unresolved external' | Select-Object -Last 60
+            Write-Output '::endgroup::'
+            Get-Content build.log -Tail 20
+            exit 1
+          }
+          Get-Content build.log -Tail 5
+        shell: pwsh
 
       - name: Publish Artifact
         uses: actions/upload-artifact@v4
@@ -149,8 +184,8 @@ jobs:
   # macOS compilation.
   buildMac:
     name: Build macOS
-    needs: dependencies
     runs-on: macos-15
+    timeout-minutes: 60
 
     steps:
       - uses: actions/checkout@v4
@@ -159,16 +194,14 @@ jobs:
         with:
           haxe-version: 4.3.4
 
-      - name: Setup Haxelib
-        run: haxelib setup ~/haxelib
-
-      - name: Download Haxelibs
-        uses: actions/download-artifact@v4
+      - name: Cache Haxelib
+        id: haxelib-cache
+        uses: actions/cache@v4
         with:
-          name: haxelibs-mac
-
-      - name: Restore Haxelibs
-        run: tar -xzf haxelibs.tar.gz -C "$HOME"
+          path: ~/haxelib
+          key: mac-haxelib-4.3.4-${{ hashFiles('Project.xml', 'setup/**') }}
+          restore-keys: |
+            mac-haxelib-4.3.4-
 
       - name: Cache compiled objects
         uses: actions/cache@v4
@@ -180,6 +213,16 @@ jobs:
 
       - name: Enable hxcpp's object cache
         run: echo "HXCPP_COMPILE_CACHE=$HOME/.hxcpp_cache" >> "$GITHUB_ENV"
+
+      - name: Setup Haxelib
+        run: haxelib setup ~/haxelib
+
+      - name: Install Haxelibs
+        if: steps.haxelib-cache.outputs.cache-hit != 'true'
+        run: |
+          haxelib install hxcpp 4.3.2 --quiet
+          chmod +x ./setup/unix.sh
+          sh ./setup/unix.sh
 
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
