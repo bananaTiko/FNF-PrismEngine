@@ -152,34 +152,36 @@ class SSerafim extends BaseStage
 		return spr;
 	}
 
+	/**
+	 * A full-camera colour wash. One stretched pixel does the same job as a three-screen
+	 * bitmap without the memory and the texture upload.
+	 */
+	function makeOverlay(color:Int):FlxSprite
+	{
+		var spr:FlxSprite = new FlxSprite();
+		spr.makeGraphic(1, 1, color);
+		spr.origin.set(0, 0);
+		spr.scale.set(FlxG.width * 3, FlxG.height * 3);
+		spr.setPosition(-FlxG.width, -FlxG.height);
+		spr.scrollFactor.set(0, 0);
+		spr.alpha = 0;
+		spr.cameras = [camGame];
+		return spr;
+	}
+
 	override function createPost()
 	{
 		// The diner is dark at the start of the song, the forklift's lights and the
 		// end cards sit above the characters.
-		darkOverlay = new FlxSprite();
-		darkOverlay.makeGraphic(Std.int(FlxG.width * 3), Std.int(FlxG.height * 3), FlxColor.BLACK);
-		darkOverlay.setPosition(-FlxG.width, -FlxG.height);
-		darkOverlay.scrollFactor.set(0, 0);
-		darkOverlay.alpha = 0;
-		darkOverlay.cameras = [camGame];
+		darkOverlay = makeOverlay(FlxColor.BLACK);
 		add(darkOverlay);
 
 		// V-Slice brightens the stage and characters with its adjust-colour shader as
 		// the truck closes in; a white wash stands in for it here.
-		cutsceneWhite = new FlxSprite();
-		cutsceneWhite.makeGraphic(Std.int(FlxG.width * 3), Std.int(FlxG.height * 3), FlxColor.WHITE);
-		cutsceneWhite.setPosition(-FlxG.width, -FlxG.height);
-		cutsceneWhite.scrollFactor.set(0, 0);
-		cutsceneWhite.alpha = 0;
-		cutsceneWhite.cameras = [camGame];
+		cutsceneWhite = makeOverlay(FlxColor.WHITE);
 		add(cutsceneWhite);
 
-		cover = new FlxSprite();
-		cover.makeGraphic(Std.int(FlxG.width * 3), Std.int(FlxG.height * 3), FlxColor.BLACK);
-		cover.setPosition(-FlxG.width, -FlxG.height);
-		cover.scrollFactor.set(0, 0);
-		cover.alpha = 0;
-		cover.cameras = [camGame];
+		cover = makeOverlay(FlxColor.BLACK);
 		add(cover);
 
 		seeYou1 = new BGSprite('sserafim/end/end-1', 0, 0, 0, 0);
@@ -212,6 +214,9 @@ class SSerafim extends BaseStage
 		yunjin.playAnim('doorclosed', true);
 		chaewon.visible = false;
 		eunchae.visible = false;
+		// The band members only animate once their show event brings them in.
+		chaewon.active = false;
+		eunchae.active = false;
 
 		// Everyone is hidden until their show/sing events, and the opponent icon and
 		// girlfriend only turn up when yunjin kicks the door open.
@@ -401,6 +406,10 @@ class SSerafim extends BaseStage
 					chaewon.visible = vis[2];
 					eunchae.visible = vis[3];
 					boyfriend.visible = vis[4];
+
+					yunjin.active = vis[0];
+					chaewon.active = vis[2];
+					eunchae.active = vis[3];
 				}
 
 			case 'sserafimSing':
@@ -514,8 +523,22 @@ class SSerafim extends BaseStage
 		if (paused) spr.anim.pause();
 	}
 
+	function setCutsceneSpritesActive(active:Bool)
+	{
+		// Hidden atlases stop updating: the intro's three animations are heavy and they
+		// have no business running through the rest of the song.
+		for (spr in [cutsceneMain, cutsceneGf, cutsceneBf])
+		{
+			if (spr == null) continue;
+			spr.active = active;
+			if (!active) spr.anim.pause();
+		}
+	}
+
 	function setCutsceneVisibility(active:Bool)
 	{
+		setCutsceneSpritesActive(active);
+
 		if (cutsceneMain != null) cutsceneMain.visible = active;
 		if (!active)
 		{
@@ -545,6 +568,14 @@ class SSerafim extends BaseStage
 
 		counterStretch.visible = active;
 		burgerCutscene.visible = active;
+
+		if (active)
+		{
+			// BF and GF only sit up in the wrecked diner, so their atlases stay idle
+			// until the crash.
+			if (cutsceneGf != null) cutsceneGf.active = false;
+			if (cutsceneBf != null) cutsceneBf.active = false;
+		}
 	}
 
 	function cutsceneTimer(delay:Float, callback:Void->Void)
@@ -647,11 +678,13 @@ class SSerafim extends BaseStage
 			if (cutsceneGf != null)
 			{
 				cutsceneGf.visible = true;
+				cutsceneGf.active = true;
 				playCutsceneAnim(cutsceneGf, 'static', true);
 			}
 			if (cutsceneBf != null)
 			{
 				cutsceneBf.visible = true;
+				cutsceneBf.active = true;
 				playCutsceneAnim(cutsceneBf, 'static', true);
 			}
 		});
@@ -672,6 +705,7 @@ class SSerafim extends BaseStage
 
 		if (cutsceneGf != null) cutsceneGf.visible = false;
 		if (cutsceneBf != null) cutsceneBf.visible = false;
+		setCutsceneSpritesActive(false);
 		if (skipText != null) skipText.visible = false;
 
 		camGame.zoom = normalZoom;
@@ -723,12 +757,14 @@ class SSerafim extends BaseStage
 			if (cutsceneGf != null)
 			{
 				cutsceneGf.visible = true;
+				cutsceneGf.active = true;
 				playCutsceneAnim(cutsceneGf, 'getup', true);
 				cutsceneGf.anim.curFrame = 23;
 			}
 			if (cutsceneBf != null)
 			{
 				cutsceneBf.visible = true;
+				cutsceneBf.active = true;
 				playCutsceneAnim(cutsceneBf, 'getup', true);
 				cutsceneBf.anim.curFrame = 23;
 			}
