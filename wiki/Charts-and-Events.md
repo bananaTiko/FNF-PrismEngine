@@ -104,11 +104,3 @@ Pick the file in the editor's import option and it is converted to this engine's
 The editor (`source/states/editors/ChartingState.hx`) is reachable from the **Editors** menu, with the `7` debug key from the main menu, or from the pause menu during a song. It writes the chart back into the song folder it loaded from — keep a copy before editing a song you care about.
 
 Sibling editors, all under `source/states/editors/`: Character, Stage, Week, Dialogue, Dialogue Character, Menu Character, Note Splash.
-
-## Validation in CI
-
-Every push parses all `assets/**/*.json` before starting a build. A trailing comma in a chart or event file stops CI in about a second with the file name and reason, instead of spending twenty minutes compiling an engine that would fail when the song loads. Run the same check locally with:
-
-```bash
-node .github/scripts/check-assets.js
-```

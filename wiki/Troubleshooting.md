@@ -39,16 +39,6 @@ A dependency installed under a different haxelib repository is the usual cause; 
 
 It is not hanging — hxcpp is compiling. A clean full build takes several minutes and prints one line per file. Local builds are incremental: only changed `.cpp` files recompile, so the second build is much faster.
 
-### CI fails at **Validate JSON assets**
-
-A `.json` under `assets/` is not valid JSON. The step prints the file and the parser's reason. Reproduce locally:
-
-```bash
-node .github/scripts/check-assets.js
-```
-
-Common causes are a trailing comma or a missing brace from a hand edit. A UTF-8 BOM is fine — the check strips it, because several upstream spritemaps have one.
-
 ## Running
 
 ### A song says the instrumental or vocals are missing

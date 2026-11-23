@@ -75,14 +75,14 @@ haxelib run lime build Project.xml linux --app-version="4.0.0-1" -D officialBuil
 
 ## How CI builds it
 
-`.github/workflows/build.yml` builds all three platforms as **independent jobs**, so they start at the same time instead of queueing:
+`.github/workflows/build.yml` runs a dependency job first, then one build job per platform:
 
-1. **Validate JSON assets** — parses all of `assets/**/*.json` first (about a second). A chart or event file with a syntax error would otherwise only surface when the game loads it; now it stops the job immediately.
-2. **Caches** — the haxelib folder (keyed on `Project.xml` + `setup/**`) and hxcpp's object cache (`~/.hxcpp_cache` or `C:/hxcpp_cache`, keyed on `source/**/*.hx`).
-3. **Compile** into `build.log`, printing errors only.
-4. **Upload** the `bin` folder as an artifact.
+1. **`dependencies`** — calls `setup-dependencies.yml`, which installs the haxelib set once per platform (matrix: Linux, Windows, macOS), packs `~/haxelib` (or `C:/haxelib`) into `haxelibs.tar.gz` and uploads it as an artifact. The haxelib folder is cached, keyed on `Project.xml` + `setup/**`, so the five `haxelib git` clones are skipped when neither changed.
+2. **`buildLinux` / `buildWindows` / `buildMac`** — download that artifact, unpack it, install platform extras (VLC headers on Linux, the zlib patch on macOS), then `haxelib run lime build …` and upload `export/release/<platform>/bin` as `linuxBuild` / `windowsBuild` / `macBuild`.
 
-hxcpp's object cache is what makes an asset-only push cheap: every generated `.cpp` is keyed by an md5 of its contents, so unchanged files are copied out of the cache instead of compiled. It is enabled by the `HXCPP_COMPILE_CACHE` **environment variable** (not a `-D` flag — hxcpp ignores the define), which is why the workflow exports it rather than passing it to `lime`.
+Each run starts from an empty `export/`, so hxcpp compiles the whole tree. Pushing the same commit again does not help — the caches that survive between runs are the haxelib folder only.
+
+A `concurrency` block cancels a superseded run when you push again, so only the newest commit is built.
 
 ## Publishing this wiki to GitHub
 
