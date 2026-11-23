@@ -73,27 +73,39 @@ class FreeplayState extends MusicBeatState
 	var noResultsText:FlxText;
 	static var sortModes:Array<String> = ['Name', 'Week', 'Favourites', 'Recent'];
 
-	//Freeplay is split into two mixes; each one shows its own songs plus an erect section.
-	static var mixNames:Array<String> = ['BF MIXES', 'PICO MIXES'];
-	static var mixCategories:Array<Array<String>> = [['BF Mixes', 'BF Erect'], ['Pico Mixes', 'Pico Erect']];
+	//Freeplay is split into mixes; each one shows its own sections. Both come from
+	//data/freeplay-sections.json, which mods can extend (see docs/freeplay-sections.md).
+	static var mixNames:Array<String> = [];
+	static var mixCategories:Array<Array<String>> = [];
 	static var curMix:Int = 0;
 	var mixTabs:Array<FlxText> = [];
 
-	//The list is split into these groups with a heading above each one, so it stops being
+	//The list is split into these sections with a heading above each one, so it stops being
 	//one long scroll.
-	static var freeplayCategories:Array<String> = ['BF Mixes', 'BF Erect', 'Pico Mixes', 'Pico Erect'];
+	static var freeplayCategories:Array<String> = [];
 	static var songOrder:Array<String> = [];
 	static var songCategories:Map<String, String> = [];
+	static var sectionsLoaded:Bool = false;
 
 	//The erect mixes aren't their own rows: a song's erect chart is picked with the
 	//difficulty (Hard -> Erect -> Nightmare), the same way V-Slice does it.
 	static var erectSongs:Map<String, String> = [];
 	static var erectBaseSongs:Map<String, String> = [];
 
-	//Every freeplay song, in the order it shows up in its mix and the section it belongs to.
+	/**
+	 * Builds the stock mixes/sections, then merges every `data/freeplay-sections.json` the
+	 * game can see (base game, the mods folder, each enabled mod). The files only describe
+	 * what they add - a section, songs in an existing section, or a whole new mix - so a mod
+	 * never has to copy the stock list. See `docs/freeplay-sections.md` for the format.
+	 */
 	static function buildSongTable():Void
 	{
-		if (songOrder.length > 0) return;
+		if (sectionsLoaded) return;
+		sectionsLoaded = true;
+
+		mixNames = ['BF MIXES', 'PICO MIXES'];
+		mixCategories = [['BF Mixes', 'BF Erect'], ['Pico Mixes', 'Pico Erect']];
+		freeplayCategories = ['BF Mixes', 'BF Erect', 'Pico Mixes', 'Pico Erect'];
 
 		addSongTable('BF Mixes', [
 			'tutorial', 'bopeebo', 'fresh', 'dad battle', 'spookeez', 'south', 'monster',
@@ -117,21 +129,118 @@ class FreeplayState extends MusicBeatState
 		]);
 
 		addSongTable('Pico Erect', ['darnell erect']);
+
+		//Same search order the weeks use: base game, then the mods folder, then each enabled mod.
+		var directories:Array<String> = [Paths.getSharedPath()];
+		#if MODS_ALLOWED
+		directories.push(Paths.mods());
+		for (mod in Mods.parseList().enabled)
+			directories.push(Paths.mods(mod + '/'));
+		#end
+
+		for (directory in directories)
+		{
+			var path:String = directory + 'data/freeplay-sections.json';
+			var raw:String = readSectionsFile(path);
+			if (raw == null || raw.length < 1) continue;
+
+			try
+				applySectionData(tjson.TJSON.parse(raw))
+			catch (e:Dynamic)
+				FlxG.log.warn('Could not parse freeplay sections in $path: $e');
+		}
 	}
 
 	static function addSongTable(category:String, names:Array<String>):Void
 	{
 		for (name in names)
-		{
-			songOrder.push(name);
-			songCategories.set(name, category);
+			addSongEntry(category, name);
+	}
 
-			if (name.endsWith(' erect'))
+	static function readSectionsFile(path:String):String
+	{
+		try
+		{
+			#if sys
+			if (!FileSystem.exists(path)) return null;
+			return File.getContent(path);
+			#else
+			return Assets.getText(path);
+			#end
+		}
+		catch (e:Dynamic)
+		{
+			FlxG.log.warn('Could not read freeplay sections from $path: $e');
+			return null;
+		}
+	}
+
+	static function applySectionData(data:Dynamic):Void
+	{
+		if (data == null) return;
+
+		var sections:Array<Dynamic> = data.sections;
+		if (sections != null)
+		{
+			for (section in sections)
 			{
-				var base:String = name.substr(0, name.length - ' erect'.length);
-				erectSongs.set(base, name);
-				erectBaseSongs.set(name, base);
+				var name:String = section.name;
+				if (name == null || name.length < 1) continue;
+
+				if (!freeplayCategories.contains(name)) freeplayCategories.push(name);
+
+				//A section can name its own mix, so a mod doesn't have to edit the mix block.
+				var mixName:String = section.mix;
+				if (mixName != null && mixName.length > 0) addSectionToMix(mixName, name);
+
+				var songList:Array<Dynamic> = section.songs;
+				if (songList == null) continue;
+				for (song in songList)
+					addSongEntry(name, Std.string(song).toLowerCase());
 			}
+		}
+
+		var mixes:Array<Dynamic> = data.mixes;
+		if (mixes == null) return;
+		for (mix in mixes)
+		{
+			var mixName:String = mix.name;
+			if (mixName == null || mixName.length < 1) continue;
+
+			var sectionList:Array<Dynamic> = mix.sections;
+			if (sectionList == null) continue;
+			for (section in sectionList)
+				addSectionToMix(mixName, Std.string(section));
+		}
+	}
+
+	static function addSectionToMix(mixName:String, section:String):Void
+	{
+		var index:Int = mixNames.indexOf(mixName);
+		if (index < 0)
+		{
+			mixNames.push(mixName);
+			mixCategories.push([]);
+			index = mixNames.length - 1;
+		}
+
+		if (!mixCategories[index].contains(section)) mixCategories[index].push(section);
+		if (!freeplayCategories.contains(section)) freeplayCategories.push(section);
+	}
+
+	/** Adds a song to a section's order, keeping the first section that claims it. */
+	static function addSongEntry(category:String, name:String):Void
+	{
+		if (name == null || name.length < 1 || songOrder.contains(name)) return;
+
+		songOrder.push(name);
+		songCategories.set(name, category);
+
+		if (name.endsWith(' erect'))
+		{
+			var base:String = name.substr(0, name.length - ' erect'.length);
+			erectSongs.set(base, name);
+			erectBaseSongs.set(name, base);
 		}
 	}
 
