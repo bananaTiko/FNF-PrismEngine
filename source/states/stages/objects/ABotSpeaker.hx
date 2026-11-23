@@ -2,7 +2,6 @@ package states.stages.objects;
 
 #if funkin.vis
 import funkin.vis.dsp.SpectralAnalyzer;
-import funkin.vis.dsp.SpectralAnalyzer.Bar;
 #end
 
 class ABotSpeaker extends FlxSpriteGroup
@@ -90,14 +89,16 @@ class ABotSpeaker extends FlxSpriteGroup
 		return temp;
 	}
 	#if funkin.vis
-	var levels:Array<Bar>;
+	// Dynamic on purpose: `Bar` resolves differently depending on which funkin.vis revision is installed,
+	// so we keep the analyzer's struct out of the type system.
+	var levels:Array<Dynamic>;
 	var levelMax:Int = 0;
 	override function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
 		if(analyzer == null) return;
 
-		levels = analyzer.getLevels(levels);
+		levels = analyzer.getLevels(cast levels);
 		var oldLevelMax = levelMax;
 		levelMax = 0;
 		for (i in 0...Std.int(Math.min(vizSprites.length, levels.length)))
