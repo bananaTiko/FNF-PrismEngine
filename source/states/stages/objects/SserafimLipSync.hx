@@ -44,6 +44,14 @@ class SserafimLipSync extends FlxAtlasSprite
 	{
 		if (anim == null) return null;
 
+		// Joint poses put the mouth somewhere else, so they carry their own anchor.
+		if (anchors.exists(anim)) return anchors.get(anim);
+
+		// The bf1/bf2 poses only draw BF with a static mouth, and the joint miss poses
+		// have no mouth symbol at all, so V-Slice never attaches Sakura's lip-sync
+		// sprite to those frames.
+		if (anim.indexOf('-bf1') != -1 || anim.indexOf('-bf2') != -1 || (anim.indexOf('-joint') != -1 && anim.indexOf('miss') != -1)) return null;
+
 		var key:String = null;
 		if (anim == 'idle' || anim == 'danceLeft' || anim == 'danceRight') key = 'idle';
 		else if (anim.indexOf('LEFT') != -1) key = 'left';

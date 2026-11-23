@@ -84,7 +84,7 @@ class SSerafim extends BaseStage
 		'sserafim-chaewon' => ['idle' => [530.2, 331.1, 172.93], 'left' => [510.8, 332.8, 173.22], 'right' => [551.9, 310.1, 166.67], 'up' => [537.8, 300.3, 163.85], 'down' => [530.4, 333.8, 178.33]],
 		'sserafim-eunchae' => ['idle' => [661.2, 293.2, -174.04], 'left' => [637.2, 286.5, -172.65], 'right' => [683.1, 280.3, -178.28], 'up' => [662.3, 290.2, -160.55], 'down' => [641.9, 285.6, 175.6]],
 		'sserafim-kazuha' => ['idle' => [514.0, 241.1, -3.66], 'left' => [480.6, 227.4, 1.82], 'right' => [541.6, 233.5, 6.36], 'up' => [509.2, 197.6, 9.99], 'down' => [516.9, 258.7, -7.09]],
-		'sserafim-sakura' => ['idle' => [431.3, 198.8, 3.77], 'left' => [418.2, 193.1, 9.56], 'right' => [465.4, 180.9, 7.78], 'up' => [449.9, 156.2, 15.73], 'down' => [425.4, 211.8, 2.2]]
+		'sserafim-sakura' => ['idle' => [431.3, 198.8, 3.77], 'left' => [418.2, 193.1, 9.56], 'right' => [465.4, 180.9, 7.78], 'up' => [449.9, 156.2, 15.73], 'down' => [425.4, 211.8, 2.2], 'singUP-joint' => [490.3, 157.0, 18.48], 'singRIGHT-joint' => [463.6, 181.6, 3.77], 'singDOWN-joint' => [403.4, 225.9, 1.63], 'singLEFT-joint' => [419.2, 195.2, 9.47]]
 	];
 
 	static final LIP_OFFSETS:Map<String, Map<String, Array<Float>>> = [
@@ -92,7 +92,8 @@ class SSerafim extends BaseStage
 		'sserafim-chaewon' => ['idle' => [41, 3, -166], 'up' => [38, 0, -168], 'right' => [39, 1, -165], 'down' => [41, 3, -167], 'left' => [40, 2, -165]],
 		'sserafim-eunchae' => ['idle' => [43, 6, -168], 'up' => [45, 10, -166], 'right' => [42, 5, -166], 'down' => [41, 3, -168], 'left' => [43, 6, -169]],
 		'sserafim-kazuha' => ['idle' => [5, 4, -13], 'up' => [7, 2, -14], 'right' => [7, 2, -13], 'down' => [4, 6, -12], 'left' => [5, 4, -14]],
-		'sserafim-sakura' => ['idle' => [7, 2, -14], 'up' => [8, 1, -15], 'right' => [7, 2, -15], 'down' => [6, 3, -15], 'left' => [7, 2, -14]]
+		'sserafim-sakura' => ['idle' => [7, 2, -14], 'up' => [8, 1, -15], 'right' => [7, 2, -15], 'down' => [6, 3, -15], 'left' => [7, 2, -14], 'singUP-joint' => [10, -1, -14],
+			'singRIGHT-joint' => [6, 3, -15], 'singDOWN-joint' => [5, 5, -15], 'singLEFT-joint' => [7, 2, -16]]
 	];
 
 	var cover:FlxSprite;
@@ -366,24 +367,53 @@ class SSerafim extends BaseStage
 		return 0;
 	}
 
-	/** Plays the note pose on every member the chart currently marks as singing. */
+	/**
+	 * Plays the note pose on every member the chart currently marks as singing, plus
+	 * Sakura's kind-specific poses, which V-Slice always plays.
+	 */
 	function playMembers(note:Note, miss:Bool):Void
 	{
 		if (note == null || note.isSustainNote || note.noAnimation) return;
 
 		var dir:Int = Std.int(Math.abs(note.noteData)) % 4;
-		var anim:String = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'][dir] + (miss ? 'miss' : '');
+		var base:String = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'][dir] + (miss ? 'miss' : '');
 		for (i in 0...band.length)
 		{
-			if (!singFlags[i]) continue;
-
 			var char:Character = band[i];
-			if (char == null || !char.hasAnimation(anim)) continue;
+			if (char == null) continue;
+
+			var kindAnim:String = (char.curCharacter == 'sserafim-sakura') ? sakuraKindAnim(note.noteType, base, miss) : null;
+			// Sakura's kind poses play even when the sserafimSing flags do not make
+			// her the current lead; everyone else only sings when flagged.
+			if (kindAnim == null && !singFlags[i]) continue;
+
+			var anim:String = (kindAnim != null) ? kindAnim : base;
+			if (!char.hasAnimation(anim)) continue;
 			if (!miss && char.specialAnim && !char.isAnimationFinished()) continue;
 
 			char.playAnim(anim, true);
 			char.holdTimer = 0;
 		}
+	}
+
+	/**
+	 * V-Slice's sserafim-sakura script branches on the chart's Sakura note kinds.
+	 * Hits keep the kind's own suffix; on a miss the joint pose stays `joint` while
+	 * both bf kinds use the `bf2` miss style, since there are no bf1 miss poses.
+	 */
+	function sakuraKindAnim(noteType:String, base:String, miss:Bool):String
+	{
+		if (noteType == null) return null;
+
+		var suffix:String;
+		switch (noteType)
+		{
+			case 'sakura-joint': suffix = 'joint';
+			case 'sakura-bf1': suffix = miss ? 'bf2' : 'bf1';
+			case 'sakura-bf2': suffix = 'bf2';
+			default: return null;
+		}
+		return base + '-' + suffix;
 	}
 
 	override function goodNoteHit(note:Note)
