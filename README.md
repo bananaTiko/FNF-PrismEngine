@@ -8,6 +8,10 @@ Psych Engine was originally used on [Mind Games Mod](https://gamebanana.com/mods
 
 Refer to [the Build Instructions](/docs/BUILDING.md)
 
+## Wiki:
+
+Content and modding documentation lives in [`wiki/`](wiki/Home.md) — installing a build, controls, mods, charts and events, characters, weeks, scripting and troubleshooting. Publishing those pages to the GitHub wiki is described at the end of [Building](wiki/Building.md).
+
 ## Customization:
 
 If you wish to disable things like *Lua Scripts* or *Video Cutscenes*, you can refer to the `Project.xml` file.
