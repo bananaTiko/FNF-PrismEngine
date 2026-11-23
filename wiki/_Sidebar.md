@@ -12,6 +12,7 @@
 - [Characters](Characters)
 - [Weeks and Freeplay](Weeks-and-Freeplay)
 - [Scripting](Scripting)
+- [Sticker Transition](Sticker-Transition)
 
 **Help**
 

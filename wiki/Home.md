@@ -16,6 +16,7 @@ It is a HaxeFlixel game, so everything here is about a compiled desktop binary â
 | Add or edit characters | [Characters](Characters) |
 | Add a week or freeplay entry | [Weeks and Freeplay](Weeks-and-Freeplay) |
 | Write Lua / HScript / Prism scripts | [Scripting](Scripting) |
+| Turn on the sticker transition | [Sticker Transition](Sticker-Transition) |
 | Fix a build or runtime error | [Troubleshooting](Troubleshooting) |
 
 ## What this fork adds over Psych 1.0.4
