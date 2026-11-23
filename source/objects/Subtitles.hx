@@ -125,8 +125,8 @@ class Subtitles extends FlxSpriteGroup
 
 	/**
 	 * Reads a text file whether it was embedded as an asset or just copied next to the
-	 * executable. `.srt` isn't in lime's known extensions, so it ends up typed as a binary
-	 * asset and `Assets.getText` alone never finds it; that's why subtitles stayed empty.
+	 * executable. Most songs have no subtitle file at all, and lime treats an unknown asset
+	 * id as a hard error rather than "not found", so every asset call here is guarded.
 	 */
 	static function readText(path:String):String
 	{
@@ -134,22 +134,32 @@ class Subtitles extends FlxSpriteGroup
 
 		#if sys
 		if(FileSystem.exists(path)) return File.getContent(path);
+		#end
 
+		var known:Bool = false;
+		try { known = Assets.exists(path); } catch(e:Dynamic) {}
+		if(!known) return null;
+
+		#if sys
 		//Let the asset system resolve the game folder, which is not always the working directory
-		var resolved:String = Assets.getPath(path);
-		if(resolved != null && resolved != path && FileSystem.exists(resolved)) return File.getContent(resolved);
+		try
+		{
+			var resolved:String = Assets.getPath(path);
+			if(resolved != null && resolved != path && FileSystem.exists(resolved)) return File.getContent(resolved);
+		}
+		catch(e:Dynamic) {}
 		#end
 
 		try
 		{
-			if(Assets.exists(path)) return Assets.getText(path);
+			return Assets.getText(path);
 		}
 		catch(e:Dynamic) {}
 
 		//Binary-typed assets still carry their bytes, so decode those as text
 		try
 		{
-			if(Assets.exists(path)) return Assets.getBytes(path).toString();
+			return Assets.getBytes(path).toString();
 		}
 		catch(e:Dynamic) {}
 
