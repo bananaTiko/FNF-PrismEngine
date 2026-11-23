@@ -289,7 +289,18 @@ class SSerafim extends BaseStage
 
 		band = [yunjin, dad, chaewon, eunchae, boyfriend, gf];
 		for (char in band)
-			if (char != null) char.skipSing = true; // clear until an sserafimSing event says otherwise
+		{
+			if (char == null) continue;
+			char.skipSing = true; // clear until an sserafimSing event says otherwise
+
+			// V-Slice replaces these characters' built-in mouths with the animated
+			// lip-sync sprite and hides the static mouth so it doesn't show underneath.
+			switch (char.curCharacter)
+			{
+				case 'sserafim-eunchae': char.hideAtlasSymbol('mouth default');
+				case 'sserafim-sakura': char.hideAtlasSymbol('mouth edit');
+			}
+		}
 
 		placeBand();
 

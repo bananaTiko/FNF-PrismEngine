@@ -403,6 +403,40 @@ class Character extends FlxSprite
 		return _lastPlayedAnimation;
 	}
 
+	/**
+	 * Hides every instance of an atlas symbol (for example the baked-in mouth) so a
+	 * separate animated sprite can replace it without the static art showing through.
+	 */
+	#if flxanimate
+	public function hideAtlasSymbol(symbolName:String):Void
+	{
+		if(!isAnimateAtlas || atlas == null || atlas.anim == null || atlas.anim.symbolDictionary == null)
+			return;
+
+		for(symbol in atlas.anim.symbolDictionary)
+		{
+			if(symbol == null || symbol.timeline == null) continue;
+
+			for(layer in symbol.timeline.getList())
+			{
+				if(layer == null) continue;
+
+				@:privateAccess
+				for(keyframe in layer._keyframes)
+				{
+					if(keyframe == null) continue;
+
+					for(element in keyframe.getList())
+					{
+						if(element != null && element.symbol != null && element.symbol.name == symbolName)
+							element.visible = false;
+					}
+				}
+			}
+		}
+	}
+	#end
+
 	public function isAnimationFinished():Bool
 	{
 		if(isAnimationNull()) return false;
