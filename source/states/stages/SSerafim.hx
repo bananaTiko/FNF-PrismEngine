@@ -2,9 +2,11 @@ package states.stages;
 
 import flixel.addons.display.FlxBackdrop;
 import flixel.text.FlxText;
+import backend.VsliceOptions;
 import objects.Character;
 import objects.FlxAtlasSprite;
 import objects.StrumNote;
+import shaders.SserafimShader;
 
 /**
  * The SSERAFIM diner from Spaghetti, ported from V-Slice's `sserafim` stage.
@@ -69,6 +71,11 @@ class SSerafim extends BaseStage
 	var cutsceneFailed:Bool = false;
 	var normalZoom:Float = 0.5;
 
+	// V-Slice tints the whole diner through a shader, which is what gives the pulse
+	// lights behind the truck their colour. Without it the lights are a flat white wash.
+	var stageShader:SserafimShader;
+	var characterShader:SserafimShader;
+
 	var lightsEnabled:Bool = false;
 	var lightsColors:Array<Int> = [];
 	var lightsDurations:Array<Float> = [];
@@ -77,6 +84,12 @@ class SSerafim extends BaseStage
 
 	override function create()
 	{
+		if (VsliceOptions.SHADERS)
+		{
+			stageShader = new SserafimShader();
+			characterShader = new SserafimShader(true);
+		}
+
 		bg = new BGSprite('sserafim/bg', -1853, -815, 0.75, 0.75);
 		add(bg);
 
@@ -133,6 +146,14 @@ class SSerafim extends BaseStage
 		dust.push(makeDust('sserafim/dust/dust-back', -650, -250, 1.15, 1.5, 0.9, -300, 0xFF8B6C63));
 		dust.push(makeDust('sserafim/dust/dust-mid', -650, -400, 1.2, 2.0, 0.8, -200, 0xFF6E645C));
 		dust.push(makeDust('sserafim/dust/dust-back', -650, -1300, 1.25, 3.5, 0.9, -150, 0xFF886A60));
+
+		// The lights themselves keep their own blend modes, the rest of the diner is tinted.
+		if (stageShader != null)
+		{
+			for (spr in [bg, floorSprite, backTables, backStools, truck, truckDoor, frontStool, counterStretch, burgerCutscene])
+				spr.shader = stageShader;
+			for (d in dust) d.shader = stageShader;
+		}
 
 		// V-Slice cancels the countdown to play the intro. setStartCallback runs in its
 		// place, and the intro starts the countdown once it is done. Like V-Slice, the
@@ -239,6 +260,14 @@ class SSerafim extends BaseStage
 		skipText.visible = false;
 		skipText.cameras = [camOther];
 		add(skipText);
+
+		if (characterShader != null)
+		{
+			for (char in [boyfriend, dad, gf, yunjin, chaewon, eunchae])
+				if (char != null) char.shader = characterShader;
+			for (spr in [cutsceneMain, cutsceneGf, cutsceneBf])
+				if (spr != null) spr.shader = characterShader;
+		}
 	}
 
 	function hideOpponentStrums()
@@ -336,6 +365,16 @@ class SSerafim extends BaseStage
 
 		lightsTween.push(FlxTween.tween(backLightColor, {alpha: 0}, duration, {ease: FlxEase.cubeInOut}));
 		lightsTween.push(FlxTween.tween(backLightWhite, {alpha: 0}, duration, {ease: FlxEase.cubeInOut}));
+
+		if (stageShader != null)
+		{
+			stageShader.pulseLightColor = color;
+			characterShader.pulseLightColor = color;
+			stageShader.pulseLightStrength = amount;
+			characterShader.pulseLightStrength = amount;
+			lightsTween.push(FlxTween.tween(stageShader, {pulseLightStrength: 0}, duration, {ease: FlxEase.cubeInOut}));
+			lightsTween.push(FlxTween.tween(characterShader, {pulseLightStrength: 0}, duration, {ease: FlxEase.cubeInOut}));
+		}
 	}
 
 	function truckLights(amount:Float, duration:Float)
@@ -346,6 +385,17 @@ class SSerafim extends BaseStage
 		truckLight2.alpha = amount;
 		FlxTween.tween(truckLight1, {alpha: 0}, duration, {ease: FlxEase.cubeInOut});
 		FlxTween.tween(truckLight2, {alpha: 0}, duration, {ease: FlxEase.cubeInOut});
+
+		// The glare also brightens whatever is in front of the truck.
+		if (stageShader != null)
+		{
+			FlxTween.cancelTweensOf(stageShader);
+			FlxTween.cancelTweensOf(characterShader);
+			stageShader.truckLightStrength = amount;
+			characterShader.truckLightStrength = amount;
+			FlxTween.tween(stageShader, {truckLightStrength: 0}, duration, {ease: FlxEase.cubeInOut});
+			FlxTween.tween(characterShader, {truckLightStrength: 0}, duration, {ease: FlxEase.cubeInOut});
+		}
 	}
 
 	function clearDust(progress:Float)
@@ -433,8 +483,7 @@ class SSerafim extends BaseStage
 				var amt:Float = flValue1 != null ? flValue1 : (value1 != null ? Std.parseFloat(value1) : 0);
 				var dur:Float = value2 != null ? Std.parseFloat(value2) : 0;
 				if (Math.isNaN(amt)) amt = 0;
-				FlxTween.cancelTweensOf(darkOverlay);
-				FlxTween.tween(darkOverlay, {alpha: amt}, dur, {ease: FlxEase.sineInOut});
+				setCutsceneDarken(amt, dur);
 
 			case 'sserafimLights':
 				var amt:Float = value1 != null ? Std.parseFloat(value1) : 0;
@@ -466,6 +515,11 @@ class SSerafim extends BaseStage
 				{
 					backLightColor.alpha = 0;
 					backLightWhite.alpha = 0;
+					if (stageShader != null)
+					{
+						stageShader.pulseLightStrength = 0;
+						characterShader.pulseLightStrength = 0;
+					}
 				}
 
 			case 'sserafimBeautiful':
@@ -596,8 +650,54 @@ class SSerafim extends BaseStage
 
 	function setCutsceneDarken(amount:Float, duration:Float)
 	{
+		if (stageShader != null)
+		{
+			// V-Slice darkens the diner itself instead of laying black over it.
+			FlxTween.cancelTweensOf(stageShader);
+			FlxTween.cancelTweensOf(characterShader);
+			FlxTween.tween(stageShader, {darkenAmount: amount}, duration, {ease: FlxEase.sineInOut});
+			FlxTween.tween(characterShader, {darkenAmount: amount}, duration, {ease: FlxEase.sineInOut});
+			return;
+		}
+
 		FlxTween.cancelTweensOf(darkOverlay);
 		FlxTween.tween(darkOverlay, {alpha: amount}, duration, {ease: FlxEase.sineInOut});
+	}
+
+	/**
+	 * V-Slice brightens the diner with "Adjust Color" for the truck close-up. Without the
+	 * shader the white overlay stands in for it.
+	 */
+	function brightenScene(brightness:Float, hue:Float, contrast:Float, duration:Float, ?ease:Float->Float):Void
+	{
+		if (stageShader == null)
+		{
+			FlxTween.cancelTweensOf(cutsceneWhite);
+			FlxTween.tween(cutsceneWhite, {alpha: Math.min(0.6, brightness / 110)}, duration, {ease: ease != null ? ease : FlxEase.sineOut});
+			return;
+		}
+
+		FlxTween.cancelTweensOf(stageShader);
+		FlxTween.cancelTweensOf(characterShader);
+		FlxTween.tween(stageShader, {baseBrightness: brightness, baseHue: hue, baseContrast: contrast}, duration,
+			{ease: ease != null ? ease : FlxEase.sineOut});
+		FlxTween.tween(characterShader, {baseBrightness: brightness, baseHue: hue, baseContrast: contrast}, duration,
+			{ease: ease != null ? ease : FlxEase.sineOut});
+	}
+
+	function resetShaders():Void
+	{
+		if (stageShader == null) return;
+
+		FlxTween.cancelTweensOf(stageShader);
+		FlxTween.cancelTweensOf(characterShader);
+		for (shader in [stageShader, characterShader])
+		{
+			shader.setAdjustColor(0, 0, 0, 0);
+			shader.darkenAmount = 0;
+			shader.pulseLightStrength = 0;
+			shader.truckLightStrength = 0;
+		}
 	}
 
 	function startIntroCutscene()
@@ -650,12 +750,11 @@ class SSerafim extends BaseStage
 				skipText.alpha = 0;
 			}
 			FlxTween.cancelTweensOf(cutsceneWhite);
-			FlxTween.tween(cutsceneWhite, {alpha: 0.45}, 49 / 24, {ease: FlxEase.sineOut});
+			brightenScene(55, 0, -30, 49 / 24, FlxEase.sineOut);
 		});
 
 		cutsceneTimer(548 / 24, function() {
-			FlxTween.cancelTweensOf(cutsceneWhite);
-			FlxTween.tween(cutsceneWhite, {alpha: 0.6}, 15 / 24, {ease: FlxEase.expoIn});
+			brightenScene(66, 10, -17, 15 / 24, FlxEase.expoIn);
 		});
 
 		// Crash: white flash, then black while the stage is swapped to the wreck.
@@ -663,6 +762,7 @@ class SSerafim extends BaseStage
 			FlxTween.cancelTweensOf(cutsceneWhite);
 			FlxTween.cancelTweensOf(camGame);
 			if (cutsceneWhite != null) cutsceneWhite.alpha = 0;
+			resetShaders();
 			camGame.flash(FlxColor.WHITE, 30 / 24);
 			cover.alpha = 1;
 			setCutsceneVisibility(false);
@@ -707,6 +807,7 @@ class SSerafim extends BaseStage
 		if (cutsceneBf != null) cutsceneBf.visible = false;
 		setCutsceneSpritesActive(false);
 		if (skipText != null) skipText.visible = false;
+		resetShaders();
 
 		camGame.zoom = normalZoom;
 		defaultCamZoom = normalZoom;
@@ -738,6 +839,7 @@ class SSerafim extends BaseStage
 		FlxTween.cancelTweensOf(camGame);
 		FlxTween.cancelTweensOf(camFollow);
 		if (cutsceneWhite != null) cutsceneWhite.alpha = 0;
+		resetShaders();
 		if (skipText != null)
 		{
 			skipText.visible = false;
@@ -807,5 +909,10 @@ class SSerafim extends BaseStage
 		for (twn in lightsTween)
 			if (twn != null) twn.cancel();
 		lightsTween = [];
+		if (stageShader != null)
+		{
+			FlxTween.cancelTweensOf(stageShader);
+			FlxTween.cancelTweensOf(characterShader);
+		}
 	}
 }
