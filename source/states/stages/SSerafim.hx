@@ -7,6 +7,7 @@ import objects.FlxAtlasSprite;
 import objects.Note;
 import objects.StrumNote;
 import shaders.SserafimShader;
+import states.stages.objects.PerspectiveSprite;
 import states.stages.objects.SserafimLipSync;
 
 /**
@@ -16,13 +17,11 @@ import states.stages.objects.SserafimLipSync;
  * the original stage uses). The stage also runs the song's custom events:
  * the band members showing up and taking turns, the door kick, the truck/back
  * lights, the darkening and the "see you" end cards.
- *
- * Not ported yet: the perspective floor skew.
  */
 class SSerafim extends BaseStage
 {
 	var bg:BGSprite;
-	var floorSprite:BGSprite;
+	var perspectiveFloor:PerspectiveSprite;
 	var backTables:BGSprite;
 	var backStools:BGSprite;
 	var truck:BGSprite;
@@ -121,6 +120,10 @@ class SSerafim extends BaseStage
 	var cutsceneFailed:Bool = false;
 	var normalZoom:Float = 0.5;
 
+	// V-Slice hides the opponent strumline on the stage's first update: Kazuha never
+	// charts anything in Spaghetti, so the left arrows should never be on screen.
+	var opponentStrumsHidden:Bool = false;
+
 	// V-Slice tints the diner through this shader: it is what colours the lights behind
 	// the truck, and what darkens the stage and brightens it for the truck close-up.
 	var stageShader:SserafimShader;
@@ -144,8 +147,14 @@ class SSerafim extends BaseStage
 		bg = new BGSprite('sserafim/bg', -1853, -815, 0.75, 0.75);
 		add(bg);
 
-		floorSprite = new BGSprite('sserafim/floor', 790, 625, 0.85, 0.85);
-		add(floorSprite);
+		// V-Slice's stage JSON disables its flat floor and replaces it with this skewed
+		// sprite, pinned between (760, 1375) and (790, 625) with per-edge scroll.
+		perspectiveFloor = new PerspectiveSprite();
+		perspectiveFloor.sprite.loadGraphic(Paths.image('sserafim/floor'));
+		perspectiveFloor.setPositions(760, 1375, 790, 625);
+		perspectiveFloor.setScrollFactors(1.05, 1.05, 0.93, 0.93);
+		add(perspectiveFloor);
+		perspectiveFloor.updateSkew(camGame);
 
 		counterStretch = new BGSprite('sserafim/cutscene/counter-stretch', -1858, 377, 0.93, 0.93);
 		// It is a 1px strip, the cutscene stretches it into the long diner counter.
@@ -200,8 +209,9 @@ class SSerafim extends BaseStage
 
 		// V-Slice runs every prop through the stage shader except the lights and the
 		// solid cover, which need their own blend modes.
-		for (spr in [bg, floorSprite, backTables, backStools, truck, truckDoor, frontStool, counterStretch, burgerCutscene])
+		for (spr in [bg, backTables, backStools, truck, truckDoor, frontStool, counterStretch, burgerCutscene])
 			spr.shader = stageShader;
+		perspectiveFloor.sprite.shader = stageShader;
 		for (d in dust) d.shader = stageShader;
 
 		// V-Slice cancels the countdown to play the intro. setStartCallback runs in its
@@ -836,7 +846,8 @@ class SSerafim extends BaseStage
 		frontStool.visible = !active;
 		for (d in dust) d.visible = !active;
 
-		floorSprite.loadGraphic(Paths.image(active ? 'sserafim/cutscene/floor-cutscene' : 'sserafim/floor'));
+		perspectiveFloor.sprite.loadGraphic(Paths.image(active ? 'sserafim/cutscene/floor-cutscene' : 'sserafim/floor'));
+		perspectiveFloor.updateSkew(camGame);
 
 		counterStretch.visible = active;
 		burgerCutscene.visible = active;
@@ -1103,6 +1114,14 @@ class SSerafim extends BaseStage
 	override function update(elapsed:Float)
 	{
 		if (game == null || game.controls == null) return;
+
+		if (perspectiveFloor != null && camGame != null) perspectiveFloor.updateSkew(camGame);
+
+		if (!opponentStrumsHidden && game.opponentStrums != null)
+		{
+			opponentStrumsHidden = true;
+			game.opponentStrums.visible = false;
+		}
 
 		var covered:Bool = cover != null && cover.alpha > 0.01;
 		for (mouth in mouths)
