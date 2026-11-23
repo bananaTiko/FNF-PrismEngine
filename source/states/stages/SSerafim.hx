@@ -4,8 +4,10 @@ import flixel.addons.display.FlxBackdrop;
 import flixel.text.FlxText;
 import objects.Character;
 import objects.FlxAtlasSprite;
+import objects.Note;
 import objects.StrumNote;
 import shaders.SserafimShader;
+import states.stages.objects.SserafimLipSync;
 
 /**
  * The SSERAFIM diner from Spaghetti, ported from V-Slice's `sserafim` stage.
@@ -15,7 +17,7 @@ import shaders.SserafimShader;
  * the band members showing up and taking turns, the door kick, the truck/back
  * lights, the darkening and the "see you" end cards.
  *
- * Not ported yet: the perspective floor skew and the lipsync mouths.
+ * Not ported yet: the perspective floor skew.
  */
 class SSerafim extends BaseStage
 {
@@ -39,6 +41,44 @@ class SSerafim extends BaseStage
 	var eunchae:Character;
 
 	var dust:Array<FlxBackdrop> = [];
+
+	// In event order: yunjin, kazuha, chaewon, eunchae, Sakura (the player) and GF.
+	// V-Slice swaps their CharacterType on every `sserafimSing` so the current lead
+	// sings the player's notes; the same flags drive the lip-sync mouths.
+	var band:Array<Character> = [];
+	var singFlags:Array<Bool> = [false, false, false, false, false, false];
+	var mouths:Array<SserafimLipSync> = [null, null, null, null, null, null];
+	var placedChars:Array<Bool> = [false, false, false, false, false, false];
+	var initiallyVisible:Array<Bool> = [true, false, false, false, false, false];
+	var shownChars:Array<Bool> = [false, false, false, false, false, false];
+
+	static final LIP_ATLAS:Map<String, String> = [
+		'sserafim-yunjin' => 'sserafim/sserafim-lipsync-yunjin',
+		'sserafim-kazuha' => 'sserafim/sserafim-lipsync',
+		'sserafim-chaewon' => 'sserafim/sserafim-lipsync',
+		'sserafim-eunchae' => 'sserafim/sserafim-lipsync',
+		'sserafim-sakura' => 'sserafim/sserafim-lipsync',
+		'sserafim-gf' => 'sserafim/sserafim-lipsync'
+	];
+
+	// Mouth anchors inside each character atlas (x, y, rotation), taken from the
+	// "mouth" symbol each pose nests, and the per-animation offsets V-Slice's
+	// character scripts apply to the mouth sprite.
+	static final LIP_ANCHORS:Map<String, Map<String, Array<Float>>> = [
+		'sserafim-yunjin' => ['idle' => [545.8, 373.3, 1.56], 'left' => [498.1, 362.4, -6.34], 'right' => [581.7, 365.4, -9.88], 'up' => [545.1, 344.8, -12.39], 'down' => [534.1, 385.7, -0.62]],
+		'sserafim-chaewon' => ['idle' => [530.2, 331.1, 172.93], 'left' => [510.8, 332.8, 173.22], 'right' => [551.9, 310.1, 166.67], 'up' => [537.8, 300.3, 163.85], 'down' => [530.4, 333.8, 178.33]],
+		'sserafim-eunchae' => ['idle' => [661.2, 293.2, -174.04], 'left' => [637.2, 286.5, -172.65], 'right' => [683.1, 280.3, -178.28], 'up' => [662.3, 290.2, -160.55], 'down' => [641.9, 285.6, 175.6]],
+		'sserafim-kazuha' => ['idle' => [514.0, 241.1, -3.66], 'left' => [480.6, 227.4, 1.82], 'right' => [541.6, 233.5, 6.36], 'up' => [509.2, 197.6, 9.99], 'down' => [516.9, 258.7, -7.09]],
+		'sserafim-sakura' => ['idle' => [431.3, 198.8, 3.77], 'left' => [418.2, 193.1, 9.56], 'right' => [465.4, 180.9, 7.78], 'up' => [449.9, 156.2, 15.73], 'down' => [425.4, 211.8, 2.2]]
+	];
+
+	static final LIP_OFFSETS:Map<String, Map<String, Array<Float>>> = [
+		'sserafim-yunjin' => ['idle' => [8, 6, 23], 'up' => [6, 8, 22], 'right' => [6, 8, 23], 'down' => [8, 6, 23], 'left' => [6, 8, 23]],
+		'sserafim-chaewon' => ['idle' => [41, 3, -166], 'up' => [38, 0, -168], 'right' => [39, 1, -165], 'down' => [41, 3, -167], 'left' => [40, 2, -165]],
+		'sserafim-eunchae' => ['idle' => [43, 6, -168], 'up' => [45, 10, -166], 'right' => [42, 5, -166], 'down' => [41, 3, -168], 'left' => [43, 6, -169]],
+		'sserafim-kazuha' => ['idle' => [5, 4, -13], 'up' => [7, 2, -14], 'right' => [7, 2, -13], 'down' => [4, 6, -12], 'left' => [5, 4, -14]],
+		'sserafim-sakura' => ['idle' => [7, 2, -14], 'up' => [8, 1, -15], 'right' => [7, 2, -15], 'down' => [6, 3, -15], 'left' => [7, 2, -14]]
+	];
 
 	var cover:FlxSprite;
 	var seeYou1:BGSprite;
@@ -212,10 +252,12 @@ class SSerafim extends BaseStage
 
 		yunjin.playAnim('doorclosed', true);
 		chaewon.visible = false;
-		eunchae.visible = false;
-		// The band members only animate once their show event brings them in.
-		chaewon.active = false;
-		eunchae.active = false;
+		eunchae.visible = false; // The band members only appear once their show event brings them in.
+
+		// V-Slice's stage json positions: bf [1530, 970], dad [70, 470], gf [938.5, 392].
+		if (boyfriend != null) boyfriend.scrollFactor.set(0.99, 0.99);
+		if (dad != null) dad.scrollFactor.set(0.97, 0.97);
+		if (gf != null) gf.scrollFactor.set(0.95, 0.95);
 
 		// Everyone is hidden until their show/sing events, and the opponent icon and
 		// girlfriend only turn up when yunjin kicks the door open.
@@ -224,8 +266,29 @@ class SSerafim extends BaseStage
 		gf.visible = false;
 		if (game.iconP2 != null) game.iconP2.visible = false;
 
+		band = [yunjin, dad, chaewon, eunchae, boyfriend, gf];
+		for (i in 0...band.length)
+		{
+			var char:Character = band[i];
+			if (char == null) continue;
+
+			char.skipSing = true; // clear until an sserafimSing event says otherwise
+			initiallyVisible[i] = char.visible;
+
+			// The atlas only knows its sprite bounds after it has been drawn once. Draw
+			// everyone once at (almost) zero alpha so they can be positioned by their feet
+			// without a frame of misplaced characters or a camera jump.
+			if (!char.visible)
+			{
+				char.visible = true;
+				char.alpha = 0.001;
+			}
+		}
+
 		for (spr in dust)
 			add(spr);
+
+		createLipSyncs();
 
 		normalZoom = defaultCamZoom;
 		createCutsceneSprites();
@@ -243,6 +306,149 @@ class SSerafim extends BaseStage
 			if (char != null) char.shader = characterShader;
 		for (spr in [cutsceneMain, cutsceneGf, cutsceneBf])
 			if (spr != null) spr.shader = characterShader;
+	}
+
+	function createLipSyncs():Void
+	{
+		var ids:Array<String> = ['sserafim-yunjin', 'sserafim-kazuha', 'sserafim-chaewon', 'sserafim-eunchae', 'sserafim-sakura', 'sserafim-gf'];
+		for (i in 0...band.length)
+		{
+			var char:Character = band[i];
+			var id:String = ids[i];
+			if (char == null || !LIP_ANCHORS.exists(id)) continue;
+
+			try
+			{
+				// Chaewon's mouth is drawn at half alpha, like her V-Slice script; kazuha and
+				// Sakura share the flipped mouth atlas.
+				var lip:SserafimLipSync = new SserafimLipSync(char, LIP_ATLAS.get(id), LIP_ANCHORS.get(id), LIP_OFFSETS.get(id), groupOffsetX(char),
+					groupOffsetY(char), id == 'sserafim-chaewon' ? 0.5 : 1.0, id == 'sserafim-kazuha' || id == 'sserafim-sakura');
+				lip.shader = characterShader;
+				add(lip);
+				mouths[i] = lip;
+			}
+			catch (e:Dynamic)
+			{
+				FlxG.log.warn('Spaghetti lip-sync atlas for $id could not be loaded: ' + e);
+			}
+		}
+	}
+
+	function applySinging():Void
+	{
+		// A member only animates while the chart makes them the lead.
+		if (boyfriend != null) boyfriend.skipSing = !singFlags[4];
+		if (dad != null) dad.skipSing = !singFlags[1];
+		for (i in 0...mouths.length)
+			if (mouths[i] != null) mouths[i].singing = singFlags[i];
+	}
+
+	function groupOffsetX(char:Character):Float
+	{
+		if (char == boyfriend && game.boyfriendGroup != null) return game.boyfriendGroup.x;
+		if (char == dad && game.dadGroup != null) return game.dadGroup.x;
+		if (char == gf && game.gfGroup != null) return game.gfGroup.x;
+		return 0;
+	}
+
+	function groupOffsetY(char:Character):Float
+	{
+		if (char == boyfriend && game.boyfriendGroup != null) return game.boyfriendGroup.y;
+		if (char == dad && game.dadGroup != null) return game.dadGroup.y;
+		if (char == gf && game.gfGroup != null) return game.gfGroup.y;
+		return 0;
+	}
+
+	/** Plays the note pose on every member the chart currently marks as singing. */
+	function playMembers(note:Note, miss:Bool):Void
+	{
+		if (note == null || note.isSustainNote || note.noAnimation) return;
+
+		var dir:Int = Std.int(Math.abs(note.noteData)) % 4;
+		var anim:String = ['singLEFT', 'singDOWN', 'singUP', 'singRIGHT'][dir] + (miss ? 'miss' : '');
+		for (i in 0...band.length)
+		{
+			if (!singFlags[i]) continue;
+
+			var char:Character = band[i];
+			if (char == null || !char.hasAnimation(anim)) continue;
+			if (!miss && char.specialAnim && !char.isAnimationFinished()) continue;
+
+			char.playAnim(anim, true);
+			char.holdTimer = 0;
+		}
+	}
+
+	override function goodNoteHit(note:Note)
+	{
+		playMembers(note, false);
+	}
+
+	override function noteMiss(note:Note)
+	{
+		playMembers(note, true);
+	}
+
+	/**
+	 * V-Slice places characters by their feet: stage position minus the origin of the
+	 * frame that is currently drawn. The atlas only reports that origin after it has
+	 * been drawn once, so this retries until every character is ready.
+	 */
+	function placeCharacters():Void
+	{
+		var feet:Array<Array<Float>> = [[-621, 154], [70, 470], [687, 98], [770, 675], [1530, 970], [938.5, 392]];
+		for (i in 0...band.length)
+		{
+			if (placedChars[i]) continue;
+			var char:Character = band[i];
+			if (char == null)
+			{
+				placedChars[i] = true;
+				continue;
+			}
+
+			if (!placeCharacter(char, feet[i][0], feet[i][1])) continue;
+
+			placedChars[i] = true;
+			char.alpha = 1;
+			// Do not re-show someone the intro or a show event has hidden; only undo the
+			// temporary visibility that was needed to measure the atlas.
+			if (!initiallyVisible[i] && !shownChars[i]) char.visible = false;
+		}
+	}
+
+	function placeCharacter(char:Character, feetX:Float, feetY:Float):Bool
+	{
+		var origin:FlxPoint = char.getFeetOrigin();
+		if (origin.x < 1 || origin.y < 1)
+		{
+			origin.put();
+			return false;
+		}
+
+		// BF, dad and GF live inside PlayState's sprite groups, so their local position
+		// has to discount the group offset.
+		var groupX:Float = 0;
+		var groupY:Float = 0;
+		if (char == boyfriend && game.boyfriendGroup != null)
+		{
+			groupX = game.boyfriendGroup.x;
+			groupY = game.boyfriendGroup.y;
+		}
+		else if (char == dad && game.dadGroup != null)
+		{
+			groupX = game.dadGroup.x;
+			groupY = game.dadGroup.y;
+		}
+		else if (char == gf && game.gfGroup != null)
+		{
+			groupX = game.gfGroup.x;
+			groupY = game.gfGroup.y;
+		}
+
+		char.setPosition(feetX - groupX - origin.x, feetY - groupY - origin.y);
+		origin.put();
+		return true;
 	}
 
 	function hideOpponentStrums()
@@ -265,11 +471,18 @@ class SSerafim extends BaseStage
 		hideOpponentStrums();
 	}
 
+	/** Whether the character is free to bop, i.e. is not holding a sing pose. */
+	function canDance(char:Character):Bool
+	{
+		var anim:String = char.getAnimationName();
+		return anim == null || !anim.startsWith('sing');
+	}
+
 	override function beatHit()
 	{
-		if (yunjinDancing && yunjin != null && yunjin.visible) yunjin.dance();
-		if (chaewon != null && chaewon.visible) chaewon.dance();
-		if (eunchae != null && eunchae.visible) eunchae.dance();
+		if (yunjinDancing && yunjin != null && yunjin.visible && canDance(yunjin)) yunjin.dance();
+		if (chaewon != null && chaewon.visible && canDance(chaewon)) chaewon.dance();
+		if (eunchae != null && eunchae.visible && canDance(eunchae)) eunchae.dance();
 
 		if (lightsEnabled && lightsColors.length > 0)
 		{
@@ -318,6 +531,7 @@ class SSerafim extends BaseStage
 			yunjinDancing = true;
 			FlxG.sound.play(Paths.sound('sserafim/door-kick-2'));
 			gf.visible = true;
+			shownChars[5] = true;
 			if (game.iconP2 != null) game.iconP2.visible = true;
 			// The door is part of her animation at first, so only show it afterwards.
 			new FlxTimer().start(23 / 24, function(tmr:FlxTimer) truckDoor.visible = true);
@@ -446,16 +660,18 @@ class SSerafim extends BaseStage
 					chaewon.visible = vis[2];
 					eunchae.visible = vis[3];
 					boyfriend.visible = vis[4];
-
-					yunjin.active = vis[0];
-					chaewon.active = vis[2];
-					eunchae.active = vis[3];
+					for (i in 0...5)
+						if (vis[i]) shownChars[i] = true;
 				}
 
 			case 'sserafimSing':
-				// V-Slice swaps which member's mouth moves; we don't have the lipsync
-				// sprites yet, so the flags are only read here for later use.
-				parseBools(value1);
+				var flags:Array<Bool> = parseBools(value1);
+				if (flags.length >= 5)
+				{
+					while (flags.length < 6) flags.push(false);
+					singFlags = flags;
+					applySinging();
+				}
 
 			case 'sserafimKick':
 				var isFinal:Bool = value1 != null && value1.trim().toLowerCase() == 'true';
@@ -865,6 +1081,11 @@ class SSerafim extends BaseStage
 	override function update(elapsed:Float)
 	{
 		if (game == null || game.controls == null) return;
+		placeCharacters();
+
+		var covered:Bool = cover != null && cover.alpha > 0.01;
+		for (mouth in mouths)
+			if (mouth != null) mouth.hiddenByCover = covered;
 		if (cutscenePlaying && !cutsceneSkipped)
 		{
 			if (game.controls.ACCEPT && cutsceneSkipAllowed)

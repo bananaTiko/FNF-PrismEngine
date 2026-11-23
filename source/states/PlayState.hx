@@ -3522,7 +3522,7 @@ class PlayState extends MusicBeatState
 		var char:Character = boyfriend;
 		if((note != null && note.gfNote) || (SONG.notes[curSection] != null && SONG.notes[curSection].gfSection)) char = gf;
 
-		if(char != null && (note == null || !note.noMissAnimation) && char.hasMissAnimations)
+		if(char != null && !char.skipSing && (note == null || !note.noMissAnimation) && char.hasMissAnimations)
 		{
 			var postfix:String = '';
 			if(note != null) postfix = note.animSuffix;
@@ -3575,7 +3575,7 @@ class PlayState extends MusicBeatState
 					//finishes; notes landing on the same beat must not cut it off.
 					if(char.specialAnim && !char.isAnimationFinished()) canPlay = false;
 
-					if(canPlay) char.playAnim(animToPlay, true);
+					if(canPlay && !char.skipSing) char.playAnim(animToPlay, true);
 					char.holdTimer = 0;
 				}
 			}
@@ -3635,7 +3635,7 @@ class PlayState extends MusicBeatState
 					}
 	
 					if(char.specialAnim && !char.isAnimationFinished()) canPlay = false;
-					if(canPlay) char.playAnim(animToPlay, true);
+					if(canPlay && !char.skipSing) char.playAnim(animToPlay, true);
 					char.holdTimer = 0;
 
 					if(note.noteType == 'Hey!')

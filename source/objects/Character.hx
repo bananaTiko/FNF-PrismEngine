@@ -81,6 +81,10 @@ class Character extends FlxSprite
 
 	public var missingCharacter:Bool = false;
 	public var missingText:FlxText;
+
+	// When a stage owns the singing (Spaghetti's SSERAFIM members), it can stop this
+	// character from playing its own note animations.
+	public var skipSing:Bool = false;
 	public var hasMissAnimations:Bool = false;
 	public var vocalsFile:String = '';
 
@@ -297,7 +301,14 @@ class Character extends FlxSprite
 				#if flxanimate
 				else
 				{
-					if(animIndices != null && animIndices.length > 0)
+					// V-Slice characters name their animations after a frame label inside the
+					// atlas' main symbol ("left", "sakura pose left", ...), not after a symbol.
+					// Prefer the label, then fall back to a symbol of that name.
+					var symbol = (atlas.anim.stageInstance != null) ? atlas.anim.symbolDictionary[atlas.anim.stageInstance.symbol.name] : null;
+					var labelNames:Array<String> = symbol != null ? symbol.getFrameLabelNames() : [];
+					if(labelNames.indexOf(animName) != -1)
+						atlas.anim.addByFrameLabel(animAnim, animName, animFps, animLoop);
+					else if(animIndices != null && animIndices.length > 0)
 						atlas.anim.addBySymbolIndices(animAnim, animName, animIndices, animFps, animLoop);
 					else
 						atlas.anim.addBySymbol(animAnim, animName, animFps, animLoop);
@@ -390,6 +401,19 @@ class Character extends FlxSprite
 	inline public function getAnimationName():String
 	{
 		return _lastPlayedAnimation;
+	}
+
+	/**
+	 * The offset from this sprite's top-left corner to its feet (horizontal centre,
+	 * vertical bottom) which V-Slice uses to place characters on a stage.
+	 */
+	public function getFeetOrigin():FlxPoint
+	{
+		#if flxanimate
+		if(isAnimateAtlas && atlas != null && atlas.width > 1 && atlas.height > 1)
+			return FlxPoint.get(atlas.width * 0.5, atlas.height);
+		#end
+		return FlxPoint.get(width * 0.5, height);
 	}
 
 	public function isAnimationFinished():Bool
