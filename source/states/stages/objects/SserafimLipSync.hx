@@ -79,6 +79,8 @@ class SserafimLipSync extends FlxAtlasSprite
 		x = parentX + character.x + anchor[0] * character.scale.x;
 		y = parentY + character.y + anchor[1] * character.scale.y;
 
+		if (anim == null || anim.curInstance == null) return;
+
 		// V-Slice flaps the mouth at 24 fps straight from the song clock.
 		if (singing) anim.curFrame = Std.int(Conductor.songPosition / 1000 * 24) - 1;
 		else anim.curFrame = 0;
