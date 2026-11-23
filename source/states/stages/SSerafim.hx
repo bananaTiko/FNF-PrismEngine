@@ -165,16 +165,19 @@ class SSerafim extends BaseStage
 		counterStretch.scale.set(400, 1);
 		counterStretch.updateHitbox();
 		counterStretch.visible = false;
-		add(counterStretch);
 
 		burgerCutscene = new BGSprite('sserafim/cutscene/burger-cutscene', -97, 237, 0.93, 0.93);
 		burgerCutscene.visible = false;
-		add(burgerCutscene);
 
 		backTables = new BGSprite('sserafim/back-tables', -1857, 267, 0.93, 0.93);
-		add(backTables);
 
 		backStools = new BGSprite('sserafim/back-stools', -1357, 426, 0.94, 0.94);
+
+		// V-Slice's stage zIndexes: backTables and the counter are both 12,
+		// burgerCutscene is 13 and backStools is 14.
+		add(backTables);
+		add(counterStretch);
+		add(burgerCutscene);
 		add(backStools);
 
 		backLightColor = new BGSprite('sserafim/lights/back-light-color', -1241, -949, 0.93, 0.93);
@@ -197,14 +200,15 @@ class SSerafim extends BaseStage
 		truckLight1 = new BGSprite('sserafim/lights/truck-light-1', -962, -607, 0.95, 0.95);
 		truckLight1.blend = ADD;
 		truckLight1.alpha = 0;
-		add(truckLight1);
 
 		truckLight2 = new BGSprite('sserafim/lights/truck-light-2', -781, -464, 0.95, 0.95);
 		truckLight2.alpha = 0;
+
+		// truckLight1 sits above truckLight2 in the V-Slice stage (23 vs 22).
 		add(truckLight2);
+		add(truckLight1);
 
 		frontStool = new BGSprite('sserafim/front-stool', -280, 818, 1.0, 1.0);
-		add(frontStool);
 
 		dust.push(makeDust('sserafim/dust/dust-mid', -650, -200, 1.1, 1.5, 0.8, 350, 0xFF98847D));
 		dust.push(makeDust('sserafim/dust/dust-back', -650, -250, 1.15, 1.5, 0.9, -300, 0xFF8B6C63));
@@ -256,23 +260,6 @@ class SSerafim extends BaseStage
 
 	override function createPost()
 	{
-		cover = makeOverlay(FlxColor.BLACK);
-		add(cover);
-
-		seeYou1 = new BGSprite('sserafim/end/end-1', 0, 0, 0, 0);
-		seeYou1.scale.set(0.67, 0.67);
-		seeYou1.updateHitbox();
-		seeYou1.screenCenter();
-		seeYou1.visible = false;
-		add(seeYou1);
-
-		seeYou2 = new BGSprite('sserafim/end/end-2', 0, 0, 0, 0);
-		seeYou2.scale.set(0.67, 0.67);
-		seeYou2.updateHitbox();
-		seeYou2.setPosition(FlxG.width - 40 - seeYou2.width, FlxG.height - 40 - seeYou2.height);
-		seeYou2.visible = false;
-		add(seeYou2);
-
 		// The band, as stage characters. yunjin starts behind the closed truck door.
 		yunjin = new Character(-621, 154, 'sserafim-yunjin');
 		yunjin.scrollFactor.set(0.95, 0.95);
@@ -319,13 +306,33 @@ class SSerafim extends BaseStage
 
 		placeBand();
 
-		for (spr in dust)
-			add(spr);
-
+		// V-Slice layers: band/mouths 1000, frontStool 1500, dust 2000,
+		// solidCover 9999, end cards 10000. Psych draws in insertion order.
 		createLipSyncs();
 
 		normalZoom = defaultCamZoom;
 		createCutsceneSprites();
+
+		add(frontStool);
+		for (spr in dust)
+			add(spr);
+
+		cover = makeOverlay(FlxColor.BLACK);
+		add(cover);
+
+		seeYou1 = new BGSprite('sserafim/end/end-1', 0, 0, 0, 0);
+		seeYou1.scale.set(0.67, 0.67);
+		seeYou1.updateHitbox();
+		seeYou1.screenCenter();
+		seeYou1.visible = false;
+		add(seeYou1);
+
+		seeYou2 = new BGSprite('sserafim/end/end-2', 0, 0, 0, 0);
+		seeYou2.scale.set(0.67, 0.67);
+		seeYou2.updateHitbox();
+		seeYou2.setPosition(FlxG.width - 40 - seeYou2.width, FlxG.height - 40 - seeYou2.height);
+		seeYou2.visible = false;
+		add(seeYou2);
 
 		skipText = new FlxText(936, 618, 0, 'Skip [ ACCEPT ]', 40);
 		skipText.setFormat(Paths.font('vcr.ttf'), 40, 0xFFFFFFFF, "right", FlxTextBorderStyle.OUTLINE, 0xFF000000);
