@@ -1,102 +1,219 @@
-# This is a basic workflow to help you get started with Actions
+# Builds the Linux, Windows and macOS releases on every push.
+#
+# A full hxcpp build regenerates and recompiles every generated .cpp file, which is
+# what makes these runs take so long. Two things cut most of that away:
+#   * the haxelib folder is cached, so `setup/unix.sh` (17 downloads, several git
+#     clones) only runs when the dependency list actually changes;
+#   * ccache is put in front of the compiler on Linux and macOS. ccache hashes the
+#     real compiler input, so a push that only touches charts/assets still gets
+#     object files from cache instead of compiling from scratch.
 
 name: Build
 
-
-# Controls when the action will run.
 on:
-  # Triggers the workflow on push or pull request events but only for the master branch
   push:
     branches: [ main, experimental, Prism-Engine-Main ]
   pull_request:
     branches: [ main, experimental, Prism-Engine-Main ]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# A newer push makes the older run pointless: cancel it instead of letting three
+# full builds queue up behind each other.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  # This workflow contains a single job called "build"
   buildLinux:
-    # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4.1.7
 
       - uses: krdlab/setup-haxe@master
         with:
           haxe-version: 4.3.4
-      # Runs a set of commands using the runners shell
+
+      - name: Cache haxelibs
+        id: haxelib-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/haxelib
+          key: ${{ runner.os }}-haxelib-${{ hashFiles('Project.xml', 'setup/unix.sh') }}
+
+      - name: Cache compiled objects
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Install system libraries
+        run: sudo apt-get update && sudo apt-get install -y ccache libvlc-dev libvlccore-dev
+
+      - name: Point haxelib at the cache
+        run: haxelib setup ~/haxelib
+
       - name: Install Haxelib
+        if: steps.haxelib-cache.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get install libvlc-dev
-          sudo apt-get install libvlccore-dev
-          haxelib setup ~/haxelib
           haxelib install hxcpp > /dev/null --quiet
           chmod +x ./setup/unix.sh
           sh ./setup/unix.sh
+
+      - name: Make sure hxcpp is present
+        run: haxelib list | grep -q '^hxcpp' || haxelib install hxcpp
+
+      - name: Use ccache for every compile
+        run: |
+          mkdir -p "$HOME/.ccache/bin"
+          for c in gcc g++ cc c++; do ln -sf "$(command -v ccache)" "$HOME/.ccache/bin/$c"; done
+          echo "$HOME/.ccache/bin" >> "$GITHUB_PATH"
+          {
+            echo "CCACHE_DIR=$HOME/.ccache"
+            echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"
+            echo "CCACHE_NOHASHDIR=1"
+            echo "CCACHE_MAXSIZE=2G"
+          } >> "$GITHUB_ENV"
+
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
+
       - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
+        run: echo "${{ github.run_id }}" > VERSION
+
       - name: Compile
-        run: haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id}}" -D officialBuild
+        run: |
+          set -o pipefail
+          haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id }}" -D officialBuild > build.log 2>&1 || {
+            echo '::group::Compile errors'
+            grep -n -i -E 'error|undefined symbol|ld: ' build.log | tail -60 || true
+            echo '::endgroup::'
+            exit 1
+          }
+          ccache -s || true
+          tail -5 build.log
+
       - name: Publish Artifact
         uses: actions/upload-artifact@v4.3.4
         with:
           name: linuxBuild
           path: 'export/release/linux/bin'
+
   buildWindows:
     runs-on: windows-latest
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4.1.7
 
       - uses: krdlab/setup-haxe@master
         with:
           haxe-version: 4.3.4
-      # Runs a set of commands using the runners shell
-      - name: Install Haxelib
-        run: |
-          haxelib setup C:/haxelib
-          haxelib install hxcpp > /dev/null --quiet
-          .\"setup/windows.bat"
+
+      - name: Cache haxelibs
+        id: haxelib-cache
+        uses: actions/cache@v4
+        with:
+          path: C:/haxelib
+          key: ${{ runner.os }}-haxelib-${{ hashFiles('Project.xml', 'setup/windows.bat') }}
+
+      - name: Point haxelib at the cache
+        run: haxelib setup C:/haxelib
         shell: cmd
+
+      - name: Install Haxelib
+        if: steps.haxelib-cache.outputs.cache-hit != 'true'
+        run: |
+          haxelib install hxcpp
+          .\setup\windows.bat
+        shell: cmd
+
+      - name: Make sure hxcpp is present
+        run: haxelib list | findstr /B /C:"hxcpp" >nul || haxelib install hxcpp
+        shell: cmd
+
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> %USERPROFILE%/settings.cocoa
         shell: cmd
+
       - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
+        run: echo "${{ github.run_id }}" > VERSION
+
       - name: Compile
-        run: haxelib run lime build windows --app-version="4.0.0-${{ github.run_id}}"  -D officialBuild
+        run: |
+          haxelib run lime build windows --app-version="4.0.0-${{ github.run_id }}" -D officialBuild > build.log 2>&1
+          if %ERRORLEVEL% NEQ 0 (
+            echo ::group::Compile errors
+            findstr /R /C:"error" build.log | more
+            echo ::endgroup::
+            exit /b 1
+          )
+          powershell -Command "Get-Content build.log -Tail 5"
+        shell: cmd
+
       - name: Publish Artifact
         uses: actions/upload-artifact@v4.3.4
         with:
           name: windowsBuild
           path: export/release/windows/bin
+
   buildMac:
     runs-on: macos-15
 
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4.1.7
 
       - uses: krdlab/setup-haxe@master
         with:
           haxe-version: 4.3.4
-      # Runs a set of commands using the runners shell
+
+      - name: Cache haxelibs
+        id: haxelib-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/haxelib
+          key: ${{ runner.os }}-haxelib-${{ hashFiles('Project.xml', 'setup/unix.sh') }}
+
+      - name: Cache compiled objects
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ccache-
+
+      - name: Install ccache
+        run: brew install ccache
+
+      - name: Point haxelib at the cache
+        run: haxelib setup ~/haxelib
+
       - name: Install Haxelib
+        if: steps.haxelib-cache.outputs.cache-hit != 'true'
         run: |
-          haxelib setup ~/haxelib
           haxelib install hxcpp > /dev/null --quiet
           chmod +x ./setup/unix.sh
           sh ./setup/unix.sh
+
+      - name: Make sure hxcpp is present
+        run: haxelib list | grep -q '^hxcpp' || haxelib install hxcpp
+
+      - name: Use ccache for every compile
+        run: |
+          mkdir -p "$HOME/.ccache/bin"
+          for c in gcc g++ cc c++ clang clang++; do ln -sf "$(command -v ccache)" "$HOME/.ccache/bin/$c"; done
+          echo "$HOME/.ccache/bin" >> "$GITHUB_PATH"
+          {
+            echo "CCACHE_DIR=$HOME/.ccache"
+            echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"
+            echo "CCACHE_NOHASHDIR=1"
+            echo "CCACHE_MAXSIZE=1G"
+          } >> "$GITHUB_ENV"
+
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
+
       # hxcpp 4.3.2 bundles zlib 1.2.11, and its zutil.h treats TARGET_OS_MAC (which Apple's
       # own headers always define) as classic Mac OS 9: it turns fdopen into a NULL macro and
       # sets an OS/2 code. Against the macOS 14+/15 SDK that breaks <stdio.h> itself
@@ -109,14 +226,17 @@ jobs:
             sed -i '' 's/#if defined(MACOS) || defined(TARGET_OS_MAC)/#if defined(MACOS)/' "$f"
             grep -q '^#if defined(MACOS)$' "$f"
           done
+
       - name: Create Version Tag
-        run: echo "${{github.run_id}}" > VERSION
+        run: echo "${{ github.run_id }}" > VERSION
+
       # Keep the job log readable: a full hxcpp build is far too big to page through, so the
       # whole output goes to a file and only the errors are printed if the build fails.
       - name: Compile
         run: |
           set -o pipefail
           if haxelib run lime build mac --app-version="4.0.0-${{ github.run_id }}" -D officialBuild > build.log 2>&1; then
+            ccache -s || true
             tail -5 build.log
           else
             echo '::group::Compile errors'
@@ -124,6 +244,7 @@ jobs:
             echo '::endgroup::'
             exit 1
           fi
+
       - name: Publish Artifact
         uses: actions/upload-artifact@v4.3.4
         with:
