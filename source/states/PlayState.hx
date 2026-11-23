@@ -1162,7 +1162,11 @@ class PlayState extends MusicBeatState
 			}
 			else if (skipCountdown)
 			{
-				setSongTime(0);
+				// Charts converted from V-Slice start their notes at 0 ms, so dropping straight
+				// into the song would swallow the first notes. Let them scroll in for two beats.
+				var firstNoteTime:Float = unspawnNotes.length > 0 ? unspawnNotes[0].strumTime : 1;
+				if (firstNoteTime <= 0) Conductor.songPosition = -Conductor.crochet * 2 + Conductor.offset;
+				else setSongTime(0);
 				return true;
 			}
 			moveCameraSection();

@@ -135,8 +135,9 @@ class SSerafim extends BaseStage
 		dust.push(makeDust('sserafim/dust/dust-back', -650, -1300, 1.25, 3.5, 0.9, -150, 0xFF886A60));
 
 		// V-Slice cancels the countdown to play the intro. setStartCallback runs in its
-		// place, and the intro starts the countdown once it is done.
-		if (!seenCutscene) setStartCallback(startIntroCutscene);
+		// place, and the intro starts the countdown once it is done. Like V-Slice, the
+		// intro only plays in Story Mode: Freeplay jumps straight into the song.
+		if (isStoryMode && !seenCutscene) setStartCallback(startIntroCutscene);
 	}
 
 	function makeDust(image:String, x:Float, y:Float, scroll:Float, scale:Float, alpha:Float, velX:Float, color:Int):FlxBackdrop
@@ -484,6 +485,8 @@ class SSerafim extends BaseStage
 
 			cutsceneGf = new FlxAtlasSprite(655, -104, 'sserafim/cutscene/gf-get-up');
 			cutsceneGf.scrollFactor.set(0.95, 0.95);
+			// V-Slice dims GF in the wrecked diner shot.
+			cutsceneGf.alpha = 0.5;
 			cutsceneGf.visible = false;
 			add(cutsceneGf);
 
@@ -499,10 +502,15 @@ class SSerafim extends BaseStage
 		}
 	}
 
-	function playCutsceneAnim(spr:FlxAtlasSprite, paused:Bool = false)
+	/**
+	 * Plays one of the cutscene atlases the way V-Slice does: an empty name plays the
+	 * atlas' own symbol, otherwise the frame label (`static`, `getup`) is used.
+	 */
+	function playCutsceneAnim(spr:FlxAtlasSprite, ?label:String, paused:Bool = false)
 	{
 		if (spr == null) return;
-		spr.anim.play('', true, false, 0);
+		if (label == null) spr.anim.play('', true, false, 0);
+		else spr.playAnimation(label, true, false, false, 0);
 		if (paused) spr.anim.pause();
 	}
 
@@ -639,18 +647,18 @@ class SSerafim extends BaseStage
 			if (cutsceneGf != null)
 			{
 				cutsceneGf.visible = true;
-				playCutsceneAnim(cutsceneGf, true);
+				playCutsceneAnim(cutsceneGf, 'static', true);
 			}
 			if (cutsceneBf != null)
 			{
 				cutsceneBf.visible = true;
-				playCutsceneAnim(cutsceneBf, true);
+				playCutsceneAnim(cutsceneBf, 'static', true);
 			}
 		});
 
 		cutsceneTimer(710 / 24, function() {
-			playCutsceneAnim(cutsceneGf);
-			playCutsceneAnim(cutsceneBf);
+			playCutsceneAnim(cutsceneGf, 'getup');
+			playCutsceneAnim(cutsceneBf, 'getup');
 		});
 
 		cutsceneTimer(730 / 24, endIntroCutscene);
@@ -715,13 +723,13 @@ class SSerafim extends BaseStage
 			if (cutsceneGf != null)
 			{
 				cutsceneGf.visible = true;
-				playCutsceneAnim(cutsceneGf, true);
+				playCutsceneAnim(cutsceneGf, 'getup', true);
 				cutsceneGf.anim.curFrame = 23;
 			}
 			if (cutsceneBf != null)
 			{
 				cutsceneBf.visible = true;
-				playCutsceneAnim(cutsceneBf, true);
+				playCutsceneAnim(cutsceneBf, 'getup', true);
 				cutsceneBf.anim.curFrame = 23;
 			}
 			camGame.zoom = normalZoom;
