@@ -88,9 +88,9 @@ class FreeplayState extends MusicBeatState
 	static var sectionsLoaded:Bool = false;
 
 	//The erect mixes aren't their own rows: a song's erect chart is picked with the
-	//difficulty (Hard -> Erect -> Nightmare), the same way V-Slice does it.
+	//difficulty (Hard -> Erect -> Nightmare), the same way V-Slice does it. The list
+	//only contains those entries once an erect difficulty is selected.
 	static var erectSongs:Map<String, String> = [];
-	static var erectBaseSongs:Map<String, String> = [];
 
 	/**
 	 * Builds the stock mixes/sections, then merges every `data/freeplay-sections.json` the
@@ -104,20 +104,14 @@ class FreeplayState extends MusicBeatState
 		sectionsLoaded = true;
 
 		mixNames = ['BF MIXES', 'PICO MIXES'];
-		mixCategories = [['BF Mixes', 'BF Erect'], ['Pico Mixes', 'Pico Erect']];
-		freeplayCategories = ['BF Mixes', 'BF Erect', 'Pico Mixes', 'Pico Erect'];
+		mixCategories = [['BF Mixes'], ['Pico Mixes']];
+		freeplayCategories = ['BF Mixes', 'Pico Mixes'];
 
 		addSongTable('BF Mixes', [
 			'tutorial', 'bopeebo', 'fresh', 'dad battle', 'spookeez', 'south', 'monster',
 			'pico', 'philly nice', 'blammed', 'satin panties', 'high', 'milf',
 			'cocoa', 'eggnog', 'winter horrorland', 'senpai', 'roses', 'thorns',
 			'ugh', 'guns', 'stress', 'spaghetti', 'darnell (bf mix)', 'lit up (bf mix)'
-		]);
-
-		addSongTable('BF Erect', [
-			'bopeebo erect', 'fresh erect', 'dad battle erect', 'spookeez erect', 'south erect',
-			'pico erect', 'philly nice erect', 'blammed erect', 'satin panties erect', 'high erect',
-			'cocoa erect', 'eggnog erect', 'senpai erect', 'roses erect', 'thorns erect', 'ugh erect'
 		]);
 
 		addSongTable('Pico Mixes', [
@@ -127,8 +121,6 @@ class FreeplayState extends MusicBeatState
 			'ugh (pico mix)', 'guns (pico mix)', 'stress (pico mix)',
 			'darnell', 'lit up', '2hot', 'blazin'
 		]);
-
-		addSongTable('Pico Erect', ['darnell erect']);
 
 		//Same search order the weeks use: base game, then the mods folder, then each enabled mod.
 		var directories:Array<String> = [Paths.getSharedPath()];
@@ -236,12 +228,18 @@ class FreeplayState extends MusicBeatState
 		songOrder.push(name);
 		songCategories.set(name, category);
 
-		if (name.endsWith(' erect'))
-		{
-			var base:String = name.substr(0, name.length - ' erect'.length);
-			erectSongs.set(base, name);
-			erectBaseSongs.set(name, base);
-		}
+		if (isErectVariant(name)) registerErectVariant(name);
+	}
+
+	static inline function isErectVariant(name:String):Bool
+	{
+		return name != null && name.toLowerCase().endsWith(' erect');
+	}
+
+	static function registerErectVariant(name:String):Void
+	{
+		var base:String = name.substr(0, name.length - ' erect'.length);
+		erectSongs.set(base.toLowerCase(), name);
 	}
 
 	//The erect chart a song can switch to, if it has one.
@@ -348,8 +346,11 @@ class FreeplayState extends MusicBeatState
 		scoreBG.alpha = 0.6;
 		add(scoreBG);
 
-		diffText = new FlxText(scoreText.x, scoreText.y + 36, 0, "", 24);
-		diffText.font = scoreText.font;
+		//V-Slice keeps the difficulty above the song list, not beside the high score.
+		diffText = new FlxText(0, 252, FlxG.width, "", 28);
+		diffText.setFormat(Paths.font("vcr.ttf"), 28, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
+		diffText.borderSize = 2;
+		diffText.scrollFactor.set();
 		add(diffText);
 
 		add(scoreText);
@@ -434,6 +435,7 @@ class FreeplayState extends MusicBeatState
 		add(noResultsText);
 
 		changeSelection();
+		if (isErectDifficulty(curDifficulty)) rebuildForDifficulty();
 		updateHint();
 		updateTexts();
 		super.create();
@@ -448,6 +450,13 @@ class FreeplayState extends MusicBeatState
 
 	public function addSong(songName:String, weekNum:Int, songCharacter:String, color:Int)
 	{
+		//Erect charts are difficulties of their base song, never separate rows.
+		if (isErectVariant(songName))
+		{
+			registerErectVariant(songName);
+			return;
+		}
+
 		var song:SongMetadata = new SongMetadata(songName, weekNum, songCharacter, color);
 		song.category = getSongCategory(songName, weekNum, songCharacter);
 		allSongs.push(song);
@@ -812,6 +821,13 @@ class FreeplayState extends MusicBeatState
 		opponentVocals = FlxDestroyUtil.destroy(opponentVocals);
 	}
 
+	static function addErectDifficulties(songName:String):Void
+	{
+		if (getErectName(songName) == null) return;
+		for (diff in ['Erect', 'Nightmare'])
+			if (!Difficulty.list.contains(diff)) Difficulty.list.push(diff);
+	}
+
 	function changeDiff(change:Int = 0)
 	{
 		if (player.playingMusic || songs.length < 1)
@@ -833,7 +849,38 @@ class FreeplayState extends MusicBeatState
 		positionHighscore();
 		missingText.visible = false;
 		missingTextBG.visible = false;
+		if (change != 0) rebuildForDifficulty();
 		updateSongCard();
+	}
+
+	/** Rebuilds the rows when the difficulty changes, keeping the same base song selected if it still exists. */
+	function rebuildForDifficulty():Void
+	{
+		var keepKey:String = null;
+		if (curSelected >= 0 && curSelected < songs.length)
+			keepKey = getFavouriteKey(songs[curSelected]);
+
+		applyFilterAndSort();
+		buildSongObjects();
+
+		curSelected = 0;
+		if (keepKey != null)
+		{
+			for (i in 0...songs.length)
+			{
+				if (getFavouriteKey(songs[i]) == keepKey)
+				{
+					curSelected = i;
+					break;
+				}
+			}
+		}
+		if (songs.length > 0) curSelected = FlxMath.wrap(curSelected, 0, songs.length - 1);
+
+		lerpSelected = curSelected;
+		_updateSongLastDifficulty();
+		updateHint();
+		updateTexts(0.0);
 	}
 
 	function changeSelection(change:Int = 0, playSound:Bool = true)
@@ -868,6 +915,7 @@ class FreeplayState extends MusicBeatState
 		Mods.currentModDirectory = songs[curSelected].folder;
 		PlayState.storyWeek = songs[curSelected].week;
 		Difficulty.loadFromWeek();
+		addErectDifficulties(songs[curSelected].songName);
 		
 		var savedDiff:String = songs[curSelected].lastDifficulty;
 		var lastDiff:Int = Difficulty.list.indexOf(lastDifficultyName);
@@ -897,8 +945,6 @@ class FreeplayState extends MusicBeatState
 		scoreText.x = FlxG.width - scoreText.width - 6;
 		scoreBG.scale.x = FlxG.width - scoreText.x + 6;
 		scoreBG.x = FlxG.width - (scoreBG.scale.x / 2);
-		diffText.x = Std.int(scoreBG.x + (scoreBG.width / 2));
-		diffText.x -= diffText.width / 2;
 	}
 
 	var _drawDistance:Int = 4;
@@ -1002,8 +1048,22 @@ class FreeplayState extends MusicBeatState
 		for (song in allSongs)
 		{
 			if (!allowed.contains(song.category)) continue;
-			if (query.length > 0 && !song.songName.toLowerCase().contains(query))
-				continue;
+
+			//V-Slice only lists the songs that have the selected difficulty. The erect
+			//entries therefore stay hidden until Erect/Nightmare is picked.
+			if (isErectDifficulty(curDifficulty))
+			{
+				if (getErectName(song.songName) == null) continue;
+			}
+			else if (isErectVariant(song.songName)) continue;
+
+			var searchName:String = song.songName.toLowerCase();
+			if (isErectDifficulty(curDifficulty))
+			{
+				var erectName:String = getErectName(song.songName);
+				if (erectName != null) searchName += ' ' + erectName.toLowerCase();
+			}
+			if (query.length > 0 && !searchName.contains(query)) continue;
 			filtered.push(song);
 		}
 
@@ -1092,7 +1152,7 @@ class FreeplayState extends MusicBeatState
 		buildCategoryRows();
 		for (i in 0...songs.length)
 		{
-			var songText:Alphabet = new Alphabet(90, 320, songs[i].songName, true);
+			var songText:Alphabet = new Alphabet(90, 320, chartSongName(songs[i], curDifficulty), true);
 			songText.targetY = i;
 			//Every group after the first starts lower, to leave room for its heading
 			if (songGroups[i] > 0) songText.startPosition.y = 320 + CATEGORY_GAP * songGroups[i];
@@ -1302,7 +1362,7 @@ class FreeplayState extends MusicBeatState
 		if(!hasSong) return;
 
 		var song:SongMetadata = songs[curSelected];
-		cardTitle.text = song.songName;
+		cardTitle.text = chartSongName(song, curDifficulty);
 
 		var weekName:String = (song.week >= 0 && song.week < WeekData.weeksList.length) ? WeekData.weeksList[song.week] : '?';
 		var scoreKey:String = Highscore.formatSong(chartSongName(song, curDifficulty), curDifficulty);

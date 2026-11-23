@@ -45,6 +45,8 @@ class LoadingState extends MusicBeatState
 	static var requestedBitmaps:Map<String, BitmapData> = [];
 	static var mutex:Mutex;
 	static var threadPool:FixedThreadPool = null;
+	static var loadGeneration:Int = 0;
+	static var loadCanceled:Bool = false;
 
 	function new(target:FlxState, stopMusic:Bool)
 	{
@@ -197,6 +199,7 @@ class LoadingState extends MusicBeatState
 	//whatever did load instead.
 	static inline var MAX_LOAD_SECONDS:Float = 20;
 	var loadElapsed:Float = 0;
+	var loadTimedOut:Bool = false;
 
 	override function update(elapsed:Float)
 	{
@@ -211,6 +214,7 @@ class LoadingState extends MusicBeatState
 			if (timedOut && !finishedLoading)
 			{
 				trace('Loading took longer than ' + MAX_LOAD_SECONDS + 's, starting without the rest of the assets');
+				loadTimedOut = true;
 				initialThreadCompleted = true;
 			}
 
@@ -332,7 +336,9 @@ class LoadingState extends MusicBeatState
 	var finishedLoading:Bool = false;
 	function onLoad()
 	{
-		_loaded();
+		//Never join a preload worker that already missed the deadline: shutdown() waits
+		//for the worker, which is exactly how the loading screen used to freeze at 100%.
+		_loaded(loadTimedOut);
 
 		if (stopMusic && FlxG.sound.music != null)
 			FlxG.sound.music.stop();
@@ -343,17 +349,24 @@ class LoadingState extends MusicBeatState
 		finishedLoading = true;
 	}
 
-	static function _loaded()
+	static function _loaded(force:Bool = false)
 	{
 		loaded = 0;
 		loadMax = 0;
 		initialThreadCompleted = true;
 		isIntrusive = false;
+		loadGeneration++;
+		loadCanceled = force;
 
 		FlxTransitionableState.skipNextTransIn = true;
-		if (threadPool != null) threadPool.shutdown(); // kill all workers safely
-		threadPool = null;
-		mutex = null;
+		if (threadPool != null)
+		{
+			//A timed-out worker may never return, so abandon the pool instead of blocking
+			//the main thread in shutdown(). Its callbacks are ignored by generation.
+			if (!force) threadPool.shutdown();
+			threadPool = null;
+		}
+		if (!force) mutex = null;
 	}
 
 	public static function checkLoaded():Bool
@@ -411,7 +424,7 @@ class LoadingState extends MusicBeatState
 			if(Sys.time() > deadline)
 			{
 				trace('Loading timed out, starting without the rest of the assets');
-				_loaded();
+				_loaded(true);
 				break;
 			}
 			Sys.sleep(0.001);
@@ -445,6 +458,7 @@ class LoadingState extends MusicBeatState
 
 	public static function prepareToSong()
 	{
+		loadCanceled = false;
 		if(PlayState.SONG == null)
 		{
 			imagesToPrepare = [];
@@ -694,6 +708,8 @@ class LoadingState extends MusicBeatState
 
 	public static function startThreads()
 	{
+		if (loadCanceled) return;
+		loadGeneration++;
 		mutex = new Mutex();
 		loadMax = imagesToPrepare.length + soundsToPrepare.length + musicToPrepare.length + songsToPrepare.length;
 		loaded = 0;
@@ -721,6 +737,7 @@ class LoadingState extends MusicBeatState
 
 	static function initThread(func:Void->Dynamic, traceData:String)
 	{
+		var generation:Int = loadGeneration;
 		// trace('scheduled $func in threadPool');
 		#if debug
 		var threadSchedule = Sys.time();
@@ -743,7 +760,7 @@ class LoadingState extends MusicBeatState
 				trace('ERROR! fail on preloading $traceData: $e');
 			}
 			// mutex.acquire();
-			loaded++;
+			if (generation == loadGeneration) loaded++;
 			// mutex.release();
 		});
 	}

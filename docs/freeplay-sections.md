@@ -1,7 +1,7 @@
 # Freeplay sections
 
 Freeplay's mixes (the tabs at the top, e.g. `BF MIXES` / `PICO MIXES`) and the sections under
-them (`BF Mixes`, `BF Erect`, ...) are no longer hardcoded per menu. The stock ones live in
+them (`BF Mixes`, `Pico Mixes`, ...) are no longer hardcoded per menu. The stock ones live in
 `FreeplayState`, and any mod can add to them — or add completely new sections and mixes — with a
 small data file.
 
@@ -23,7 +23,7 @@ stock songs.
 ```json
 {
   "mixes": [
-    { "name": "BF MIXES", "sections": ["BF Mixes", "BF Erect"] }
+    { "name": "BF MIXES", "sections": ["BF Mixes"] }
   ],
   "sections": [
     { "name": "BF Mixes", "mix": "BF MIXES", "songs": ["bopeebo", "fresh"] }
@@ -43,8 +43,8 @@ Both blocks are optional.
   appended in the order given, so a mod adding to a stock section lands at the end of it.
 
 Songs only show up in Freeplay if they belong to a week (`data/<mod>/weeks/*.json`), same as
-normal mods. Anything not named in a sections file still appears, grouped by its opponent and
-whether it's an erect chart.
+normal mods. Anything not named in a sections file still appears, grouped by its opponent.
+Erect charts are difficulties of their base song, not separate Freeplay entries.
 
 ## Example: a mod adding its own section and songs
 

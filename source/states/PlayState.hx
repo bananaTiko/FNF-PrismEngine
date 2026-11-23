@@ -32,7 +32,6 @@ import substates.GameOverSubstate;
 import backend.PlayStats;
 import backend.StreamedSound;
 import backend.Widescreen;
-import substates.ResultsSubState;
 
 #if !flash
 import openfl.filters.ShaderFilter;
@@ -2926,9 +2925,7 @@ class PlayState extends MusicBeatState
 			PlayStats.addSong(Std.int(Math.max(totalPlayed - songMisses, 0)), songMisses, playedSeconds);
 			PlayStats.recordRecent(Paths.formatToSongPath(SONG.song) + '|' + storyDifficulty);
 
-			var previousBestScore:Int = 0;
 			#if !switch
-			previousBestScore = Highscore.getScore(Song.loadedSongName, storyDifficulty);
 			var percent:Float = ratingPercent;
 			if(Math.isNaN(percent)) percent = 0;
 			Highscore.saveScore(Song.loadedSongName, songScore, storyDifficulty, percent);
@@ -2941,32 +2938,12 @@ class PlayState extends MusicBeatState
 				return false;
 			}
 
-			if (ClientPrefs.data.resultsScreen)
-			{
-				transitioning = true;
-				if (FlxG.sound.music != null) FlxG.sound.music.stop();
-				openSubState(new ResultsSubState({
-					song: SONG.song,
-					score: songScore,
-					accuracy: ratingPercent,
-					rank: ratingName,
-					maxCombo: maxCombo,
-					newBest: songScore > previousBestScore,
-					misses: songMisses,
-					sicks: ratingsData[0].hits,
-					goods: ratingsData[1].hits,
-					bads: ratingsData[2].hits,
-					shits: ratingsData[3].hits
-				}));
-				return true;
-			}
-
 			continueAfterSong();
 		}
 		return true;
 	}
 
-	/** Story mode progression, or back to freeplay. Runs after the results screen is dismissed. */
+	/** Story mode progression, or back to freeplay. */
 	public function continueAfterSong():Void
 	{
 		if (isStoryMode)

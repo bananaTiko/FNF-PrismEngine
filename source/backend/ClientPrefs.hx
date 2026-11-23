@@ -42,7 +42,6 @@ import states.TitleState;
 	public var ghostTapping:Bool = true;
 	public var timeBarType:String = 'Time Left';
 	public var scoreZoom:Bool = true;
-	public var resultsScreen:Bool = true;
 	public var showNPS:Bool = false;
 	public var showHitTiming:Bool = false;
 	public var badShitBreakCombo:Bool = false;
