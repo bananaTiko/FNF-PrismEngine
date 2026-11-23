@@ -306,7 +306,13 @@ class Character extends FlxSprite
 					// Prefer the label, then fall back to a symbol of that name.
 					var symbol = (atlas.anim.stageInstance != null) ? atlas.anim.symbolDictionary[atlas.anim.stageInstance.symbol.name] : null;
 					var labelNames:Array<String> = symbol != null ? symbol.getFrameLabelNames() : [];
-					if(labelNames.indexOf(animName) != -1)
+					// addByFrameLabel/addBySymbolIndices name their wrapper symbol after the
+					// animation. If the atlas already has a symbol with that name (Kazuha's
+					// "idle", Sakura's joint poses) the wrapper replaces it and points back at
+					// the root, so rendering recurses forever. Use the existing symbol.
+					if(atlas.anim.symbolDictionary.exists(animName))
+						atlas.anim.addBySymbol(animAnim, animName, animFps, animLoop);
+					else if(labelNames.indexOf(animName) != -1)
 						atlas.anim.addByFrameLabel(animAnim, animName, animFps, animLoop);
 					else if(animIndices != null && animIndices.length > 0)
 						atlas.anim.addBySymbolIndices(animAnim, animName, animIndices, animFps, animLoop);
