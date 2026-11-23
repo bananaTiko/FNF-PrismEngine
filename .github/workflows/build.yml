@@ -35,6 +35,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Cheapest check first: a broken chart or event file fails here in a second
+      # rather than after the whole engine has compiled.
+      - name: Validate JSON assets
+        run: node .github/scripts/check-assets.js
 
       - uses: krdlab/setup-haxe@master
         with:
@@ -114,6 +121,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Cheapest check first: a broken chart or event file fails here in a second
+      # rather than after the whole engine has compiled.
+      - name: Validate JSON assets
+        run: node .github/scripts/check-assets.js
 
       - uses: krdlab/setup-haxe@master
         with:
@@ -189,6 +203,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # Cheapest check first: a broken chart or event file fails here in a second
+      # rather than after the whole engine has compiled.
+      - name: Validate JSON assets
+        run: node .github/scripts/check-assets.js
 
       - uses: krdlab/setup-haxe@master
         with:
