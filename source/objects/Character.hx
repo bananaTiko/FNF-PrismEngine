@@ -403,19 +403,6 @@ class Character extends FlxSprite
 		return _lastPlayedAnimation;
 	}
 
-	/**
-	 * The offset from this sprite's top-left corner to its feet (horizontal centre,
-	 * vertical bottom) which V-Slice uses to place characters on a stage.
-	 */
-	public function getFeetOrigin():FlxPoint
-	{
-		#if flxanimate
-		if(isAnimateAtlas && atlas != null && atlas.width > 1 && atlas.height > 1)
-			return FlxPoint.get(atlas.width * 0.5, atlas.height);
-		#end
-		return FlxPoint.get(width * 0.5, height);
-	}
-
 	public function isAnimationFinished():Bool
 	{
 		if(isAnimationNull()) return false;

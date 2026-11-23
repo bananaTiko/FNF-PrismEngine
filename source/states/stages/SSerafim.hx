@@ -48,9 +48,24 @@ class SSerafim extends BaseStage
 	var band:Array<Character> = [];
 	var singFlags:Array<Bool> = [false, false, false, false, false, false];
 	var mouths:Array<SserafimLipSync> = [null, null, null, null, null, null];
-	var placedChars:Array<Bool> = [false, false, false, false, false, false];
-	var initiallyVisible:Array<Bool> = [true, false, false, false, false, false];
-	var shownChars:Array<Bool> = [false, false, false, false, false, false];
+
+	/**
+	 * V-Slice positions characters by their feet. Its characterOrigin is
+	 * (bounds.width / 2, bounds.height) while the atlas is drawn shifted by
+	 * -bounds.topLeft, so the point that lands on the stage position is the
+	 * bottom-centre of the whole main-timeline bounds. These are those points
+	 * (bounds.x + width / 2, bounds.y + height) measured from the V-Slice atlas
+	 * matrices and spritemap rects. Baking them means a character can be placed
+	 * while still hidden, without drawing it or touching its alpha.
+	 */
+	static final FEET_ORIGINS:Map<String, Array<Float>> = [
+		'sserafim-yunjin' => [449.0976602189243, 844.650798407942],
+		'sserafim-chaewon' => [532.7721099853516, 816.5062469482422],
+		'sserafim-eunchae' => [493.96503714823626, 682.1432730056346],
+		'sserafim-gf' => [1186.05, 860.5953308105469],
+		'sserafim-kazuha' => [479.36452065818014, 920.1373352050782],
+		'sserafim-sakura' => [471.2061737060547, 748.1230090137572]
+	];
 
 	static final LIP_ATLAS:Map<String, String> = [
 		'sserafim-yunjin' => 'sserafim/sserafim-lipsync-yunjin',
@@ -272,23 +287,10 @@ class SSerafim extends BaseStage
 		if (game.iconP2 != null) game.iconP2.visible = false;
 
 		band = [yunjin, dad, chaewon, eunchae, boyfriend, gf];
-		for (i in 0...band.length)
-		{
-			var char:Character = band[i];
-			if (char == null) continue;
+		for (char in band)
+			if (char != null) char.skipSing = true; // clear until an sserafimSing event says otherwise
 
-			char.skipSing = true; // clear until an sserafimSing event says otherwise
-			initiallyVisible[i] = char.visible;
-
-			// The atlas only knows its sprite bounds after it has been drawn once. Draw
-			// everyone once at (almost) zero alpha so they can be positioned by their feet
-			// without a frame of misplaced characters or a camera jump.
-			if (!char.visible)
-			{
-				char.visible = true;
-				char.alpha = 0.001;
-			}
-		}
+		placeBand();
 
 		for (spr in dust)
 			add(spr);
@@ -394,41 +396,20 @@ class SSerafim extends BaseStage
 		playMembers(note, true);
 	}
 
-	/**
-	 * V-Slice places characters by their feet: stage position minus the origin of the
-	 * frame that is currently drawn. The atlas only reports that origin after it has
-	 * been drawn once, so this retries until every character is ready.
-	 */
-	function placeCharacters():Void
+	function placeBand():Void
 	{
 		var feet:Array<Array<Float>> = [[-621, 154], [70, 470], [687, 98], [770, 675], [1530, 970], [938.5, 392]];
 		for (i in 0...band.length)
-		{
-			if (placedChars[i]) continue;
-			var char:Character = band[i];
-			if (char == null)
-			{
-				placedChars[i] = true;
-				continue;
-			}
-
-			if (!placeCharacter(char, feet[i][0], feet[i][1])) continue;
-
-			placedChars[i] = true;
-			char.alpha = 1;
-			// Do not re-show someone the intro or a show event has hidden; only undo the
-			// temporary visibility that was needed to measure the atlas.
-			if (!initiallyVisible[i] && !shownChars[i]) char.visible = false;
-		}
+			if (band[i] != null) placeCharacter(band[i], feet[i][0], feet[i][1]);
 	}
 
-	function placeCharacter(char:Character, feetX:Float, feetY:Float):Bool
+	function placeCharacter(char:Character, feetX:Float, feetY:Float):Void
 	{
-		var origin:FlxPoint = char.getFeetOrigin();
-		if (origin.x < 1 || origin.y < 1)
+		var origin:Array<Float> = FEET_ORIGINS.get(char.curCharacter);
+		if (origin == null)
 		{
-			origin.put();
-			return false;
+			FlxG.log.warn('SSerafim: no baked feet origin for ${char.curCharacter}');
+			return;
 		}
 
 		// BF, dad and GF live inside PlayState's sprite groups, so their local position
@@ -451,9 +432,7 @@ class SSerafim extends BaseStage
 			groupY = game.gfGroup.y;
 		}
 
-		char.setPosition(feetX - groupX - origin.x, feetY - groupY - origin.y);
-		origin.put();
-		return true;
+		char.setPosition(feetX - groupX - origin[0], feetY - groupY - origin[1]);
 	}
 
 	function hideOpponentStrums()
@@ -536,7 +515,6 @@ class SSerafim extends BaseStage
 			yunjinDancing = true;
 			FlxG.sound.play(Paths.sound('sserafim/door-kick-2'));
 			gf.visible = true;
-			shownChars[5] = true;
 			if (game.iconP2 != null) game.iconP2.visible = true;
 			// The door is part of her animation at first, so only show it afterwards.
 			new FlxTimer().start(23 / 24, function(tmr:FlxTimer) truckDoor.visible = true);
@@ -665,8 +643,6 @@ class SSerafim extends BaseStage
 					chaewon.visible = vis[2];
 					eunchae.visible = vis[3];
 					boyfriend.visible = vis[4];
-					for (i in 0...5)
-						if (vis[i]) shownChars[i] = true;
 				}
 
 			case 'sserafimSing':
@@ -1086,7 +1062,6 @@ class SSerafim extends BaseStage
 	override function update(elapsed:Float)
 	{
 		if (game == null || game.controls == null) return;
-		placeCharacters();
 
 		var covered:Bool = cover != null && cover.alpha > 0.01;
 		for (mouth in mouths)
