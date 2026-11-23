@@ -181,7 +181,17 @@ class Main extends Sprite
 		Controls.instance = new Controls();
 		ClientPrefs.loadDefaultKeys();
 		#if ACHIEVEMENTS_ALLOWED Achievements.load(); #end
-		addChild(new FlxGame(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen));
+		var flxGame:FlxGame = new FlxGame(game.width, game.height, game.initialState, game.framerate, game.framerate, game.skipSplash, game.startFullscreen);
+		// V-Slice's volume box instead of flixel's plain meter. FlxGame builds the tray when it
+		// is added to the stage, so it only sees the class if it is set before addChild.
+		@:privateAccess flxGame._customSoundTray = backend.VolumeBox;
+		addChild(flxGame);
+
+		#if (!mobile && FLX_SOUND_TRAY)
+		// The tray only updates while it is active. Starting it active is what lets the box
+		// show up when the game launches already muted or at zero volume.
+		if (flxGame.soundTray != null) flxGame.soundTray.active = true;
+		#end
 
 		// Opt-in desktop widescreen scaling. FlxGame has to exist first, it measures the window.
 		#if desktop
