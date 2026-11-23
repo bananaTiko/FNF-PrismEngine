@@ -117,6 +117,11 @@ class SSerafim extends BaseStage
 
 	override function create()
 	{
+		// V-Slice's sserafim stage json sets cameraZoom 0.5. Every prop position below
+		// and the character positions are authored for it.
+		defaultCamZoom = 0.5;
+		camGame.zoom = 0.5;
+
 		stageShader = new SserafimShader();
 		characterShader = new SserafimShader(true);
 
