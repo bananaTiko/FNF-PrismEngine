@@ -1,12 +1,12 @@
 # Builds the Linux, Windows and macOS releases on every push.
 #
-# A full hxcpp build regenerates and recompiles every generated .cpp file, which is
-# what makes these runs take so long. Two things cut most of that away:
-#   * the haxelib folder is cached, so `setup/unix.sh` (17 downloads, several git
-#     clones) only runs when the dependency list actually changes;
-#   * ccache is put in front of the compiler on Linux and macOS. ccache hashes the
-#     real compiler input, so a push that only touches charts/assets still gets
-#     object files from cache instead of compiling from scratch.
+# hxcpp regenerates its C++ and recompiles the whole tree on a fresh runner, which
+# is why these runs take so long. hxcpp has its own content-hashed object cache
+# (`HXCPP_COMPILE_CACHE`), so every generated .cpp that is byte-identical to a
+# previous run is copied out of the cache instead of compiled — that covers the
+# engine, the haxelibs, and every file in this project that a push did not touch.
+# The cache folder is persisted between runs, and the haxelib folder is too, so
+# `setup/unix.sh` only downloads again when the dependency list changes.
 
 name: Build
 
@@ -44,13 +44,18 @@ jobs:
       - name: Cache compiled objects
         uses: actions/cache@v4
         with:
-          path: ~/.ccache
-          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          path: ~/.hxcpp_cache
+          key: ${{ runner.os }}-hxcpp-cache-${{ hashFiles('Project.xml', 'source/**/*.hx') }}
           restore-keys: |
-            ${{ runner.os }}-ccache-
+            ${{ runner.os }}-hxcpp-cache-
 
       - name: Install system libraries
-        run: sudo apt-get update && sudo apt-get install -y ccache libvlc-dev libvlccore-dev
+        run: sudo apt-get update && sudo apt-get install -y libvlc-dev libvlccore-dev
+
+      # hxcpp picks this up from the environment and keys every object by an md5 of
+      # its source, so only files this run actually changed get compiled.
+      - name: Enable hxcpp's object cache
+        run: echo "HXCPP_COMPILE_CACHE=$HOME/.hxcpp_cache" >> "$GITHUB_ENV"
 
       - name: Point haxelib at the cache
         run: haxelib setup ~/haxelib
@@ -58,24 +63,12 @@ jobs:
       - name: Install Haxelib
         if: steps.haxelib-cache.outputs.cache-hit != 'true'
         run: |
-          haxelib install hxcpp > /dev/null --quiet
+          haxelib install hxcpp
           chmod +x ./setup/unix.sh
           sh ./setup/unix.sh
 
       - name: Make sure hxcpp is present
         run: haxelib list | grep -q '^hxcpp' || haxelib install hxcpp
-
-      - name: Use ccache for every compile
-        run: |
-          mkdir -p "$HOME/.ccache/bin"
-          for c in gcc g++ cc c++; do ln -sf "$(command -v ccache)" "$HOME/.ccache/bin/$c"; done
-          echo "$HOME/.ccache/bin" >> "$GITHUB_PATH"
-          {
-            echo "CCACHE_DIR=$HOME/.ccache"
-            echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"
-            echo "CCACHE_NOHASHDIR=1"
-            echo "CCACHE_MAXSIZE=2G"
-          } >> "$GITHUB_ENV"
 
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
@@ -86,13 +79,14 @@ jobs:
       - name: Compile
         run: |
           set -o pipefail
-          haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id }}" -D officialBuild > build.log 2>&1 || {
+          haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id }}" \
+            -D officialBuild > build.log 2>&1 || {
             echo '::group::Compile errors'
             grep -n -i -E 'error|undefined symbol|ld: ' build.log | tail -60 || true
             echo '::endgroup::'
             exit 1
           }
-          ccache -s || true
+          du -sh "$HXCPP_COMPILE_CACHE" || true
           tail -5 build.log
 
       - name: Publish Artifact
@@ -118,6 +112,14 @@ jobs:
           path: C:/haxelib
           key: ${{ runner.os }}-haxelib-${{ hashFiles('Project.xml', 'setup/windows.bat') }}
 
+      - name: Cache compiled objects
+        uses: actions/cache@v4
+        with:
+          path: C:/hxcpp_cache
+          key: ${{ runner.os }}-hxcpp-cache-${{ hashFiles('Project.xml', 'source/**/*.hx') }}
+          restore-keys: |
+            ${{ runner.os }}-hxcpp-cache-
+
       - name: Point haxelib at the cache
         run: haxelib setup C:/haxelib
         shell: cmd
@@ -131,6 +133,12 @@ jobs:
 
       - name: Make sure hxcpp is present
         run: haxelib list | findstr /B /C:"hxcpp" >nul || haxelib install hxcpp
+        shell: cmd
+
+      # hxcpp reads this from the environment; it keys objects by source md5, so only
+      # what changed gets compiled.
+      - name: Enable hxcpp's object cache
+        run: echo HXCPP_COMPILE_CACHE=C:/hxcpp_cache>> %GITHUB_ENV%
         shell: cmd
 
       - name: Skip SScript setup mode
@@ -178,13 +186,10 @@ jobs:
       - name: Cache compiled objects
         uses: actions/cache@v4
         with:
-          path: ~/.ccache
-          key: ${{ runner.os }}-ccache-${{ github.sha }}
+          path: ~/.hxcpp_cache
+          key: ${{ runner.os }}-hxcpp-cache-${{ hashFiles('Project.xml', 'source/**/*.hx') }}
           restore-keys: |
-            ${{ runner.os }}-ccache-
-
-      - name: Install ccache
-        run: brew install ccache
+            ${{ runner.os }}-hxcpp-cache-
 
       - name: Point haxelib at the cache
         run: haxelib setup ~/haxelib
@@ -192,24 +197,15 @@ jobs:
       - name: Install Haxelib
         if: steps.haxelib-cache.outputs.cache-hit != 'true'
         run: |
-          haxelib install hxcpp > /dev/null --quiet
+          haxelib install hxcpp
           chmod +x ./setup/unix.sh
           sh ./setup/unix.sh
 
       - name: Make sure hxcpp is present
         run: haxelib list | grep -q '^hxcpp' || haxelib install hxcpp
 
-      - name: Use ccache for every compile
-        run: |
-          mkdir -p "$HOME/.ccache/bin"
-          for c in gcc g++ cc c++ clang clang++; do ln -sf "$(command -v ccache)" "$HOME/.ccache/bin/$c"; done
-          echo "$HOME/.ccache/bin" >> "$GITHUB_PATH"
-          {
-            echo "CCACHE_DIR=$HOME/.ccache"
-            echo "CCACHE_BASEDIR=$GITHUB_WORKSPACE"
-            echo "CCACHE_NOHASHDIR=1"
-            echo "CCACHE_MAXSIZE=1G"
-          } >> "$GITHUB_ENV"
+      - name: Enable hxcpp's object cache
+        run: echo "HXCPP_COMPILE_CACHE=$HOME/.hxcpp_cache" >> "$GITHUB_ENV"
 
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
@@ -235,8 +231,9 @@ jobs:
       - name: Compile
         run: |
           set -o pipefail
-          if haxelib run lime build mac --app-version="4.0.0-${{ github.run_id }}" -D officialBuild > build.log 2>&1; then
-            ccache -s || true
+          if haxelib run lime build mac --app-version="4.0.0-${{ github.run_id }}" \
+              -D officialBuild > build.log 2>&1; then
+            du -sh "$HXCPP_COMPILE_CACHE" || true
             tail -5 build.log
           else
             echo '::group::Compile errors'
