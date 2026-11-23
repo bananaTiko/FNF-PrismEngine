@@ -306,7 +306,7 @@ class MusicBeatState extends FlxState
 				FlxG.resetState();
 			else
 				FlxG.switchState(target);
-		}, target);
+		});
 	}
 
 	public static function getState():MusicBeatState {

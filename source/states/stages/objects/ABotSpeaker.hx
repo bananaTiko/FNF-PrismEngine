@@ -2,6 +2,7 @@ package states.stages.objects;
 
 #if funkin.vis
 import funkin.vis.dsp.SpectralAnalyzer;
+import funkin.vis.dsp.SpectralAnalyzer.Bar;
 #end
 
 class ABotSpeaker extends FlxSpriteGroup

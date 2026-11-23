@@ -189,7 +189,7 @@ class VisualsSettingsSubState extends BaseOptionsMenu
 			ClientPrefs.data.transition = ClientPrefs.defaultData.transition; //Saved transition script is gone
 
 		var option:Option = new Option('Transition:',
-			"What plays when you go to another menu or start a song.\nSticker only plays around songs started from Freeplay.\nAny script in data/transitions/ shows up here, None skips transitions entirely.",
+			"What plays when you go to another menu or start a song.\nAny script in data/transitions/ shows up here, None skips transitions entirely.",
 			'transition',
 			STRING,
 			transitions);

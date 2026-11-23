@@ -14,11 +14,11 @@ images/go: "images/fr/go"
 
 // Les boutons du menu principal et les bannières de semaine se routent de la même
 // façon : décommentez ces lignes une fois l'art déposé dans le dossier fr.
-// images/mainmenu/menu_story_mode: "images/fr/mainmenu/menu_story_mode"
-// images/mainmenu/menu_freeplay: "images/fr/mainmenu/menu_freeplay"
+images/mainmenu/menu_story_mode: "images/fr/mainmenu/menu_story_mode"
+images/mainmenu/menu_freeplay: "images/fr/mainmenu/menu_freeplay"
 // images/mainmenu/menu_options: "images/fr/mainmenu/menu_options"
-// images/mainmenu/menu_credits: "images/fr/mainmenu/menu_credits"
-// images/mainmenu/menu_mods: "images/fr/mainmenu/menu_mods"
+images/mainmenu/menu_credits: "images/fr/mainmenu/menu_credits"
+images/mainmenu/menu_mods: "images/fr/mainmenu/menu_mods"
 // images/storymenu/tutorial: "images/fr/storymenu/tutorial"
 // images/storymenu/week1: "images/fr/storymenu/week1"
 // images/storymenu/week2: "images/fr/storymenu/week2"
