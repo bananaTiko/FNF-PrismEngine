@@ -59,6 +59,8 @@ class FreeplayState extends MusicBeatState
 	var cardSlideTargets:Array<FlxSprite> = [];
 	var cardSlideBaseX:Array<Float> = [];
 	var lastCardSongKey:String = '';
+	var diffAnimDir:Float = 1;
+	var diffColorTime:Float = 0;
 	var cardBG:FlxSprite;
 	var cardTitle:FlxText;
 	var cardInfo:FlxText;
@@ -336,7 +338,7 @@ class FreeplayState extends MusicBeatState
 		createSongCard();
 
 		applyFilterAndSort();
-		buildSongObjects();
+		buildSongObjects(true);
 		WeekData.setDirectoryFromWeek();
 
 		scoreText = new FlxText(FlxG.width * 0.7, 5, 0, "", 32);
@@ -512,6 +514,14 @@ class FreeplayState extends MusicBeatState
 
 		if (FlxG.sound.music != null && FlxG.sound.music.volume < 0.7)
 			FlxG.sound.music.volume += 0.5 * elapsed;
+
+		if (diffText != null)
+		{
+			//Title-screen style colour drift on the difficulty heading.
+			diffColorTime += elapsed;
+			var colourT:Float = (Math.sin(diffColorTime * Math.PI / 3) + 1) * 0.5;
+			diffText.color = FlxColor.interpolate(0xFF33FFFF, 0xFF3333CC, colourT);
+		}
 
 		lerpScore = Math.floor(FlxMath.lerp(intendedScore, lerpScore, Math.exp(-elapsed * 24)));
 		lerpRating = FlxMath.lerp(intendedRating, lerpRating, Math.exp(-elapsed * 12));
@@ -850,7 +860,26 @@ class FreeplayState extends MusicBeatState
 		missingText.visible = false;
 		missingTextBG.visible = false;
 		if (change != 0) rebuildForDifficulty();
+		animateDiffText();
 		updateSongCard();
+	}
+
+	/** Title-screen style entrance for the difficulty heading. */
+	function animateDiffText():Void
+	{
+		if (diffText == null) return;
+
+		diffAnimDir *= -1;
+		FlxTween.cancelTweensOf(diffText);
+		FlxTween.cancelTweensOf(diffText.scale);
+		FlxTween.cancelTweensOf(diffText.offset);
+
+		diffText.alpha = 0;
+		diffText.offset.x = 120 * diffAnimDir;
+		diffText.scale.set(0.82, 0.82);
+		FlxTween.tween(diffText, {alpha: 1}, 0.25, {ease: FlxEase.quadOut});
+		FlxTween.tween(diffText.offset, {x: 0}, 0.35, {ease: FlxEase.expoOut});
+		FlxTween.tween(diffText.scale, {x: 1, y: 1}, 0.35, {ease: FlxEase.backOut});
 	}
 
 	/** Rebuilds the rows when the difficulty changes, keeping the same base song selected if it still exists. */
@@ -861,7 +890,7 @@ class FreeplayState extends MusicBeatState
 			keepKey = getFavouriteKey(songs[curSelected]);
 
 		applyFilterAndSort();
-		buildSongObjects();
+		buildSongObjects(true);
 
 		curSelected = 0;
 		if (keepKey != null)
@@ -976,12 +1005,16 @@ class FreeplayState extends MusicBeatState
 		updateCategoryRows();
 	}
 
-	function buildCategoryRows():Void
+	function buildCategoryRows(animate:Bool = false):Void
 	{
 		if (grpCategories != null)
 		{
 			for (member in grpCategories.members)
-				if (member != null) member.destroy();
+			{
+				if (member == null) continue;
+				FlxTween.cancelTweensOf(member.startPosition);
+				member.destroy();
+			}
 			grpCategories.clear();
 		}
 		else
@@ -1015,6 +1048,15 @@ class FreeplayState extends MusicBeatState
 			header.setScale(0.62);
 			header.alpha = 0.75;
 			header.startPosition.y = (320 + CATEGORY_GAP * i) - CATEGORY_GAP;
+			if (animate)
+			{
+				var homeX:Float = header.startPosition.x;
+				header.startPosition.x = homeX + (i % 2 == 0 ? -FlxG.width : FlxG.width);
+				FlxTween.tween(header.startPosition, {x: homeX}, 0.5, {
+					ease: FlxEase.expoOut,
+					startDelay: 0.05 + (i * 0.03)
+				});
+			}
 			grpCategories.add(header);
 		}
 	}
@@ -1125,14 +1167,18 @@ class FreeplayState extends MusicBeatState
 		songs = filtered;
 	}
 
-	function buildSongObjects():Void
+	function buildSongObjects(animate:Bool = false):Void
 	{
 		if (grpSongs != null)
 		{
 			var oldMembers:Array<Alphabet> = grpSongs.members.copy();
 			grpSongs.clear();
 			for (member in oldMembers)
-				if (member != null) member.destroy();
+			{
+				if (member == null) continue;
+				FlxTween.cancelTweensOf(member.startPosition);
+				member.destroy();
+			}
 		}
 		else
 		{
@@ -1149,7 +1195,7 @@ class FreeplayState extends MusicBeatState
 		iconArray = [];
 		_lastVisibles = [];
 
-		buildCategoryRows();
+		buildCategoryRows(animate);
 		for (i in 0...songs.length)
 		{
 			var songText:Alphabet = new Alphabet(90, 320, chartSongName(songs[i], curDifficulty), true);
@@ -1160,6 +1206,18 @@ class FreeplayState extends MusicBeatState
 
 			songText.scaleX = Math.min(1, 980 / songText.width);
 			songText.snapToPosition();
+
+			if (animate)
+			{
+				//The title screen's credit text comes in from alternating sides; the list
+				//does the same, with a small stagger down the rows.
+				var homeX:Float = songText.startPosition.x;
+				songText.startPosition.x = homeX + (i % 2 == 0 ? -FlxG.width : FlxG.width);
+				FlxTween.tween(songText.startPosition, {x: homeX}, 0.4 + (i * 0.02), {
+					ease: FlxEase.expoOut,
+					startDelay: i * 0.015
+				});
+			}
 
 			Mods.currentModDirectory = songs[i].folder;
 			var icon:HealthIcon = new HealthIcon(songs[i].songCharacter);
@@ -1426,6 +1484,18 @@ class FreeplayState extends MusicBeatState
 
 		FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
 		FlxTween.tween(FlxG.sound.music, {volume: 1}, 1);
+	}
+
+	override function beatHit():Void
+	{
+		super.beatHit();
+
+		if (diffText != null)
+		{
+			FlxTween.cancelTweensOf(diffText.scale);
+			diffText.scale.set(1.08, 1.08);
+			FlxTween.tween(diffText.scale, {x: 1, y: 1}, Conductor.crochet / 1000 * 0.45, {ease: FlxEase.quadOut});
+		}
 	}
 
 	override function destroy():Void
