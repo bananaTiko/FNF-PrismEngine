@@ -43,6 +43,19 @@ jobs:
       - name: Restore Haxelibs
         run: tar -xzf haxelibs.tar.gz -C "$HOME"
 
+      # hxcpp keys every generated .cpp by an md5 of its contents and reads the cache
+      # folder from this variable, so a push only compiles what actually changed.
+      - name: Cache compiled objects
+        uses: actions/cache@v4
+        with:
+          path: ~/.hxcpp_cache
+          key: ${{ runner.os }}-hxcpp-cache-${{ hashFiles('Project.xml', 'source/**/*.hx') }}
+          restore-keys: |
+            ${{ runner.os }}-hxcpp-cache-
+
+      - name: Enable hxcpp's object cache
+        run: echo "HXCPP_COMPILE_CACHE=$HOME/.hxcpp_cache" >> "$GITHUB_ENV"
+
       - name: Install Linux Dependencies
         run: |
           sudo apt-get update
@@ -54,8 +67,22 @@ jobs:
       - name: Create Version Tag
         run: echo "${{ github.run_id }}" > VERSION
 
+      # A full hxcpp build prints thousands of lines, so the log only comes out
+      # when something failed.
       - name: Compile
-        run: haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id }}" -D officialBuild
+        run: |
+          set -o pipefail
+          if haxelib run lime build Project.xml linux --app-version="4.0.0-${{ github.run_id }}" \
+              -D officialBuild > build.log 2>&1; then
+            du -sh "$HXCPP_COMPILE_CACHE" || true
+            tail -5 build.log
+          else
+            echo '::group::Compile errors'
+            grep -n -i -E 'error|undefined symbol|ld: ' build.log | tail -60 || true
+            echo '::endgroup::'
+            tail -20 build.log
+            exit 1
+          fi
 
       - name: Publish Artifact
         uses: actions/upload-artifact@v4
@@ -88,6 +115,20 @@ jobs:
       - name: Restore Haxelibs
         run: tar -xzf haxelibs.tar.gz -C C:/
         shell: pwsh
+
+      # Same md5-keyed object cache as the other platforms: this is what keeps a
+      # Windows push from recompiling the whole engine.
+      - name: Cache compiled objects
+        uses: actions/cache@v4
+        with:
+          path: C:/hxcpp_cache
+          key: ${{ runner.os }}-hxcpp-cache-${{ hashFiles('Project.xml', 'source/**/*.hx') }}
+          restore-keys: |
+            ${{ runner.os }}-hxcpp-cache-
+
+      - name: Enable hxcpp's object cache
+        run: echo HXCPP_COMPILE_CACHE=C:/hxcpp_cache>> %GITHUB_ENV%
+        shell: cmd
 
       - name: Skip SScript setup mode
         run: echo oy9:showMacroty8:loopCosti25y10:includeAllfg >> %USERPROFILE%/settings.cocoa
@@ -129,6 +170,17 @@ jobs:
       - name: Restore Haxelibs
         run: tar -xzf haxelibs.tar.gz -C "$HOME"
 
+      - name: Cache compiled objects
+        uses: actions/cache@v4
+        with:
+          path: ~/.hxcpp_cache
+          key: ${{ runner.os }}-hxcpp-cache-${{ hashFiles('Project.xml', 'source/**/*.hx') }}
+          restore-keys: |
+            ${{ runner.os }}-hxcpp-cache-
+
+      - name: Enable hxcpp's object cache
+        run: echo "HXCPP_COMPILE_CACHE=$HOME/.hxcpp_cache" >> "$GITHUB_ENV"
+
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
 
@@ -149,11 +201,13 @@ jobs:
         run: |
           set -o pipefail
           if haxelib run lime build mac --app-version="4.0.0-${{ github.run_id }}" -D officialBuild > build.log 2>&1; then
+            du -sh "$HXCPP_COMPILE_CACHE" || true
             tail -5 build.log
           else
             echo '::group::Compile errors'
             grep -n -i -E 'error|undefined symbol|ld: ' build.log | tail -60 || true
             echo '::endgroup::'
+            tail -20 build.log
             exit 1
           fi
 
