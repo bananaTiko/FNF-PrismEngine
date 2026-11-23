@@ -59,10 +59,13 @@ class Subtitles extends FlxSpriteGroup
 
 		if(assignedSound == null || subtitlesData.length < 1) return;
 
+		//Cue times come out of the .srt in seconds, while FlxSound.time is in milliseconds
+		var currentTime:Float = assignedSound.time * 0.001;
+
 		var currentLines:Array<String> = [];
 		for(data in subtitlesData)
 		{
-			if(assignedSound.time >= data.start && assignedSound.time <= data.end)
+			if(currentTime >= data.start && currentTime <= data.end)
 				currentLines.push(data.text);
 		}
 
