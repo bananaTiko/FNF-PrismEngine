@@ -121,7 +121,7 @@ class Alphabet extends FlxSpriteGroup
 	 * atlas can't draw at all is rendered with the language's font instead of a row of
 	 * "?" placeholders.
 	 */
-	static function canDrawAll(text:String):Bool
+	public static function canDrawAll(text:String):Bool
 	{
 		if(AlphaCharacter.allLetters == null) return true;
 

@@ -21,8 +21,9 @@ class VideoSprite extends FlxSpriteGroup {
 	private var videoName:String;
 
 	public var waiting:Bool = false;
+	public var captions:Subtitles = null;
 
-	public function new(videoName:String, isWaiting:Bool, canSkip:Bool = false, shouldLoop:Dynamic = false) {
+	public function new(videoName:String, isWaiting:Bool, canSkip:Bool = false, shouldLoop:Dynamic = false, ?captionFile:String) {
 		super();
 
 		this.videoName = videoName;
@@ -65,6 +66,21 @@ class VideoSprite extends FlxSpriteGroup {
 
 		// start video and adjust resolution to screen size
 		videoSprite.load(videoName, shouldLoop ? ['input-repeat=65545'] : null);
+
+		//V-Slice's cutscene captions are timed against the video, not a FlxSound.
+		if(captionFile != null && captionFile.length > 0 && ClientPrefs.data.subtitles)
+		{
+			captions = new Subtitles(0, 90, 'bottom');
+			captions.timeSource = function():Float
+			{
+				//libVLC reports microseconds as an Int64; keep it exact without an unsafe cast.
+				var ticks = videoSprite.bitmap.time;
+				var micros:Float = (ticks.high * 4294967296.0) + (ticks.low < 0 ? ticks.low + 4294967296.0 : ticks.low);
+				return micros * 0.000001;
+			};
+			captions.assignSubtitles(captionFile);
+			add(captions);
+		}
 	}
 
 	var alreadyDestroyed:Bool = false;

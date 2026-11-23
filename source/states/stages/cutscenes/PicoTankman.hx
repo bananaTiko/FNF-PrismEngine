@@ -5,6 +5,7 @@ import openfl.filters.ShaderFilter;
 import shaders.DropShadowScreenspace;
 import states.stages.erect.TankErect;
 import cutscenes.CutsceneHandler;
+import objects.Subtitles;
 
 class PicoTankman {
     public function new(stage:TankErect) {
@@ -33,11 +34,19 @@ class PicoTankman {
 	var tankmanEnding:FlxAtlasSprite;
 	var cutsceneSounds:FlxSound;
 	var bgSprite:FunkinSprite;
+	var subtitles:Subtitles;
 
 	public function playCutscene() {
 		var game = PlayState.instance;
 		cutscene = new CutsceneHandler();
 		FlxG.sound.list.add(cutsceneSounds);
+
+		//The ending ships translated captions; nothing was assigning them before.
+		subtitles = new Subtitles(0, 90, 'bottom');
+		subtitles.cameras = [stage.camOther];
+		game.add(subtitles);
+		subtitles.assignSubtitles('songs/' + game.songName + '/subtitles/end-cutscene', cutsceneSounds);
+
 		cutsceneSounds.play();
 		var tankmanPos:Array<Float> = [500,500];
 		cutscene.endTime = 320/24;

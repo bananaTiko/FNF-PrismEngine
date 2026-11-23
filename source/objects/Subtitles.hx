@@ -33,6 +33,9 @@ class Subtitles extends FlxSpriteGroup
 	var subtitlesData:Array<SubtitleEntry> = [];
 	var assignedSound:FlxSound = null;
 
+	/** Optional clock in seconds (a video's own position) used instead of a sound's time. */
+	public var timeSource:Void->Float = null;
+
 	public function new(x:Float = 0, y:Float = 0, ?alignment:String = 'bottom')
 	{
 		super(0, 0);
@@ -57,10 +60,11 @@ class Subtitles extends FlxSpriteGroup
 	{
 		super.update(elapsed);
 
-		if(assignedSound == null || subtitlesData.length < 1) return;
+		if(subtitlesData.length < 1) return;
 
 		//Cue times come out of the .srt in seconds, while FlxSound.time is in milliseconds
-		var currentTime:Float = assignedSound.time * 0.001;
+		var currentTime:Float = (timeSource != null) ? timeSource() : ((assignedSound != null) ? assignedSound.time * 0.001 : -1);
+		if(currentTime < 0) return;
 
 		var currentLines:Array<String> = [];
 		for(data in subtitlesData)
@@ -83,7 +87,7 @@ class Subtitles extends FlxSpriteGroup
 	{
 		clearSubtitles();
 
-		if(sound == null) return;
+		if(sound == null && timeSource == null) return;
 		if(filePath == null || filePath.length < 1) return;
 
 		var raw:String = null;

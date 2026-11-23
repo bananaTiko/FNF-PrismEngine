@@ -94,6 +94,8 @@
 		<assets path="assets/base_game" rename="assets" exclude="*.mp3"  unless="web"/>
 		<haxelib name="grig.audio" if="BASE_GAME_FILES"/>
 		<haxelib name="funkin.vis" if="BASE_GAME_FILES"/>
+		<!-- funkin.vis ships no extraParams.hxml, so the define its #if guards look for was never set -->
+		<define name="funkin.vis" if="BASE_GAME_FILES"/>
 	</section>
 
 	<define name="CHECK_FOR_UPDATES" if="desktop officialBuild"/>

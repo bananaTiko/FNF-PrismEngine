@@ -96,6 +96,8 @@ class ABotSpeaker extends FlxSpriteGroup
 	override function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
+		//The music is swapped when the song starts, so retry the analyzer there too
+		@:privateAccess if(analyzer == null && snd != null && snd._channel != null) initAnalyzer();
 		if(analyzer == null) return;
 
 		levels = analyzer.getLevels(cast levels);
@@ -129,7 +131,14 @@ class ABotSpeaker extends FlxSpriteGroup
 	public function initAnalyzer()
 	{
 		@:privateAccess
-		analyzer = new SpectralAnalyzer(snd._channel.__audioSource, 7, 0.1, 40);
+		{
+			if(snd == null || snd._channel == null || snd._channel.__audioSource == null)
+			{
+				analyzer = null;
+				return;
+			}
+			analyzer = new SpectralAnalyzer(snd._channel.__audioSource, 7, 0.1, 40);
+		}
 	
 		#if !web
 		// On native it uses FFT stuff that isn't as optimized as the direct browser stuff we use on HTML5

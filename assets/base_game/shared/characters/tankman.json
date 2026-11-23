@@ -142,6 +142,17 @@
 			"fps": 24,
 			"name": "PRETTY GOOD tankman",
 			"indices": []
+		},
+		{
+			"loop": false,
+			"offsets": [
+				5,
+				-40
+			],
+			"anim": "augh",
+			"fps": 24,
+			"name": "TANKMAN UGH",
+			"indices": []
 		}
 	],
 	"no_antialiasing": false,

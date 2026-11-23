@@ -9,6 +9,8 @@ import cutscenes.DialogueCharacter;
 
 typedef DialogueFile = {
 	var dialogue:Array<DialogueLine>;
+	/** `pixel` draws Week 6's pixel text box instead of the regular speech bubble. */
+	@:optional var style:Null<String>;
 }
 
 typedef DialogueLine = {
@@ -45,6 +47,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 	var skipText:FlxText;
 
 	var textBoxTypes:Array<String> = ['normal', 'angry'];
+	var isPixelStyle:Bool = false;
 	
 	var curCharacter:String = "";
 	//var charPositionList:Array<String> = ['left', 'center', 'right'];
@@ -69,24 +72,40 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		add(bgFade);
 
 		this.dialogueList = dialogueList;
+		isPixelStyle = (dialogueList.style != null && dialogueList.style.toLowerCase().trim() == 'pixel');
 		spawnCharacters();
 
 		box = new FlxSprite(70, 370);
 		box.antialiasing = ClientPrefs.data.antialiasing;
-		box.frames = Paths.getSparrowAtlas('speech_bubble');
 		box.scrollFactor.set();
-		box.animation.addByPrefix('normal', 'speech bubble normal', 24);
-		box.animation.addByPrefix('normalOpen', 'Speech Bubble Normal Open', 24, false);
-		box.animation.addByPrefix('angry', 'AHH speech bubble', 24);
-		box.animation.addByPrefix('angryOpen', 'speech bubble loud open', 24, false);
-		box.animation.addByPrefix('center-normal', 'speech bubble middle', 24);
-		box.animation.addByPrefix('center-normalOpen', 'Speech Bubble Middle Open', 24, false);
-		box.animation.addByPrefix('center-angry', 'AHH Speech Bubble middle', 24);
-		box.animation.addByPrefix('center-angryOpen', 'speech bubble Middle loud open', 24, false);
+		if(isPixelStyle)
+		{
+			//Week 6's dialogue asks for the pixel text box, like the original Roses scene.
+			box.setPosition(-20, 45);
+			box.frames = Paths.getSparrowAtlas('weeb/pixelUI/dialogueBox-senpaiMad');
+			box.animation.addByPrefix('normalOpen', 'SENPAI ANGRY IMPACT SPEECH', 24, false);
+			box.animation.addByIndices('normal', 'SENPAI ANGRY IMPACT SPEECH instance 1', [4], '', 24);
+			box.animation.addByPrefix('angryOpen', 'SENPAI ANGRY IMPACT SPEECH', 24, false);
+			box.animation.addByIndices('angry', 'SENPAI ANGRY IMPACT SPEECH instance 1', [4], '', 24);
+			box.antialiasing = false;
+		}
+		else
+		{
+			box.frames = Paths.getSparrowAtlas('speech_bubble');
+			box.animation.addByPrefix('normal', 'speech bubble normal', 24);
+			box.animation.addByPrefix('normalOpen', 'Speech Bubble Normal Open', 24, false);
+			box.animation.addByPrefix('angry', 'AHH speech bubble', 24);
+			box.animation.addByPrefix('angryOpen', 'speech bubble loud open', 24, false);
+			box.animation.addByPrefix('center-normal', 'speech bubble middle', 24);
+			box.animation.addByPrefix('center-normalOpen', 'Speech Bubble Middle Open', 24, false);
+			box.animation.addByPrefix('center-angry', 'AHH Speech Bubble middle', 24);
+			box.animation.addByPrefix('center-angryOpen', 'speech bubble Middle loud open', 24, false);
+		}
 		box.animation.play('normal', true);
 		box.visible = false;
-		box.setGraphicSize(Std.int(box.width * 0.9));
+		box.setGraphicSize(Std.int(box.width * (isPixelStyle ? PlayState.daPixelZoom * 0.9 : 0.9)));
 		box.updateHitbox();
+		if(isPixelStyle) box.screenCenter(X);
 		add(box);
 
 		daText = new TypedAlphabet(DEFAULT_TEXT_X, DEFAULT_TEXT_Y, '');
@@ -346,7 +365,7 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		}
 		var centerPrefix:String = '';
 		var lePosition:String = arrayCharacters[character].jsonFile.dialogue_pos;
-		if(lePosition == 'center') centerPrefix = 'center-';
+		if(lePosition == 'center' && !isPixelStyle) centerPrefix = 'center-';
 
 		if(character != lastCharacter) {
 			box.animation.play(centerPrefix + boxType + 'Open', true);
@@ -360,6 +379,10 @@ class DialogueBoxPsych extends FlxSpriteGroup
 		lastBoxType = boxType;
 
 		daText.text = curDialogue.text;
+		//Week 6's box expects its dark red lettering, not the white speech-bubble text.
+		if(isPixelStyle)
+			for(letter in daText.members)
+				cast(letter, FlxSprite).color = 0xFF3F2021;
 		daText.delay = curDialogue.speed;
 		daText.sound = curDialogue.sound;
 		if(daText.sound == null || daText.sound.trim() == '') daText.sound = 'dialogue';

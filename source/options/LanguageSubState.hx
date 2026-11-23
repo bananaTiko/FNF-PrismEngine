@@ -74,10 +74,7 @@ class LanguageSubState extends MusicBeatSubstate
 
 		for (num => lang in languages)
 		{
-			var name:String = displayLanguages.get(lang);
-			if(name == null) name = lang;
-
-			var text:Alphabet = new Alphabet(0, 300, name, true);
+			var text:Alphabet = new Alphabet(0, 300, displayNameFor(lang), true);
 			text.isMenuItem = true;
 			text.targetY = num;
 			text.changeX = false;
@@ -93,6 +90,52 @@ class LanguageSubState extends MusicBeatSubstate
 		}
 		changeSelected();
 	}
+
+	/**
+	 * The bitmap alphabet only carries the Latin set, so fold accents and drop anything else
+	 * it cannot draw. A name that is still undrawable falls back to the language code,
+	 * which is always ASCII, instead of switching the whole entry to a plain font.
+	 */
+	function displayNameFor(lang:String):String
+	{
+		var name:String = displayLanguages.exists(lang) ? displayLanguages.get(lang) : lang;
+		if(name == null || name.length < 1) name = lang;
+		if(Alphabet.usesFont()) return name; // the selected language's own font can draw it
+
+		var folded:String = foldLatin(name);
+		if(folded.length > 0 && Alphabet.canDrawAll(folded)) return folded;
+		return lang;
+	}
+
+	static function foldLatin(text:String):String
+	{
+		var out:StringBuf = new StringBuf();
+		for (i in 0...text.length)
+		{
+			var character:String = text.charAt(i);
+			var lower:String = character.toLowerCase();
+			if(FOLD.exists(lower))
+			{
+				out.add(FOLD.get(lower));
+				continue;
+			}
+			if(AlphaCharacter.allLetters == null || AlphaCharacter.allLetters.exists(lower)) out.add(character);
+			else out.add(' '); // parentheses, non-Latin scripts, anything the alphabet lacks
+		}
+		return StringTools.trim(~/\s+/g.replace(out.toString(), ' '));
+	}
+
+	static var FOLD:Map<String, String> = [
+		'á'=>'a', 'à'=>'a', 'â'=>'a', 'ä'=>'a', 'ã'=>'a', 'å'=>'a', 'ā'=>'a', 'ă'=>'a', 'ą'=>'a',
+		'ç'=>'c', 'ć'=>'c', 'č'=>'c', 'ď'=>'d', 'đ'=>'d',
+		'é'=>'e', 'è'=>'e', 'ê'=>'e', 'ë'=>'e', 'ě'=>'e', 'ę'=>'e', 'ė'=>'e', 'ğ'=>'g',
+		'í'=>'i', 'ì'=>'i', 'î'=>'i', 'ï'=>'i', 'ī'=>'i', 'į'=>'i', 'ı'=>'i',
+		'ł'=>'l', 'ñ'=>'n', 'ń'=>'n', 'ň'=>'n',
+		'ó'=>'o', 'ò'=>'o', 'ô'=>'o', 'ö'=>'o', 'õ'=>'o', 'ø'=>'o', 'ō'=>'o', 'ő'=>'o',
+		'ř'=>'r', 'ś'=>'s', 'š'=>'s', 'ş'=>'s', 'ș'=>'s', 'ß'=>'ss',
+		'ť'=>'t', 'ț'=>'t', 'ú'=>'u', 'ù'=>'u', 'û'=>'u', 'ü'=>'u', 'ū'=>'u', 'ů'=>'u', 'ű'=>'u', 'ų'=>'u',
+		'ý'=>'y', 'ÿ'=>'y', 'ž'=>'z', 'ź'=>'z', 'ż'=>'z'
+	];
 
 	var changedLanguage:Bool = false;
 	override function update(elapsed:Float)

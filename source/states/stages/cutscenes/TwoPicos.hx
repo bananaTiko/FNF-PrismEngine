@@ -148,6 +148,13 @@ class TwoPicos
 		};
 		cutsceneHandler.skipCallback = function()
 		{
+			//Skipping used to leave the cutscene's fade running, which faded the song's
+			//instrumental out as soon as it started and left only the vocals playing.
+			if (FlxG.sound.music != null)
+			{
+				if (FlxG.sound.music.fadeTween != null) FlxG.sound.music.fadeTween.cancel();
+				FlxG.sound.music.stop();
+			}
 			cutsceneHandler.finishCallback();
 		};
 		host.camFollow_set(host.dad.x + 280, host.dad.y + 170);

@@ -973,7 +973,8 @@ class PlayState extends MusicBeatState
 
 		if (foundFile)
 		{
-			var cutscene:VideoSprite = new VideoSprite(fileName, forMidSong, canSkip, loop);
+			var captionPath:String = 'songs/' + songName + '/subtitles/start-cutscene';
+			var cutscene:VideoSprite = new VideoSprite(fileName, forMidSong, canSkip, loop, captionPath);
 			videoCutscene = cutscene;
 			if(forMidSong) cutscene.videoSprite.bitmap.rate = playbackRate;
 			callOnScripts('onCutsceneStart', [name]);
@@ -1128,6 +1129,10 @@ class PlayState extends MusicBeatState
 			return false;
 		}
 
+		//A cutscene that faded its own track out must not keep fading the song once it starts.
+		if (FlxG.sound.music != null && FlxG.sound.music.fadeTween != null)
+			FlxG.sound.music.fadeTween.cancel();
+
 		if (ClientPrefs.data.skipCountdown) skipCountdown = true;
 
 		seenCutscene = true;
@@ -1169,6 +1174,12 @@ class PlayState extends MusicBeatState
 				else setSongTime(0);
 				return true;
 			}
+
+			//Same lead-in for the normal countdown: a chart whose first note sits at 0 ms
+			//would otherwise be at the receptor on the exact frame the song starts.
+			if (unspawnNotes.length > 0 && unspawnNotes[0].strumTime <= 0)
+				Conductor.songPosition -= Conductor.crochet * 2;
+
 			moveCameraSection();
 
 			startTimer = new FlxTimer().start(Conductor.crochet / 1000 / playbackRate, function(tmr:FlxTimer)
@@ -3550,22 +3561,26 @@ class PlayState extends MusicBeatState
 			var animToPlay:String = singAnimations[Std.int(Math.abs(Math.min(singAnimations.length-1, note.noteData)))] + note.animSuffix;
 			if(note.gfNote) char = gf;
 
-			if(char != null)
-			{
-				var canPlay:Bool = true;
-				if(note.isSustainNote)
+							if(char != null)
 				{
-					var holdAnim:String = animToPlay + '-hold';
-					if(char.animation.exists(holdAnim)) animToPlay = holdAnim;
-					if(char.getAnimationName() == holdAnim || char.getAnimationName() == holdAnim + '-loop') canPlay = false;
+					var canPlay:Bool = true;
+					if(note.isSustainNote)
+					{
+						var holdAnim:String = animToPlay + '-hold';
+						if(char.animation.exists(holdAnim)) animToPlay = holdAnim;
+						if(char.getAnimationName() == holdAnim || char.getAnimationName() == holdAnim + '-loop') canPlay = false;
+					}
+
+					//An event animation (Tankman's "pretty good", "ugh") owns the sprite until it
+					//finishes; notes landing on the same beat must not cut it off.
+					if(char.specialAnim && !char.isAnimationFinished()) canPlay = false;
+
+					if(canPlay) char.playAnim(animToPlay, true);
+					char.holdTimer = 0;
 				}
-
-				if(canPlay) char.playAnim(animToPlay, true);
-				char.holdTimer = 0;
 			}
-		}
 
-		if(opponentVocals.length <= 0) vocals.volume = 1;
+			if(opponentVocals.length <= 0) vocals.volume = 1;
 		strumPlayAnim(true, Std.int(Math.abs(note.noteData)), Conductor.stepCrochet * 1.25 / 1000 / playbackRate);
 		note.hitByOpponent = true;
 		
@@ -3619,6 +3634,7 @@ class PlayState extends MusicBeatState
 						if(char.getAnimationName() == holdAnim || char.getAnimationName() == holdAnim + '-loop') canPlay = false;
 					}
 	
+					if(char.specialAnim && !char.isAnimationFinished()) canPlay = false;
 					if(canPlay) char.playAnim(animToPlay, true);
 					char.holdTimer = 0;
 

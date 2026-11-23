@@ -868,12 +868,6 @@ class FreeplayState extends MusicBeatState
 		Mods.currentModDirectory = songs[curSelected].folder;
 		PlayState.storyWeek = songs[curSelected].week;
 		Difficulty.loadFromWeek();
-		//Erect and Nightmare only exist for songs that shipped an erect chart.
-		if (getErectName(songs[curSelected].songName) != null)
-		{
-			for (extra in ['Erect', 'Nightmare'])
-				if (!Difficulty.list.contains(extra)) Difficulty.list.push(extra);
-		}
 		
 		var savedDiff:String = songs[curSelected].lastDifficulty;
 		var lastDiff:Int = Difficulty.list.indexOf(lastDifficultyName);
@@ -1008,7 +1002,6 @@ class FreeplayState extends MusicBeatState
 		for (song in allSongs)
 		{
 			if (!allowed.contains(song.category)) continue;
-			if (erectBaseSongs.exists(song.songName.toLowerCase())) continue;
 			if (query.length > 0 && !song.songName.toLowerCase().contains(query))
 				continue;
 			filtered.push(song);
