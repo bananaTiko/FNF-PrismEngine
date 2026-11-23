@@ -124,6 +124,10 @@ class SSerafim extends BaseStage
 	// charts anything in Spaghetti, so the left arrows should never be on screen.
 	var opponentStrumsHidden:Bool = false;
 
+	// A retry recreates the state; V-Slice instead resets the stage in place and
+	// resumes from its post-cutscene shot, so the intro must not play again.
+	var retryResume:Bool = false;
+
 	// V-Slice tints the diner through this shader: it is what colours the lights behind
 	// the truck, and what darkens the stage and brightens it for the truck close-up.
 	var stageShader:SserafimShader;
@@ -217,7 +221,8 @@ class SSerafim extends BaseStage
 		// V-Slice cancels the countdown to play the intro. setStartCallback runs in its
 		// place, and the intro starts the countdown once it is done. Like V-Slice, the
 		// intro only plays in Story Mode: Freeplay jumps straight into the song.
-		if (isStoryMode && !seenCutscene) setStartCallback(startIntroCutscene);
+		retryResume = isStoryMode && PlayState.retrying;
+		if (isStoryMode && !seenCutscene && !PlayState.retrying) setStartCallback(startIntroCutscene);
 	}
 
 	function makeDust(image:String, x:Float, y:Float, scroll:Float, scale:Float, alpha:Float, velX:Float, color:Int):FlxBackdrop
@@ -335,6 +340,8 @@ class SSerafim extends BaseStage
 			if (char != null) char.shader = characterShader;
 		for (spr in [cutsceneMain, cutsceneGf, cutsceneBf])
 			if (spr != null) spr.shader = characterShader;
+
+		if (retryResume) resumeAfterRetry();
 	}
 
 	function createLipSyncs():Void
@@ -925,6 +932,72 @@ class SSerafim extends BaseStage
 			FlxTween.tween(dust[i], {alpha: 0, y: dust[i].y + [100, 200, 150, 100][i]}, duration, {ease: FlxEase.sineOut});
 			FlxTween.tween(dust[i].velocity, {x: 0}, duration, {ease: FlxEase.sineOut});
 		}
+	}
+
+	/**
+	 * V-Slice's onSongRetry + playCutsceneFromRestart. A retry rebuilds PlayState
+	 * here, so this puts the fresh stage straight into the frame-23 diner shot
+	 * instead of replaying the intro.
+	 */
+	function resumeAfterRetry():Void
+	{
+		cutscenePlaying = false;
+		cutsceneSkipped = true;
+		cutsceneFinished = true;
+		if (skipText != null)
+		{
+			skipText.visible = false;
+			skipText.alpha = 0;
+		}
+
+		setCutsceneVisibility(false);
+		resetClear();
+		cover.alpha = 0;
+
+		// V-Slice's baseVisible/baseSinging plus the hidden opponent icon.
+		yunjin.visible = true;
+		chaewon.visible = false;
+		eunchae.visible = false;
+		boyfriend.visible = false;
+		dad.visible = false;
+		gf.visible = false;
+		singFlags = [false, false, false, false, false, false];
+		applySinging();
+
+		lightsEnabled = false;
+		backLightColor.alpha = 0;
+		backLightWhite.alpha = 0;
+		truckLight1.alpha = 0;
+		truckLight2.alpha = 0;
+		characterShader.darkenAmount = 0;
+		stageShader.darkenAmount = 0;
+
+		if (game.iconP2 != null) game.iconP2.visible = false;
+		if (game.camHUD != null) game.camHUD.visible = true;
+		game.inCutscene = false;
+		game.canPause = true;
+
+		// BF and GF are already on their feet when the song restarts.
+		if (cutsceneGf != null)
+		{
+			cutsceneGf.visible = true;
+			cutsceneGf.active = true;
+			playCutsceneAnim(cutsceneGf, 'getup', true);
+			cutsceneGf.anim.curFrame = 23;
+		}
+		if (cutsceneBf != null)
+		{
+			cutsceneBf.visible = true;
+			cutsceneBf.active = true;
+			playCutsceneAnim(cutsceneBf, 'getup', true);
+			cutsceneBf.anim.curFrame = 23;
+		}
+
+		FlxTween.cancelTweensOf(camGame);
+		FlxTween.cancelTweensOf(camFollow);
+		camGame.zoom = normalZoom;
+		FlxTween.tween(camGame, {zoom: 0.55}, 1, {ease: FlxEase.circOut});
+		FlxTween.tween(camFollow, {x: 1070, y: 470}, 1, {ease: FlxEase.circOut});
 	}
 
 	function startIntroCutscene()

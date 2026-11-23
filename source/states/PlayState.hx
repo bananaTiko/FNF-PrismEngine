@@ -249,6 +249,9 @@ class PlayState extends MusicBeatState
 	public static var campaignScore:Int = 0;
 	public static var campaignMisses:Int = 0;
 	public static var seenCutscene:Bool = false;
+	// True between a retry request and the recreated song state. Stages can use this
+	// to skip intro cutscenes that should only play on the first attempt.
+	public static var retrying:Bool = false;
 	public static var deathCounter:Int = 0;
 
 	/**
@@ -747,6 +750,7 @@ class PlayState extends MusicBeatState
 		}
 
 		stagesFunc(function(stage:BaseStage) stage.createPost());
+		retrying = false; // the new stage has had its chance to read it
 		callOnScripts('onCreatePost');
 		
 		var splash:NoteSplash = new NoteSplash();

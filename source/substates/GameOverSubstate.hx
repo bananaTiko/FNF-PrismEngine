@@ -226,6 +226,7 @@ class GameOverSubstate extends MusicBeatSubstate
 	{
 		if (!isEnding)
 		{
+			PlayState.retrying = true;
 			isEnding = true;
 			if(boyfriend.hasAnimation('deathConfirm'))
 				boyfriend.playAnim('deathConfirm', true);
