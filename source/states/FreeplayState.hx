@@ -59,8 +59,6 @@ class FreeplayState extends MusicBeatState
 	var cardSlideTargets:Array<FlxSprite> = [];
 	var cardSlideBaseX:Array<Float> = [];
 	var lastCardSongKey:String = '';
-	var diffAnimDir:Float = 1;
-	var diffColorTime:Float = 0;
 	var cardBG:FlxSprite;
 	var cardTitle:FlxText;
 	var cardInfo:FlxText;
@@ -338,7 +336,7 @@ class FreeplayState extends MusicBeatState
 		createSongCard();
 
 		applyFilterAndSort();
-		buildSongObjects(true);
+		buildSongObjects();
 		WeekData.setDirectoryFromWeek();
 
 		scoreText = new FlxText(FlxG.width * 0.7, 5, 0, "", 32);
@@ -348,11 +346,8 @@ class FreeplayState extends MusicBeatState
 		scoreBG.alpha = 0.6;
 		add(scoreBG);
 
-		//V-Slice keeps the difficulty above the song list, not beside the high score.
-		diffText = new FlxText(0, 252, FlxG.width, "", 28);
-		diffText.setFormat(Paths.font("vcr.ttf"), 28, FlxColor.WHITE, CENTER, FlxTextBorderStyle.OUTLINE, FlxColor.BLACK);
-		diffText.borderSize = 2;
-		diffText.scrollFactor.set();
+		diffText = new FlxText(scoreText.x, scoreText.y + 36, 0, "", 24);
+		diffText.font = scoreText.font;
 		add(diffText);
 
 		add(scoreText);
@@ -437,7 +432,7 @@ class FreeplayState extends MusicBeatState
 		add(noResultsText);
 
 		changeSelection();
-		if (isErectDifficulty(curDifficulty)) rebuildForDifficulty();
+		if (isErectDifficulty(curDifficulty)) rebuildForDifficulty(false);
 		updateHint();
 		updateTexts();
 		super.create();
@@ -514,14 +509,6 @@ class FreeplayState extends MusicBeatState
 
 		if (FlxG.sound.music != null && FlxG.sound.music.volume < 0.7)
 			FlxG.sound.music.volume += 0.5 * elapsed;
-
-		if (diffText != null)
-		{
-			//Title-screen style colour drift on the difficulty heading.
-			diffColorTime += elapsed;
-			var colourT:Float = (Math.sin(diffColorTime * Math.PI / 3) + 1) * 0.5;
-			diffText.color = FlxColor.interpolate(0xFF33FFFF, 0xFF3333CC, colourT);
-		}
 
 		lerpScore = Math.floor(FlxMath.lerp(intendedScore, lerpScore, Math.exp(-elapsed * 24)));
 		lerpRating = FlxMath.lerp(intendedRating, lerpRating, Math.exp(-elapsed * 12));
@@ -843,7 +830,9 @@ class FreeplayState extends MusicBeatState
 		if (player.playingMusic || songs.length < 1)
 			return;
 
+		var wasErect:Bool = isErectDifficulty(curDifficulty);
 		curDifficulty = FlxMath.wrap(curDifficulty + change, 0, Difficulty.list.length-1);
+		var isErect:Bool = isErectDifficulty(curDifficulty);
 		#if !switch
 		intendedScore = Highscore.getScore(currentChartSongName(), curDifficulty);
 		intendedRating = Highscore.getRating(currentChartSongName(), curDifficulty);
@@ -859,38 +848,19 @@ class FreeplayState extends MusicBeatState
 		positionHighscore();
 		missingText.visible = false;
 		missingTextBG.visible = false;
-		if (change != 0) rebuildForDifficulty();
-		animateDiffText();
+		if (change != 0) rebuildForDifficulty(wasErect != isErect);
 		updateSongCard();
 	}
 
-	/** Title-screen style entrance for the difficulty heading. */
-	function animateDiffText():Void
-	{
-		if (diffText == null) return;
-
-		diffAnimDir *= -1;
-		FlxTween.cancelTweensOf(diffText);
-		FlxTween.cancelTweensOf(diffText.scale);
-		FlxTween.cancelTweensOf(diffText.offset);
-
-		diffText.alpha = 0;
-		diffText.offset.x = 120 * diffAnimDir;
-		diffText.scale.set(0.82, 0.82);
-		FlxTween.tween(diffText, {alpha: 1}, 0.25, {ease: FlxEase.quadOut});
-		FlxTween.tween(diffText.offset, {x: 0}, 0.35, {ease: FlxEase.expoOut});
-		FlxTween.tween(diffText.scale, {x: 1, y: 1}, 0.35, {ease: FlxEase.backOut});
-	}
-
 	/** Rebuilds the rows when the difficulty changes, keeping the same base song selected if it still exists. */
-	function rebuildForDifficulty():Void
+	function rebuildForDifficulty(animate:Bool = false):Void
 	{
 		var keepKey:String = null;
 		if (curSelected >= 0 && curSelected < songs.length)
 			keepKey = getFavouriteKey(songs[curSelected]);
 
 		applyFilterAndSort();
-		buildSongObjects(true);
+		buildSongObjects(animate);
 
 		curSelected = 0;
 		if (keepKey != null)
@@ -974,6 +944,8 @@ class FreeplayState extends MusicBeatState
 		scoreText.x = FlxG.width - scoreText.width - 6;
 		scoreBG.scale.x = FlxG.width - scoreText.x + 6;
 		scoreBG.x = FlxG.width - (scoreBG.scale.x / 2);
+		diffText.x = Std.int(scoreBG.x + (scoreBG.width / 2));
+		diffText.x -= diffText.width / 2;
 	}
 
 	var _drawDistance:Int = 4;
@@ -1484,18 +1456,6 @@ class FreeplayState extends MusicBeatState
 
 		FlxG.sound.playMusic(Paths.music('freakyMenu'), 0);
 		FlxTween.tween(FlxG.sound.music, {volume: 1}, 1);
-	}
-
-	override function beatHit():Void
-	{
-		super.beatHit();
-
-		if (diffText != null)
-		{
-			FlxTween.cancelTweensOf(diffText.scale);
-			diffText.scale.set(1.08, 1.08);
-			FlxTween.tween(diffText.scale, {x: 1, y: 1}, Conductor.crochet / 1000 * 0.45, {ease: FlxEase.quadOut});
-		}
 	}
 
 	override function destroy():Void
