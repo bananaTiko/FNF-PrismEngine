@@ -28,7 +28,8 @@ class ABotPixel extends FlxSpriteGroup
 	{
 		snd = changed;
 		#if funkin.vis
-		initAnalyzer();
+		analyzerSource = null; //a new track means a new channel
+		refreshAnalyzer();
 		#end
 		return snd;
 	}
@@ -103,11 +104,14 @@ class ABotPixel extends FlxSpriteGroup
 	// so we keep the analyzer's struct out of the type system.
 	var levels:Array<Dynamic>;
 	var levelMax:Int = 0;
+	// The audio source the current analyzer was built from. Flixel drops the channel on pause, seek and
+	// track changes and disposes its source with it, so an analyzer kept across that reads silence and
+	// the bars freeze. Tracking the source lets us rebuild against the live one instead.
+	var analyzerSource:Dynamic;
 	override function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
-		//The music is swapped when the song starts, so retry the analyzer there too
-		@:privateAccess if(analyzer == null && snd != null && snd._channel != null) initAnalyzer();
+		refreshAnalyzer();
 		if(analyzer == null) return;
 
 		levels = analyzer.getLevels(cast levels);
@@ -137,18 +141,38 @@ class ABotPixel extends FlxSpriteGroup
 	}
 
 	#if funkin.vis
+	/** Builds the analyzer for whatever channel the music is playing into right now. */
 	public function initAnalyzer()
 	{
+		analyzerSource = null;
+		refreshAnalyzer();
+	}
+
+	/** Rebuilds the analyzer when the music's channel (and with it, its audio source) changed. */
+	function refreshAnalyzer()
+	{
+		var sound:FlxSound = snd != null ? snd : FlxG.sound.music;
+		var source:Dynamic = null;
+
 		@:privateAccess
 		{
-			if(snd == null || snd._channel == null || snd._channel.__audioSource == null)
-			{
-				analyzer = null;
-				return;
-			}
-			analyzer = new SpectralAnalyzer(snd._channel.__audioSource, 7, 0.1, 40);
+			if(sound != null && sound._channel != null)
+				source = sound._channel.__audioSource;
 		}
-	
+
+		if(source == null)
+		{
+			//Paused or between songs: the old source is gone, so the old analyzer is useless
+			analyzer = null;
+			analyzerSource = null;
+			return;
+		}
+		if(analyzer != null && source == analyzerSource)
+			return;
+
+		analyzerSource = source;
+		analyzer = new SpectralAnalyzer(cast source, 7, 0.1, 40);
+
 		#if !web
 		// On native it uses FFT stuff that isn't as optimized as the direct browser stuff we use on HTML5
 		// So we want to manually change it!
