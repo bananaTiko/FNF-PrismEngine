@@ -221,7 +221,20 @@ class SserafimShader extends ErrorHandledShader
 
 			vec3 unpremultipliedColor = col.a > 0.0 ? col.rgb / col.a : col.rgb;
 
-			vec3 outColor = applyHSBCEffect(unpremultipliedColor);
+			// Adjust Color is identity unless the stage actually set it, which is most of the
+			// song, and it is the expensive half of this shader (hue matrix, contrast curve,
+			// saturation mix). Skip it instead of computing a no-op for every pixel of every
+			// prop, character and mouth.
+			vec3 outColor = (hue == 0.0 && saturation == 0.0 && brightness == 0.0 && contrast == 0.0)
+				? unpremultipliedColor
+				: applyHSBCEffect(unpremultipliedColor);
+
+			// No lights and no darkening: the multiply below would be white anyway.
+			if (darkAmt == 0.0 && truckStrength == 0.0 && pulseStrength == 0.0)
+			{
+				gl_FragColor = vec4(outColor.rgb * col.a, col.a);
+				return;
+			}
 
 			// truckLight1.alpha + backLightColor.alpha
 			float combinedAlpha = truckStrength + pulseStrength;
@@ -231,10 +244,16 @@ class SserafimShader extends ErrorHandledShader
 
 			vec3 multiplyColor;
 
-			vec3 bruhColor = lightColor;
-			bruhColor = rgb2hsl(bruhColor);
-			bruhColor.b = bruhColor.b * pulseStrength;
-			bruhColor = hsl2rgb(bruhColor);
+			vec3 bruhColor = vec3(0.0);
+			if (pulseStrength > 0.0)
+			{
+				// At full dark the pulse light collapses to black, so the round trip is skipped
+				// while the pulse is off.
+				bruhColor = lightColor;
+				bruhColor = rgb2hsl(bruhColor);
+				bruhColor.b = bruhColor.b * pulseStrength;
+				bruhColor = hsl2rgb(bruhColor);
+			}
 
 			if(isChar == true){
 				multiplyColor = mix(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), darkFactor/5.0);

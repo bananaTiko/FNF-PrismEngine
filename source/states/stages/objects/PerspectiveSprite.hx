@@ -24,6 +24,10 @@ class PerspectiveSprite extends FlxTypedSpriteGroup<FlxSprite>
 	public var bottomObj:FlxObject;
 	public var topObj:FlxObject;
 
+	// Reused by updateSkew, which runs every frame.
+	final correctedBottom:FlxPoint = FlxPoint.get();
+	final correctedTop:FlxPoint = FlxPoint.get();
+
 	public function new()
 	{
 		super(0, 0);
@@ -60,9 +64,9 @@ class PerspectiveSprite extends FlxTypedSpriteGroup<FlxSprite>
 		if (targetCam == null) targetCam = FlxG.camera;
 
 		// Correct for the different scroll factors so both points stay put on screen.
-		var correctedBottom:FlxPoint = new FlxPoint(bottomObj.x + (targetCam.scroll.x * (sprite.scrollFactor.x - bottomObj.scrollFactor.x)),
+		correctedBottom.set(bottomObj.x + (targetCam.scroll.x * (sprite.scrollFactor.x - bottomObj.scrollFactor.x)),
 			bottomObj.y + (targetCam.scroll.y * (sprite.scrollFactor.y - bottomObj.scrollFactor.y)));
-		var correctedTop:FlxPoint = new FlxPoint(topObj.x + (targetCam.scroll.x * (sprite.scrollFactor.x - topObj.scrollFactor.x)),
+		correctedTop.set(topObj.x + (targetCam.scroll.x * (sprite.scrollFactor.x - topObj.scrollFactor.x)),
 			topObj.y + (targetCam.scroll.y * (sprite.scrollFactor.y - topObj.scrollFactor.y)));
 
 		var distX:Float = correctedTop.x - correctedBottom.x;
