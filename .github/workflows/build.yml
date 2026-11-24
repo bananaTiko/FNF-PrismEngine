@@ -14,15 +14,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # Install all platform dependencies before compiling.
-  dependencies:
-    name: Setup All Dependencies
-    uses: ./.github/workflows/setup-dependencies.yml
-
   # Linux compilation.
   buildLinux:
     name: Build Linux
-    needs: dependencies
     runs-on: ubuntu-latest
 
     steps:
@@ -32,21 +26,26 @@ jobs:
         with:
           haxe-version: 4.3.4
 
-      - name: Setup Haxelib
-        run: haxelib setup ~/haxelib
-
-      - name: Download Haxelibs
-        uses: actions/download-artifact@v4
+      # Restore dependencies from previous runs.
+      - name: Cache Haxelib
+        uses: actions/cache@v4
         with:
-          name: haxelibs-linux
-
-      - name: Restore Haxelibs
-        run: tar -xzf haxelibs.tar.gz -C "$HOME"
+          path: ~/haxelib
+          key: linux-haxelib-4.3.4-${{ hashFiles('Project.xml', 'haxelib.json', 'setup/**') }}
+          restore-keys: |
+            linux-haxelib-4.3.4-
 
       - name: Install Linux Dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends libvlc-dev libvlccore-dev
+
+      - name: Install Haxelibs
+        run: |
+          haxelib setup ~/haxelib
+          haxelib install hxcpp --quiet
+          chmod +x ./setup/unix.sh
+          sh ./setup/unix.sh
 
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
@@ -66,7 +65,6 @@ jobs:
   # Windows compilation.
   buildWindows:
     name: Build Windows
-    needs: dependencies
     runs-on: windows-latest
 
     steps:
@@ -76,18 +74,21 @@ jobs:
         with:
           haxe-version: 4.3.4
 
-      - name: Setup Haxelib
-        run: haxelib setup C:/haxelib
-        shell: cmd
-
-      - name: Download Haxelibs
-        uses: actions/download-artifact@v4
+      # Restore dependencies from previous runs.
+      - name: Cache Haxelib
+        uses: actions/cache@v4
         with:
-          name: haxelibs-windows
+          path: C:/haxelib
+          key: windows-haxelib-4.3.4-${{ hashFiles('Project.xml', 'haxelib.json', 'setup/**') }}
+          restore-keys: |
+            windows-haxelib-4.3.4-
 
-      - name: Restore Haxelibs
-        run: tar -xzf haxelibs.tar.gz -C C:/
-        shell: pwsh
+      - name: Install Haxelibs
+        shell: cmd
+        run: |
+          haxelib setup C:/haxelib
+          haxelib install hxcpp --quiet
+          .\setup\windows.bat
 
       - name: Skip SScript setup mode
         run: echo oy9:showMacroty8:loopCosti25y10:includeAllfg >> %USERPROFILE%/settings.cocoa
@@ -108,7 +109,6 @@ jobs:
   # macOS compilation.
   buildMac:
     name: Build macOS
-    needs: dependencies
     runs-on: macos-15
 
     steps:
@@ -118,16 +118,21 @@ jobs:
         with:
           haxe-version: 4.3.4
 
-      - name: Setup Haxelib
-        run: haxelib setup ~/haxelib
-
-      - name: Download Haxelibs
-        uses: actions/download-artifact@v4
+      # Restore dependencies from previous runs.
+      - name: Cache Haxelib
+        uses: actions/cache@v4
         with:
-          name: haxelibs-mac
+          path: ~/haxelib
+          key: mac-haxelib-4.3.4-${{ hashFiles('Project.xml', 'haxelib.json', 'setup/**') }}
+          restore-keys: |
+            mac-haxelib-4.3.4-
 
-      - name: Restore Haxelibs
-        run: tar -xzf haxelibs.tar.gz -C "$HOME"
+      - name: Install Haxelibs
+        run: |
+          haxelib setup ~/haxelib
+          haxelib install hxcpp --quiet
+          chmod +x ./setup/unix.sh
+          sh ./setup/unix.sh
 
       - name: Skip SScript setup mode
         run: echo 'oy9:showMacroty8:loopCosti25y10:includeAllfg' >> ~/settings.cocoa
