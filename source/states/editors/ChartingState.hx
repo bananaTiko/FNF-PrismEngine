@@ -630,9 +630,91 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		forceDataUpdate = true;
 	}
 
+		// ----------------------------------------------------------------------------------------
+	// Preview characters in the corners of the editor, ported from The SkyDecay Project's
+	// chart editor (their `lilPlayer` / `lilOpponent` / `lilGf`). They bop on the beat while
+	// the song plays, so you can see who a chart is written for without playing it.
+	// ----------------------------------------------------------------------------------------
+	var lilPlayer:Character;
+	var lilOpponent:Character;
+	var lilGirl:Character;
+
+	function createLilCharacters():Void
+	{
+		if (PlayState.SONG == null) return;
+
+		if (lilPlayer != null) remove(lilPlayer, true);
+		if (lilOpponent != null) remove(lilOpponent, true);
+		if (lilGirl != null) remove(lilGirl, true);
+
+		lilPlayer = makeLilCharacter(PlayState.SONG.player1, true);
+		lilOpponent = makeLilCharacter(PlayState.SONG.player2, false);
+		lilGirl = makeLilCharacter(PlayState.SONG.gfVersion, false);
+
+		placeLilCharacters();
+	}
+
+	function makeLilCharacter(charName:String, flip:Bool):Character
+	{
+		if (charName == null || charName.length < 1) return null;
+
+		var spr:Character = null;
+		try spr = new Character(0, 0, charName, false)
+		catch (e:Dynamic)
+		{
+			FlxG.log.warn('Chart editor: could not load the preview character $charName');
+			return null;
+		}
+
+		spr.scrollFactor.set();
+		spr.setGraphicSize(Std.int(spr.width * 0.4));
+		spr.updateHitbox();
+		if (flip) spr.flipX = !spr.flipX;
+
+		// The poses were authored at full size, so their offsets have to shrink with the sprite.
+		for (key in spr.animOffsets.keys())
+		{
+			spr.animOffsets.get(key)[0] *= spr.scale.x;
+			spr.animOffsets.get(key)[1] *= spr.scale.y;
+		}
+
+		add(spr);
+		return spr;
+	}
+
+	function placeLilCharacters():Void
+	{
+		var bottom:Float = FlxG.height - 10;
+		if (lilOpponent != null) lilOpponent.setPosition(10, bottom - lilOpponent.height);
+		if (lilPlayer != null) lilPlayer.setPosition(FlxG.width - lilPlayer.width - 10, bottom - lilPlayer.height);
+		if (lilGirl != null)
+		{
+			var right:Float = FlxG.width - 10 - lilGirl.width;
+			if (lilPlayer != null) right -= lilPlayer.width * 0.5;
+			lilGirl.setPosition(right, bottom - lilGirl.height);
+		}
+	}
+
+	override function beatHit()
+	{
+		super.beatHit();
+
+		for (char in [lilPlayer, lilOpponent, lilGirl])
+		{
+			if (char == null) continue;
+
+			var anim:String = char.getAnimationName();
+			if (anim != null && anim.startsWith('sing') && !char.isAnimationFinished()) continue;
+
+			var every:Int = char.danceEveryNumBeats > 0 ? char.danceEveryNumBeats : 1;
+			if (curBeat % every == 0) char.dance();
+		}
+	}
+
 	function onChartLoaded()
 	{
-		if(PlayState.SONG == null) return;
+		if (PlayState.SONG == null) return;
+		createLilCharacters();
 
 		// SONG TAB
 		songNameInputText.text = PlayState.SONG.song;
@@ -3393,6 +3475,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			PlayState.SONG.player1 = character;
 			updateJsonData();
 			updateHeads(true);
+			createLilCharacters();
 			loadMusic();
 			trace('selected $character');
 		});
@@ -3408,6 +3491,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 			PlayState.SONG.player2 = character;
 			updateJsonData();
 			updateHeads(true);
+			createLilCharacters();
 			loadMusic();
 			trace('selected $character');
 		});
@@ -3415,6 +3499,7 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		girlfriendDropDown = new PsychUIDropDownMenu(objX, objY + 80, [''], function(id:Int, character:String)
 		{
 			PlayState.SONG.gfVersion = character;
+			createLilCharacters();
 			trace('selected $character');
 		});
 		
