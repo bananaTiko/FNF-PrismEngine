@@ -57,10 +57,30 @@ class PsychCamera extends FlxCamera
 		updateFlash(elapsed);
 		updateFade(elapsed);
 
-		flashSprite.filters = filtersEnabled ? filters : null;
+		updateCameraFilters();
 
 		updateFlashSpritePosition();
 		updateShake(elapsed);
+	}
+
+	/**
+	 * Camera filters plus the colourblind filter, which is a display option rather than part of
+	 * the stage, so it has to survive whatever a stage puts in `filters`.
+	 */
+	function updateCameraFilters():Void
+	{
+		var base:Array<openfl.filters.BitmapFilter> = (filtersEnabled ? filters : null);
+		var colorblind:openfl.filters.BitmapFilter = shaders.ColorblindShader.filterFor(ClientPrefs.data.colorblind);
+
+		if (colorblind != null)
+		{
+			var list:Array<openfl.filters.BitmapFilter> = base != null ? base.copy() : [];
+			list.push(colorblind);
+			flashSprite.filters = list;
+			return;
+		}
+
+		flashSprite.filters = base;
 	}
 
 	public inline function resetToPoint(p:FlxPoint):Void

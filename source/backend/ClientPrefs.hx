@@ -95,6 +95,7 @@ import states.TitleState;
 	public var windowColorMode:String = 'Dark'; // title bar color, Windows only
 	public var transition:String = 'Fade'; // state change transition, see backend/Transitions
 	public var language:String = 'en-US';
+	public var colorblind:String = 'Off'; // daltonize filter, see shaders/ColorblindShader
 	public var favorites:Array<String> = [];
 	public var freeplaySort:String = 'Name';
 }
