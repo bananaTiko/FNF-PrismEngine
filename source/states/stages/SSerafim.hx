@@ -270,7 +270,10 @@ class SSerafim extends BaseStage
 		eunchae.scrollFactor.set(0.97, 0.97);
 		add(eunchae);
 
-		yunjin.playAnim('doorclosed', true);
+		// V-Slice measures a character's idle pose when it positions it, so Yunjin is put
+		// on her idle for the measurement below and only closes the door afterwards
+		// (her door-closed pose is much wider than she is).
+		yunjin.playAnim('idle', true);
 		chaewon.visible = false;
 		eunchae.visible = false; // The band members only appear once their show event brings them in.
 
@@ -302,6 +305,7 @@ class SSerafim extends BaseStage
 		}
 
 		placeBand();
+		yunjin.playAnim('doorclosed', true);
 
 		// V-Slice layers: band/mouths 1000, frontStool 1500, dust 2000,
 		// solidCover 9999, end cards 10000. Psych draws in insertion order.
