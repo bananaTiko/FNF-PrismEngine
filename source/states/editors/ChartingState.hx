@@ -13,6 +13,7 @@ import lime.media.AudioBuffer;
 
 import flash.media.Sound;
 import flash.geom.Rectangle;
+import flash.net.FileFilter;
 
 import haxe.Json;
 import haxe.Exception;
@@ -1886,7 +1887,10 @@ class ChartingState extends MusicBeatState implements PsychUIEventHandler.PsychU
 		upperBox.isMinimized = true;
 		upperBox.bg.visible = false;
 
-		fileDialog.open(null, 'Open a chart file (Moonchart)', null, function()
+		// The default filter is JSON only, which hides every other chart format
+		// moonchart can read.
+		var chartFilter:Array<FileFilter> = [#if !mac new FileFilter('Chart file', '*.json;*.sm;*.ssc;*.qua;*.osu;*.mid;*.chart') #end];
+		fileDialog.open(null, 'Open a chart file (Moonchart)', chartFilter, function()
 		{
 			var chartPath:String = fileDialog.path.replace('\\', '/');
 

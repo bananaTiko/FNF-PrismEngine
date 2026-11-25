@@ -103,7 +103,10 @@ class FileDialogHandler extends FlxBasic
 	{
 		@:privateAccess
 		this.path = _fileRef.__path;
-		this.data = File.getContent(this.path);
+		// Binary formats (MIDI and friends) cannot be read as text; the callers that
+		// only need the path should not have the dialog blow up on them.
+		try this.data = File.getContent(this.path)
+		catch (e:haxe.Exception) this.data = null;
 		this.completed = true;
 		trace('Loaded file from: $path');
 
