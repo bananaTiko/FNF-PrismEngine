@@ -49,21 +49,18 @@ class SSerafim extends BaseStage
 	var mouths:Array<SserafimLipSync> = [null, null, null, null, null, null];
 
 	/**
-	 * V-Slice positions characters by their feet. Its characterOrigin is
-	 * (bounds.width / 2, bounds.height) while the atlas is drawn shifted by
-	 * -bounds.topLeft, so the point that lands on the stage position is the
-	 * bottom-centre of the whole main-timeline bounds. These are those points
-	 * (bounds.x + width / 2, bounds.y + height) measured from the V-Slice atlas
-	 * matrices and spritemap rects. Baking them means a character can be placed
-	 * while still hidden, without drawing it or touching its alpha.
+	 * Per-character offsets from the V-Slice character data (`offsets`, what Psych
+	 * calls `position`). V-Slice positions a character at `stage position -
+	 * characterOrigin`, then shifts it by these in `setScale`, so leaving them out
+	 * floats Yunjin, Kazuha, Chaewon and Eunchae hundreds of pixels above the diner.
 	 */
-	static final FEET_ORIGINS:Map<String, Array<Float>> = [
-		'sserafim-yunjin' => [449.0976602189243, 844.650798407942],
-		'sserafim-chaewon' => [532.7721099853516, 816.5062469482422],
-		'sserafim-eunchae' => [493.96503714823626, 682.1432730056346],
-		'sserafim-gf' => [1186.05, 860.5953308105469],
-		'sserafim-kazuha' => [479.36452065818014, 920.1373352050782],
-		'sserafim-sakura' => [471.2061737060547, 748.1230090137572]
+	static final CHAR_OFFSETS:Map<String, Array<Float>> = [
+		'sserafim-yunjin' => [2, 347],
+		'sserafim-kazuha' => [0, 200],
+		'sserafim-chaewon' => [0, 330],
+		'sserafim-eunchae' => [0, 260],
+		'sserafim-sakura' => [0, 0],
+		'sserafim-gf' => [0, 0]
 	];
 
 	static final LIP_ATLAS:Map<String, String> = [
@@ -470,10 +467,9 @@ class SSerafim extends BaseStage
 
 	function placeCharacter(char:Character, feetX:Float, feetY:Float):Void
 	{
-		var origin:Array<Float> = FEET_ORIGINS.get(char.curCharacter);
-		if (origin == null)
+		if (!char.isAnimateAtlas || char.atlas == null || char.atlas.anim.curInstance == null)
 		{
-			FlxG.log.warn('SSerafim: no baked feet origin for ${char.curCharacter}');
+			FlxG.log.warn('SSerafim: ${char.curCharacter} has no Animate atlas to measure');
 			return;
 		}
 
@@ -497,7 +493,61 @@ class SSerafim extends BaseStage
 			groupY = game.gfGroup.y;
 		}
 
-		char.setPosition(feetX - groupX - origin[0], feetY - groupY - origin[1]);
+		var originW:Float = char.atlas.width;
+		var originH:Float = char.atlas.height;
+		if (originW < 1 || originH < 1)
+		{
+			var measured:Array<Float> = measurePose(char);
+			if (measured == null)
+			{
+				FlxG.log.warn('SSerafim: could not measure ${char.curCharacter}, leaving it where it is');
+				return;
+			}
+			originW = measured[0];
+			originH = measured[1];
+		}
+
+		var offset:Array<Float> = CHAR_OFFSETS.get(char.curCharacter);
+		var offsetX:Float = (offset != null) ? offset[0] : 0;
+		var offsetY:Float = (offset != null) ? offset[1] : 0;
+
+		// V-Slice's Stage.hx + BaseCharacter.setScale: the pose's bottom-centre sits on
+		// the stage position, and the character's own offsets are added on top.
+		char.setPosition(feetX - groupX - originW * 0.5 + offsetX, feetY - groupY - originH + offsetY);
+	}
+
+	/**
+	 * V-Slice's characterOrigin is (pose width / 2, pose height), and flxanimate only
+	 * knows those bounds once the pose has been drawn. Draw it once at almost zero
+	 * alpha, then hand back the size and leave the sprite exactly as it was. Off-screen
+	 * limbs are still measured, only their pixels are skipped.
+	 */
+	function measurePose(char:Character):Array<Float>
+	{
+		var lastVisible:Bool = char.visible;
+		var lastAlpha:Float = char.alpha;
+
+		char.visible = true;
+		char.alpha = 0.0001;
+
+		var width:Float = 0;
+		var height:Float = 0;
+		try
+		{
+			char.copyAtlasValues();
+			char.atlas.draw();
+			width = char.atlas.width;
+			height = char.atlas.height;
+		}
+		catch (e:haxe.Exception)
+		{
+			FlxG.log.warn('SSerafim: measuring ${char.curCharacter} failed: ' + e);
+		}
+
+		char.visible = lastVisible;
+		char.alpha = lastAlpha;
+
+		return (width < 1 || height < 1) ? null : [width, height];
 	}
 
 	function hideOpponentStrums()
@@ -816,7 +866,11 @@ class SSerafim extends BaseStage
 		if (spr == null) return;
 		if (label == null) spr.anim.play('', true, false, 0);
 		else spr.playAnimation(label, true, false, false, 0);
+		// `static` and `getup` are frame labels on the cutscene's main timeline, and
+		// playAnimation only jumps to a label. Resume so the get-up actually runs
+		// (the `static` shot leaves the timeline paused).
 		if (paused) spr.anim.pause();
+		else spr.anim.resume();
 	}
 
 	function setCutsceneSpritesActive(active:Bool)
