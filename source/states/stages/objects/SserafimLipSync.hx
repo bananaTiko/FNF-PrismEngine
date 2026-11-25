@@ -64,17 +64,21 @@ class SserafimLipSync extends FlxAtlasSprite
 
 	override function update(elapsed:Float):Void
 	{
-		super.update(elapsed);
-
-		if (character == null)
+		// A mouth that cannot be seen should not walk its atlas timeline at all: there are six of
+		// these on the Spaghetti stage and the band is hidden for long stretches of the song, so
+		// skipping the flxanimate update is a real per-frame saving. Nothing is lost, because the
+		// frame is driven from the song clock the moment the mouth is visible again.
+		if (character == null || hiddenByCover || !character.visible || character.alpha <= 0.5)
 		{
 			visible = false;
 			return;
 		}
 
+		super.update(elapsed);
+
 		var animName:String = character.getAnimationName();
 		var anchor:Array<Float> = anchorFor(animName);
-		visible = !hiddenByCover && character.visible && character.alpha > 0.5 && anchor != null;
+		visible = anchor != null;
 		if (!visible) return;
 
 		var lip:Array<Float> = offsets.exists(animName) ? offsets.get(animName) : offsets.get('idle');

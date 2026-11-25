@@ -63,6 +63,17 @@ class PsychCamera extends FlxCamera
 		updateShake(elapsed);
 	}
 
+	// What the flash sprite's filter chain was last built from. OpenFL's `filters` setter has
+	// no equality check: it clones every filter and marks the display object render-dirty, so
+	// assigning it rebuilds the whole chain (and its render target) again. Doing that every
+	// frame is both a per-frame allocation and a full-screen filter pass per camera, so only
+	// touch the chain when what it should hold actually changes.
+	var appliedFilters:Array<openfl.filters.BitmapFilter> = null;
+	var appliedFiltersLength:Int = -1;
+	var appliedFiltersEnabled:Bool = false;
+	var appliedColorblind:String = null;
+	var filtersApplied:Bool = false;
+
 	/**
 	 * Camera filters plus the colourblind filter, which is a display option rather than part of
 	 * the stage, so it has to survive whatever a stage puts in `filters`.
@@ -70,7 +81,20 @@ class PsychCamera extends FlxCamera
 	function updateCameraFilters():Void
 	{
 		var base:Array<openfl.filters.BitmapFilter> = (filtersEnabled ? filters : null);
-		var colorblind:openfl.filters.BitmapFilter = shaders.ColorblindShader.filterFor(ClientPrefs.data.colorblind);
+		var baseLength:Int = (base == null) ? -1 : base.length;
+		var colorblindMode:String = ClientPrefs.data.colorblind;
+
+		if (filtersApplied && base == appliedFilters && baseLength == appliedFiltersLength
+			&& filtersEnabled == appliedFiltersEnabled && colorblindMode == appliedColorblind)
+			return;
+
+		filtersApplied = true;
+		appliedFilters = base;
+		appliedFiltersLength = baseLength;
+		appliedFiltersEnabled = filtersEnabled;
+		appliedColorblind = colorblindMode;
+
+		var colorblind:openfl.filters.BitmapFilter = shaders.ColorblindShader.filterFor(colorblindMode);
 
 		if (colorblind != null)
 		{
