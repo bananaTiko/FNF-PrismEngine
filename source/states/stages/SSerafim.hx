@@ -130,6 +130,8 @@ class SSerafim extends BaseStage
 	var stageShader:SserafimShader;
 	var characterShader:SserafimShader;
 
+	var shaderAttached:Bool = true;
+
 	var lightsEnabled:Bool = false;
 	var lightsColors:Array<Int> = [];
 	var lightsDurations:Array<Float> = [];
@@ -1249,9 +1251,41 @@ class SSerafim extends BaseStage
 		});
 	}
 
+	/**
+	 * The shader's neutral state is identity, but every sprite that carries it is drawn through
+	 * the per-sprite shader path instead of Flixel's default one. This stage can be in that state
+	 * for long stretches, so the shader is only attached while it would actually change a pixel.
+	 */
+	static function isNeutralShader(shader:SserafimShader):Bool
+	{
+		return shader.darkenAmount == 0 && shader.pulseLightStrength == 0 && shader.truckLightStrength == 0
+			&& shader.baseHue == 0 && shader.baseSaturation == 0 && shader.baseBrightness == 0 && shader.baseContrast == 0;
+	}
+
+	function updateShaderAttach():Void
+	{
+		var neutral:Bool = isNeutralShader(stageShader) && isNeutralShader(characterShader);
+		if (neutral == !shaderAttached) return;
+		shaderAttached = !neutral;
+
+		for (spr in [bg, backTables, backStools, truck, truckDoor, frontStool, counterStretch, burgerCutscene])
+			spr.shader = neutral ? null : stageShader;
+		perspectiveFloor.sprite.shader = neutral ? null : stageShader;
+		for (d in dust)
+			d.shader = neutral ? null : stageShader;
+		for (char in band)
+			if (char != null) char.shader = neutral ? null : characterShader;
+		for (mouth in mouths)
+			if (mouth != null) mouth.shader = neutral ? null : characterShader;
+		for (spr in [cutsceneMain, cutsceneGf, cutsceneBf])
+			if (spr != null) spr.shader = neutral ? null : characterShader;
+	}
+
 	override function update(elapsed:Float)
 	{
 		if (game == null || game.controls == null) return;
+
+		updateShaderAttach();
 
 		if (perspectiveFloor != null && camGame != null) perspectiveFloor.updateSkew(camGame);
 

@@ -35,6 +35,9 @@ class SserafimShader extends ErrorHandledShader
 	public var baseBrightness(default, set):Float;
 	public var baseContrast(default, set):Float;
 
+	/** The pulse light's colour after the HSL round trip, ready for the shader. */
+	var pulseColorValue:Array<Float>;
+
 	/** Sets all four "Adjust Color" values at once. */
 	public function setAdjustColor(brightness:Float, hue:Float, contrast:Float, saturation:Float):Void
 	{
@@ -82,15 +85,81 @@ class SserafimShader extends ErrorHandledShader
 	function set_pulseLightColor(col:FlxColor):FlxColor
 	{
 		pulseLightColor = col;
-		lightColor.value = [col.red / 255, col.green / 255, col.blue / 255];
+		updatePulseColor();
 		return col;
 	}
 
 	function set_pulseLightStrength(val:Float):Float
 	{
 		pulseLightStrength = val;
-		pulseStrength.value = [val];
+		updatePulseColor();
 		return val;
+	}
+
+	/**
+	 * The shader used to scale the light colour in HSL space for every single pixel, which is the
+	 * most expensive thing it did, and the light colour is one uniform for the whole sprite. The
+	 * maths is done here instead, once per change, and the result goes to the shader as a colour.
+	 */
+	function updatePulseColor():Void
+	{
+		if (pulseLightStrength <= 0)
+		{
+			pulseColorValue = [0, 0, 0];
+			pulseColor.value = pulseColorValue;
+			return;
+		}
+
+		var r:Float = pulseLightColor.red / 255;
+		var g:Float = pulseLightColor.green / 255;
+		var b:Float = pulseLightColor.blue / 255;
+
+		// rgb2hsl
+		var cMin:Float = Math.min(Math.min(r, g), b);
+		var cMax:Float = Math.max(Math.max(r, g), b);
+		var delta:Float = cMax - cMin;
+		var lightness:Float = (cMax + cMin) * 0.5;
+		var hue:Float = 0;
+		var saturation:Float = 0;
+
+		if (delta != 0)
+		{
+			saturation = (lightness < 0.5) ? delta / (cMax + cMin) : delta / (2 - cMax - cMin);
+
+			var dr:Float = (((cMax - r) / 6) + (delta / 2)) / delta;
+			var dg:Float = (((cMax - g) / 6) + (delta / 2)) / delta;
+			var db:Float = (((cMax - b) / 6) + (delta / 2)) / delta;
+
+			if (r == cMax) hue = db - dg;
+			else if (g == cMax) hue = (1 / 3) + dr - db;
+			else hue = (2 / 3) + dg - dr;
+
+			hue -= Math.floor(hue);
+		}
+
+		// hsl2rgb, with the lightness scaled by how strong the light is
+		lightness *= pulseLightStrength;
+
+		if (saturation == 0)
+			pulseColorValue = [lightness, lightness, lightness];
+		else
+		{
+			var q:Float = (lightness < 0.5) ? lightness * (1 + saturation) : lightness + saturation - lightness * saturation;
+			var p:Float = 2 * lightness - q;
+			var f:Float = hue * 6;
+			pulseColorValue = [
+				p + clamp01(Math.abs(f - 3) - 1) * (q - p),
+				p + clamp01(2 - Math.abs(f - 2)) * (q - p),
+				p + clamp01(2 - Math.abs(f - 4)) * (q - p)
+			];
+		}
+
+		pulseColor.value = pulseColorValue;
+	}
+
+	static inline function clamp01(value:Float):Float
+	{
+		return value < 0 ? 0 : (value > 1 ? 1 : value);
 	}
 
 	function set_truckLightStrength(val:Float):Float
@@ -116,7 +185,7 @@ class SserafimShader extends ErrorHandledShader
 		uniform float contrast;
 
 		uniform float darkAmt;
-		uniform vec3 lightColor;
+		uniform vec3 pulseColor;
 		uniform float pulseStrength;
 		uniform float truckStrength;
 		uniform bool isChar;
@@ -160,58 +229,6 @@ class SserafimShader extends ErrorHandledShader
 			return color;
 		}
 
-		#define saturate(v) clamp(v,0.,1.)
-
-		vec3 hue2rgb(float hue){
-			hue=fract(hue);
-			return saturate(vec3(
-				abs(hue*6.-3.)-1.,
-				2.-abs(hue*6.-2.),
-				2.-abs(hue*6.-4.)
-			));
-		}
-
-		vec3 rgb2hsl(vec3 c){
-			float cMin=min(min(c.r,c.g),c.b),
-			cMax=max(max(c.r,c.g),c.b),
-			delta=cMax-cMin;
-			vec3 hsl=vec3(0.,0.,(cMax+cMin)/2.);
-			if(delta!=0.0){
-				if(hsl.z<.5){
-					hsl.y=delta/(cMax+cMin);
-				}else{
-					hsl.y=delta/(2.-cMax-cMin);
-				}
-				float deltaR=(((cMax-c.r)/6.)+(delta/2.))/delta,
-				deltaG=(((cMax-c.g)/6.)+(delta/2.))/delta,
-				deltaB=(((cMax-c.b)/6.)+(delta/2.))/delta;
-				if(c.r==cMax){
-					hsl.x=deltaB-deltaG;
-				}else if(c.g==cMax){
-					hsl.x=(1./3.)+deltaR-deltaB;
-				}else{
-					hsl.x=(2./3.)+deltaG-deltaR;
-				}
-				hsl.x=fract(hsl.x);
-			}
-			return hsl;
-		}
-
-		vec3 hsl2rgb(vec3 hsl){
-			if(hsl.y==0.){
-				return vec3(hsl.z);
-			}else{
-				float b;
-				if(hsl.z<.5){
-					b=hsl.z*(1.+hsl.y);
-				}else{
-					b=hsl.z+hsl.y-hsl.y*hsl.z;
-				}
-				float a=2.*hsl.z-b;
-				return a+hue2rgb(hsl.x)*(b-a);
-			}
-		}
-
 		// controls how much to brighten/darken depending on combinedAlpha.
 		const float lightMultiplier = 0.07;
 
@@ -244,16 +261,9 @@ class SserafimShader extends ErrorHandledShader
 
 			vec3 multiplyColor;
 
-			vec3 bruhColor = vec3(0.0);
-			if (pulseStrength > 0.0)
-			{
-				// At full dark the pulse light collapses to black, so the round trip is skipped
-				// while the pulse is off.
-				bruhColor = lightColor;
-				bruhColor = rgb2hsl(bruhColor);
-				bruhColor.b = bruhColor.b * pulseStrength;
-				bruhColor = hsl2rgb(bruhColor);
-			}
+			// Already HSL-scaled on the CPU: the light colour is the same for every pixel, so
+			// there is no reason to convert it per pixel here.
+			vec3 bruhColor = pulseColor;
 
 			if(isChar == true){
 				multiplyColor = mix(vec3(1.0, 1.0, 1.0), vec3(0.0, 0.0, 0.0), darkFactor/5.0);
@@ -283,5 +293,8 @@ class SserafimShader extends ErrorHandledShader
 		baseSaturation = 0;
 		baseBrightness = 0;
 		baseContrast = 0;
+
+		pulseColorValue = [0, 0, 0];
+		pulseColor.value = pulseColorValue;
 	}
 }
