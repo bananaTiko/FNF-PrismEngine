@@ -5,6 +5,7 @@ import backend.animation.PsychAnimationController;
 import flixel.util.FlxSort;
 import flixel.util.FlxDestroyUtil;
 
+import openfl.display.BlendMode;
 import openfl.utils.AssetType;
 import openfl.utils.Assets;
 import haxe.Json;
@@ -88,6 +89,14 @@ class Character extends FlxSprite
 	public var hasMissAnimations:Bool = false;
 	public var vocalsFile:String = '';
 
+	// Otis (the Stress speaker) fires a muzzle flash from V-Slice, drawn behind him.
+	var muzzleFlash:FlxSprite;
+	var muzzleFlashDir:Int = 1;
+	// Where the flash belongs in each shoot animation, in Otis' own art pixels, measured
+	// from the muzzle in V-Slice's sheet ('shoot back', 'shoot back low', 'shoot forward',
+	// 'shoot forward low').
+	static var MUZZLE_FLASH_OFFSETS:Array<Array<Float>> = [[496, 1], [439, 34], [-264, 80], [-238, -13]];
+
 	// Scripts loaded for this character by PlayState.startCharacterScripts
 	#if LUA_ALLOWED
 	public var luaScripts:Array<FunkinLua> = [];
@@ -133,6 +142,7 @@ class Character extends FlxSprite
 			case 'otis-speaker': // same shooter behaviour, but he still bops
 				loadMappedAnims();
 				playAnim("shoot1");
+				setupMuzzleFlash();
 			case 'pico-blazin', 'darnell-blazin':
 				skipDance = true;
 		}
@@ -377,8 +387,10 @@ class Character extends FlxSprite
 
 					noteData += FlxG.random.int(0, 1);
 					playAnim('shoot' + noteData, true);
+					if(curCharacter == 'otis-speaker') playMuzzleFlash(noteData);
 					animationNotes.shift();
 				}
+				if(curCharacter == 'otis-speaker') updateMuzzleFlash(elapsed);
 				if(isAnimationFinished()) playAnim(getAnimationName(), false, false, animation.curAnim.frames.length - 3);
 		}
 
@@ -551,6 +563,56 @@ class Character extends FlxSprite
 		}
 	}
 
+	/** V-Slice keeps Otis' muzzle flash in its own sprite, behind the character. */
+	function setupMuzzleFlash():Void
+	{
+		muzzleFlash = new FlxSprite();
+		muzzleFlash.frames = Paths.getSparrowAtlas('characters/otis/muzzle-flashes/otis_flashes');
+		muzzleFlash.animation.addByPrefix('shoot1', 'shoot back0', 24, false);
+		muzzleFlash.animation.addByPrefix('shoot2', 'shoot back low0', 24, false);
+		muzzleFlash.animation.addByPrefix('shoot3', 'shoot forward0', 24, false);
+		muzzleFlash.animation.addByPrefix('shoot4', 'shoot forward low0', 24, false);
+		muzzleFlash.antialiasing = ClientPrefs.data.antialiasing;
+		muzzleFlash.blend = BlendMode.ADD;
+		muzzleFlash.visible = false;
+	}
+
+	public function playMuzzleFlash(dir:Int):Void
+	{
+		if(muzzleFlash == null) return;
+
+		muzzleFlashDir = (dir < 1 || dir > 4) ? 1 : dir;
+		muzzleFlash.blend = BlendMode.ADD;
+		muzzleFlash.visible = true;
+		muzzleFlash.animation.play('shoot' + muzzleFlashDir, true);
+	}
+
+	function updateMuzzleFlash(elapsed:Float):Void
+	{
+		if(muzzleFlash == null || !muzzleFlash.visible) return;
+
+		// The sprite is drawn by its character, not by a state, so it advances here.
+		muzzleFlash.update(elapsed);
+
+		var curAnim = muzzleFlash.animation.curAnim;
+		if(curAnim == null) return;
+
+		// Only the first frames of the flash are additive, as in V-Slice.
+		if(curAnim.curFrame > 1) muzzleFlash.blend = BlendMode.NORMAL;
+		if(curAnim.finished) muzzleFlash.visible = false;
+	}
+
+	function drawMuzzleFlash():Void
+	{
+		if(muzzleFlash == null || !muzzleFlash.visible || !visible) return;
+
+		var flashOffset:Array<Float> = MUZZLE_FLASH_OFFSETS[muzzleFlashDir - 1];
+		muzzleFlash.setPosition(x - offset.x + flashOffset[0] * scale.x, y - offset.y + flashOffset[1] * scale.y);
+		muzzleFlash.scrollFactor.copyFrom(scrollFactor);
+		muzzleFlash.alpha = alpha;
+		muzzleFlash.draw();
+	}
+
 	function loadMappedAnims():Void
 	{
 		try
@@ -654,6 +716,7 @@ class Character extends FlxSprite
 			}
 			return;
 		}
+		drawMuzzleFlash();
 		super.draw();
 		if(missingCharacter && visible)
 		{
