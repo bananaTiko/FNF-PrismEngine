@@ -223,10 +223,10 @@ class SSerafim extends BaseStage
 		// own tint while the diner darkens.
 
 		// V-Slice cancels the countdown to play the intro whatever mode the song was
-		// launched in, so Freeplay gets the cutscene too; only a retry skips it, since
-		// that resumes from the wrecked diner instead of replaying the whole thing.
+		// launched in. Freeplay skips it here so a test run does not sit through the
+		// cutscene every time; a retry resumes from the wrecked diner either way.
 		retryResume = PlayState.retrying;
-		if (!retryResume) setStartCallback(startIntroCutscene);
+		if (isStoryMode && !seenCutscene && !retryResume) setStartCallback(startIntroCutscene);
 	}
 
 	function makeDust(image:String, x:Float, y:Float, scroll:Float, scale:Float, alpha:Float, velX:Float, color:Int):FlxBackdrop
