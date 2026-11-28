@@ -408,12 +408,25 @@ class DialogueBoxPsych extends FlxSpriteGroup
 	}
 
 	public static function parseDialogue(path:String):DialogueFile {
-		var parsed:DialogueFile = null;
+		var raw:String = null;
 		#if MODS_ALLOWED
-		parsed = (FileSystem.exists(path)) ? Json.parse(File.getContent(path)) : dummy();
-		#else
-		parsed = (Assets.exists(path, TEXT)) ? Json.parse(Assets.getText(path)) : dummy();
+		if (FileSystem.exists(path)) raw = File.getContent(path);
 		#end
+		//A build can keep the data in the asset package instead of on disk, in which case
+		//the path in `data/` only answers through Assets.
+		if (raw == null) {
+			try raw = Assets.getText(path) catch(e:Dynamic) raw = null;
+		}
+		return parseDialogueText(raw, path);
+	}
+
+	/** Parses dialogue JSON that was already read, for callers that can load it either way. */
+	public static function parseDialogueText(rawData:String, ?path:String):DialogueFile {
+		var parsed:DialogueFile = null;
+		if (rawData != null && rawData.length > 0) {
+			try parsed = Json.parse(rawData) catch(e:Dynamic) parsed = null;
+		}
+		if (parsed == null) parsed = dummy();
 		translateDialogue(parsed, path);
 		return parsed;
 	}

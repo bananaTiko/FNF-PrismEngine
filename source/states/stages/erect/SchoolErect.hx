@@ -80,7 +80,9 @@ class SchoolErect extends BaseStage
 			case 'roses-(pico-mix)' | 'roses-erect':
 				FlxG.sound.play(Paths.sound('ANGRY_TEXT_BOX'));
 		}
-		if (!seenCutscene && (songName.endsWith("(pico-mix)") || isStoryMode))
+		//The Pico Mix intro belongs to freeplay, so it plays every time the song is picked.
+		//Story Mode keeps its once-per-playthrough rule.
+		if (songName.endsWith("(pico-mix)") || (isStoryMode && !seenCutscene))
 		{
 			var cutscene = new SchoolDoof(songName);
 			if(songName == 'roses-(pico-mix)' || songName == "roses-erect") {

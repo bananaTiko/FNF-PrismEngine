@@ -5,6 +5,7 @@ import backend.VsliceOptions;
 import cutscenes.CutsceneHandler;
 import cutscenes.DialogueBoxPsych;
 import cutscenes.DialogueBoxPsych.DialogueFile;
+import openfl.utils.Assets;
 
 class SchoolDoof
 {
@@ -28,11 +29,30 @@ class SchoolDoof
 		for (path in candidates)
 		{
 			var file:String = Paths.json(path);
-			if (file == null || !FileSystem.exists(file))
+			if (file == null)
 				continue;
-			dialogue = DialogueBoxPsych.parseDialogue(file);
+
+			var raw:String = readDialogueFile(file);
+			if (raw == null)
+				continue;
+
+			dialogue = DialogueBoxPsych.parseDialogueText(raw, file);
 			return;
 		}
+	}
+
+	/**
+	 * P-Slice reads these through NativeFileSystem, which checks the asset package as well as
+	 * the filesystem. Only checking the filesystem misses `assets/shared/...` whenever the
+	 * build keeps the data packed or the game is started from somewhere else, and the intro
+	 * was just quietly skipped.
+	 */
+	static function readDialogueFile(path:String):String
+	{
+		#if sys
+		if (FileSystem.exists(path)) return File.getContent(path);
+		#end
+		try return Assets.getText(path) catch (e:Dynamic) return null;
 	}
 
 	public function doSimpleDialogue()
