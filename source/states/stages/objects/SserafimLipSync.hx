@@ -12,6 +12,13 @@ import objects.FlxAtlasSprite;
  */
 class SserafimLipSync extends FlxAtlasSprite
 {
+	// Both lip-sync atlases (yunjin's included) place their mouth at this spot inside
+	// their own canvas, and flxanimate applies that translation to every frame it
+	// draws. Feeding it back in as the sprite origin cancels it, which puts the
+	// mouth's pivot exactly on the pose anchor below; leave it out and every mouth
+	// renders ~275px right and 200px under its face.
+	static final ATLAS_MOUTH_POS:Array<Float> = [274.95, 200];
+
 	public var character:Character;
 	public var singing:Bool = false;
 	// The stage's black cover sits above everything in V-Slice, mouths included.
@@ -30,6 +37,7 @@ class SserafimLipSync extends FlxAtlasSprite
 			?alpha:Float = 1.0, ?flip:Bool = false)
 	{
 		super(0, 0, path);
+		origin.set(ATLAS_MOUTH_POS[0], ATLAS_MOUTH_POS[1]);
 		this.character = character;
 		this.anchors = anchors;
 		this.offsets = offsets;
