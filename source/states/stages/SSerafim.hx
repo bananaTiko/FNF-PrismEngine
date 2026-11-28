@@ -2,6 +2,8 @@ package states.stages;
 
 import flixel.addons.display.FlxBackdrop;
 import flixel.text.FlxText;
+import flxanimate.PsychFlxAnimate;
+import flxanimate.animate.FlxKeyFrame;
 import objects.Character;
 import objects.FlxAtlasSprite;
 import objects.Note;
@@ -72,17 +74,9 @@ class SSerafim extends BaseStage
 		'sserafim-gf' => 'sserafim/sserafim-lipsync'
 	];
 
-	// Mouth anchors inside each character atlas (x, y, rotation), taken from the
-	// "mouth" symbol each pose nests, and the per-animation offsets V-Slice's
-	// character scripts apply to the mouth sprite.
-	static final LIP_ANCHORS:Map<String, Map<String, Array<Float>>> = [
-		'sserafim-yunjin' => ['idle' => [545.8, 373.3, 1.56], 'left' => [498.1, 362.4, -6.34], 'right' => [581.7, 365.4, -9.88], 'up' => [545.1, 344.8, -12.39], 'down' => [534.1, 385.7, -0.62]],
-		'sserafim-chaewon' => ['idle' => [530.2, 331.1, 172.93], 'left' => [510.8, 332.8, 173.22], 'right' => [551.9, 310.1, 166.67], 'up' => [537.8, 300.3, 163.85], 'down' => [530.4, 333.8, 178.33]],
-		'sserafim-eunchae' => ['idle' => [661.2, 293.2, -174.04], 'left' => [637.2, 286.5, -172.65], 'right' => [683.1, 280.3, -178.28], 'up' => [662.3, 290.2, -160.55], 'down' => [641.9, 285.6, 175.6]],
-		'sserafim-kazuha' => ['idle' => [514.0, 241.1, -3.66], 'left' => [480.6, 227.4, 1.82], 'right' => [541.6, 233.5, 6.36], 'up' => [509.2, 197.6, 9.99], 'down' => [516.9, 258.7, -7.09]],
-		'sserafim-sakura' => ['idle' => [431.3, 198.8, 3.77], 'left' => [418.2, 193.1, 9.56], 'right' => [465.4, 180.9, 7.78], 'up' => [449.9, 156.2, 15.73], 'down' => [425.4, 211.8, 2.2], 'singUP-joint' => [490.3, 157.0, 18.48], 'singRIGHT-joint' => [463.6, 181.6, 3.77], 'singDOWN-joint' => [403.4, 225.9, 1.63], 'singLEFT-joint' => [419.2, 195.2, 9.47]]
-	];
-
+	// The per-animation offsets V-Slice's character scripts apply to the mouth sprite.
+	// The atlas itself places the mouth, on the "mouth" symbol each pose nests (see
+	// objects.SpriteElement), so these are only the nudge from there and the angle on top.
 	static final LIP_OFFSETS:Map<String, Map<String, Array<Float>>> = [
 		'sserafim-yunjin' => ['idle' => [8, 6, 23], 'up' => [6, 8, 22], 'right' => [6, 8, 23], 'down' => [8, 6, 23], 'left' => [6, 8, 23]],
 		'sserafim-chaewon' => ['idle' => [41, 3, -166], 'up' => [38, 0, -168], 'right' => [39, 1, -165], 'down' => [41, 3, -167], 'left' => [40, 2, -165]],
@@ -298,13 +292,10 @@ class SSerafim extends BaseStage
 			if (char == null) continue;
 			char.skipSing = true; // clear until an sserafimSing event says otherwise
 
-			// V-Slice replaces these characters' built-in mouths with the animated
-			// lip-sync sprite and hides the static mouth so it doesn't show underneath.
-			switch (char.curCharacter)
-			{
-				case 'sserafim-eunchae': char.hideAtlasSymbol('mouth default');
-				case 'sserafim-sakura': char.hideAtlasSymbol('mouth edit');
-			}
+			// V-Slice replaces these characters' drawn mouths with the animated lip-sync
+			// sprite. The mouth symbols stay (that's what the sprite is drawn on), only the
+			// drawing inside them goes.
+			hideMouthArt(char);
 		}
 
 		placeBand();
@@ -360,6 +351,31 @@ class SSerafim extends BaseStage
 		if (retryResume) resumeAfterRetry();
 	}
 
+	/**
+	 * Takes the drawn mouth out of a character's atlas. The `mouth` symbols keep their place in the
+	 * poses, so only the art inside them is hidden and the lip-sync sprite shows through instead.
+	 */
+	function hideMouthArt(char:Character):Void
+	{
+		if (char == null || char.atlas == null || char.atlas.anim == null || char.atlas.anim.symbolDictionary == null) return;
+
+		for (name => symbol in char.atlas.anim.symbolDictionary)
+		{
+			if (symbol == null || symbol.timeline == null || name.indexOf('mouth') < 0) continue;
+
+			for (layer in symbol.timeline.getList())
+			{
+				@:privateAccess
+				for (frame in layer._keyframes)
+				{
+					if (frame == null) continue;
+					for (element in frame.getList())
+						if (element != null && element.symbol == null) element.visible = false; //the drawing, not the mouths put on it
+				}
+			}
+		}
+	}
+
 	function createLipSyncs():Void
 	{
 		var ids:Array<String> = ['sserafim-yunjin', 'sserafim-kazuha', 'sserafim-chaewon', 'sserafim-eunchae', 'sserafim-sakura', 'sserafim-gf'];
@@ -367,16 +383,26 @@ class SSerafim extends BaseStage
 		{
 			var char:Character = band[i];
 			var id:String = ids[i];
-			if (char == null || !LIP_ANCHORS.exists(id)) continue;
+			if (char == null || !LIP_OFFSETS.exists(id) || char.atlas == null) continue;
 
 			try
 			{
 				// Chaewon's mouth is drawn at half alpha, like her V-Slice script; kazuha and
 				// Sakura share the flipped mouth atlas.
-				var lip:SserafimLipSync = new SserafimLipSync(char, LIP_ATLAS.get(id), LIP_ANCHORS.get(id), LIP_OFFSETS.get(id), groupOffsetX(char),
-					groupOffsetY(char), id == 'sserafim-chaewon' ? 0.5 : 1.0, id == 'sserafim-kazuha' || id == 'sserafim-sakura');
-				lip.shader = characterShader;
-				add(lip);
+				var lip:SserafimLipSync = new SserafimLipSync(char, LIP_ATLAS.get(id), LIP_OFFSETS.get(id),
+					id == 'sserafim-chaewon' ? 0.5 : 1.0, id == 'sserafim-kazuha' || id == 'sserafim-sakura');
+
+				// V-Slice doesn't draw the mouths itself: it puts them on the atlas' mouth
+				// symbols, which is where the pose that's showing has the face. The mouths
+				// aren't added to the stage, the characters' atlases draw them.
+				var atlas:PsychFlxAnimate = cast char.atlas;
+				var frames:Array<FlxKeyFrame> = atlas.getFramesWithKeyword('mouth');
+				if (frames.length < 1)
+				{
+					FlxG.log.warn('Spaghetti: ${char.curCharacter} has no mouth symbol to put its lip sync on');
+					continue;
+				}
+				atlas.addPlacedSprite(frames, lip);
 				mouths[i] = lip;
 			}
 			catch (e:Dynamic)
@@ -393,22 +419,6 @@ class SSerafim extends BaseStage
 		if (dad != null) dad.skipSing = !singFlags[1];
 		for (i in 0...mouths.length)
 			if (mouths[i] != null) mouths[i].singing = singFlags[i];
-	}
-
-	function groupOffsetX(char:Character):Float
-	{
-		if (char == boyfriend && game.boyfriendGroup != null) return game.boyfriendGroup.x;
-		if (char == dad && game.dadGroup != null) return game.dadGroup.x;
-		if (char == gf && game.gfGroup != null) return game.gfGroup.x;
-		return 0;
-	}
-
-	function groupOffsetY(char:Character):Float
-	{
-		if (char == boyfriend && game.boyfriendGroup != null) return game.boyfriendGroup.y;
-		if (char == dad && game.dadGroup != null) return game.dadGroup.y;
-		if (char == gf && game.gfGroup != null) return game.gfGroup.y;
-		return 0;
 	}
 
 	/**
@@ -1305,8 +1315,6 @@ class SSerafim extends BaseStage
 		perspectiveFloor.sprite.shader = neutral ? null : stageShader;
 		for (char in band)
 			if (char != null) char.shader = neutral ? null : characterShader;
-		for (mouth in mouths)
-			if (mouth != null) mouth.shader = neutral ? null : characterShader;
 		for (spr in [cutsceneMain, cutsceneGf, cutsceneBf])
 			if (spr != null) spr.shader = neutral ? null : characterShader;
 	}
@@ -1325,9 +1333,14 @@ class SSerafim extends BaseStage
 			game.opponentStrums.visible = false;
 		}
 
-		var covered:Bool = cover != null && cover.alpha > 0.01;
+		// The mouths are drawn by the characters' atlases, so they aren't in the state and nothing
+		// updates them: the pose they follow and the frame the song is on are set here.
 		for (mouth in mouths)
-			if (mouth != null) mouth.hiddenByCover = covered;
+		{
+			if (mouth == null) continue;
+			mouth.applyPose(mouth.character.getAnimationName());
+			mouth.advance();
+		}
 		if (cutscenePlaying && !cutsceneSkipped)
 		{
 			if (game.controls.ACCEPT && cutsceneSkipAllowed)

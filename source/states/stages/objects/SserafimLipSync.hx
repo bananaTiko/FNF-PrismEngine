@@ -1,108 +1,53 @@
 package states.stages.objects;
 
+import flixel.FlxSprite;
 import objects.Character;
 import objects.FlxAtlasSprite;
 
 /**
  * One of Spaghetti's lip-sync mouths.
  *
- * V-Slice attaches these to the character atlas' mouth symbols. Psych's flxanimate
- * has no sprite elements inside atlas keyframes, so the mouth is drawn as its own
- * sprite at the anchor the character's current pose gives it.
+ * V-Slice puts these inside the character atlas: each pose has a `mouth` symbol where the mouth goes, and the sprite is drawn
+ * on that symbol's coordinates (see `objects.SpriteElement`), so it needs no position of its own on the stage. What's left is
+ * the small per-pose offset and angle the character's script gives the mouth, and the frame the song is on.
  */
 class SserafimLipSync extends FlxAtlasSprite
 {
-	// Both lip-sync atlases (yunjin's included) place their mouth at this spot inside
-	// their own canvas, and flxanimate applies that translation to every frame it
-	// draws. Feeding it back in as the sprite origin cancels it, which puts the
-	// mouth's pivot exactly on the pose anchor below; leave it out and every mouth
-	// renders ~275px right and 200px under its face.
-	static final ATLAS_MOUTH_POS:Array<Float> = [274.95, 200];
-
 	public var character:Character;
 	public var singing:Bool = false;
-	// The stage's black cover sits above everything in V-Slice, mouths included.
-	public var hiddenByCover:Bool = false;
 
-	// animation name -> [x, y, angle] in the character atlas' own coordinates
-	final anchors:Map<String, Array<Float>>;
-	// animation name -> [offsetX, offsetY, angle] from the character's script
+	// animation name -> [offsetX, offsetY, angle], V-Slice's `SserafimLipSyncPose`
 	final offsets:Map<String, Array<Float>>;
-	// BF, dad and GF sit inside PlayState's sprite groups, so the mouth has to add
-	// the group's offset to their local position.
-	final parentX:Float;
-	final parentY:Float;
+	var posedFor:String = null;
 
-	public function new(character:Character, path:String, anchors:Map<String, Array<Float>>, offsets:Map<String, Array<Float>>, parentX:Float = 0, parentY:Float = 0,
-			?alpha:Float = 1.0, ?flip:Bool = false)
+	public function new(character:Character, path:String, offsets:Map<String, Array<Float>>, ?alpha:Float = 1.0, ?flip:Bool = false)
 	{
 		super(0, 0, path);
-		origin.set(ATLAS_MOUTH_POS[0], ATLAS_MOUTH_POS[1]);
 		this.character = character;
-		this.anchors = anchors;
 		this.offsets = offsets;
-		this.parentX = parentX;
-		this.parentY = parentY;
 		this.alpha = alpha;
 		if (flip) flipX = true;
-		visible = false;
 	}
 
-	function anchorFor(anim:String):Array<Float>
+	/** The pose the character is on decides where the mouth sits on its face, and how it's turned. */
+	public function applyPose(anim:String):Void
 	{
-		if (anim == null) return null;
+		if (anim == posedFor) return;
+		posedFor = anim;
 
-		// Joint poses put the mouth somewhere else, so they carry their own anchor.
-		if (anchors.exists(anim)) return anchors.get(anim);
+		// Miss poses fall back to the idle numbers, like the character script's own switch does.
+		var lip:Array<Float> = (anim != null && offsets.exists(anim)) ? offsets.get(anim) : offsets.get('idle');
+		if (lip == null) return;
 
-		// The bf1/bf2 poses only draw BF with a static mouth, and the joint miss poses
-		// have no mouth symbol at all, so V-Slice never attaches Sakura's lip-sync
-		// sprite to those frames.
-		if (anim.indexOf('-bf1') != -1 || anim.indexOf('-bf2') != -1 || (anim.indexOf('-joint') != -1 && anim.indexOf('miss') != -1)) return null;
-
-		var key:String = null;
-		if (anim == 'idle' || anim == 'danceLeft' || anim == 'danceRight') key = 'idle';
-		else if (anim.indexOf('LEFT') != -1) key = 'left';
-		else if (anim.indexOf('DOWN') != -1) key = 'down';
-		else if (anim.indexOf('UP') != -1) key = 'up';
-		else if (anim.indexOf('RIGHT') != -1) key = 'right';
-
-		return key == null ? null : anchors.get(key);
+		x = lip[0];
+		y = lip[1];
+		angle = lip[2];
 	}
 
-	override function update(elapsed:Float):Void
+	/** V-Slice flaps the mouth at 24fps straight from the song clock. */
+	public function advance():Void
 	{
-		// A mouth that cannot be seen should not walk its atlas timeline at all: there are six of
-		// these on the Spaghetti stage and the band is hidden for long stretches of the song, so
-		// skipping the flxanimate update is a real per-frame saving. Nothing is lost, because the
-		// frame is driven from the song clock the moment the mouth is visible again.
-		if (character == null || hiddenByCover || !character.visible || character.alpha <= 0.5)
-		{
-			visible = false;
-			return;
-		}
-
-		super.update(elapsed);
-
-		var animName:String = character.getAnimationName();
-		var anchor:Array<Float> = anchorFor(animName);
-		visible = anchor != null;
-		if (!visible) return;
-
-		var lip:Array<Float> = offsets.exists(animName) ? offsets.get(animName) : offsets.get('idle');
-
-		scale.set(character.scale.x, character.scale.y);
-		scrollFactor.set(character.scrollFactor.x, character.scrollFactor.y);
-		angle = character.angle + anchor[2] + (lip != null ? lip[2] : 0);
-		if (lip != null) offset.set(lip[0], lip[1]);
-
-		x = parentX + character.x + anchor[0] * character.scale.x;
-		y = parentY + character.y + anchor[1] * character.scale.y;
-
-		if (anim == null || anim.curInstance == null) return;
-
-		// V-Slice flaps the mouth at 24 fps straight from the song clock.
-		if (singing) anim.curFrame = Std.int(Conductor.songPosition / 1000 * 24) - 1;
-		else anim.curFrame = 0;
+		if (anim == null || anim.curInstance == null || anim.curSymbol == null) return;
+		anim.curFrame = singing ? Std.int(Conductor.songPosition / 1000 * 24) - 1 : 0;
 	}
 }
