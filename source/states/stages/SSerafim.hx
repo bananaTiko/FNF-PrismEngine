@@ -219,7 +219,8 @@ class SSerafim extends BaseStage
 		for (spr in [bg, backTables, backStools, truck, truckDoor, frontStool, counterStretch, burgerCutscene])
 			spr.shader = stageShader;
 		perspectiveFloor.sprite.shader = stageShader;
-		for (d in dust) d.shader = stageShader;
+		// V-Slice never gives the dust backdrops the stage shader, so they keep their
+		// own tint while the diner darkens.
 
 		// V-Slice cancels the countdown to play the intro. setStartCallback runs in its
 		// place, and the intro starts the countdown once it is done. Like V-Slice, the
@@ -323,12 +324,16 @@ class SSerafim extends BaseStage
 		cover = makeOverlay(FlxColor.BLACK);
 		add(cover);
 
+		// V-Slice draws the end cards on its static cutscene camera, not the gameplay
+		// one: on camGame the camera is still zoomed to 0.55 and scrolled to the diner,
+		// so a screen-centred card ends up off screen. camOther never moves.
 		seeYou1 = new BGSprite('sserafim/end/end-1', 0, 0, 0, 0);
 		seeYou1.scale.set(0.67, 0.67);
 		seeYou1.updateHitbox();
 		seeYou1.screenCenter();
 		seeYou1.visible = false;
 		add(seeYou1);
+		seeYou1.cameras = [camOther];
 
 		seeYou2 = new BGSprite('sserafim/end/end-2', 0, 0, 0, 0);
 		seeYou2.scale.set(0.67, 0.67);
@@ -336,6 +341,7 @@ class SSerafim extends BaseStage
 		seeYou2.setPosition(FlxG.width - 40 - seeYou2.width, FlxG.height - 40 - seeYou2.height);
 		seeYou2.visible = false;
 		add(seeYou2);
+		seeYou2.cameras = [camOther];
 
 		skipText = new FlxText(936, 618, 0, 'Skip [ ACCEPT ]', 40);
 		skipText.setFormat(Paths.font('vcr.ttf'), 40, 0xFFFFFFFF, "right", FlxTextBorderStyle.OUTLINE, 0xFF000000);
@@ -639,6 +645,8 @@ class SSerafim extends BaseStage
 			if (game.iconP2 != null) game.iconP2.visible = true;
 			// The door is part of her animation at first, so only show it afterwards.
 			new FlxTimer().start(23 / 24, function(tmr:FlxTimer) truckDoor.visible = true);
+			// The dust starts settling as soon as she kicks the door off its hinges.
+			startClear();
 		}
 		else
 		{
@@ -726,9 +734,17 @@ class SSerafim extends BaseStage
 		ended = true;
 
 		FlxG.sound.play(Paths.sound('sserafim/cutscene/end-1'));
-		cover.alpha = 1;
-		if (game.camHUD != null) game.camHUD.visible = false;
-		seeYou1.visible = true;
+
+		// V-Slice cuts to the first card 50ms in and takes the HUD and the pause menu
+		// away for the rest of the song, then swaps the cards after four and eight
+		// seconds and ends the song at nine.
+		new FlxTimer().start(0.05, function(tmr:FlxTimer) {
+			cover.alpha = 1;
+			if (game.camHUD != null) game.camHUD.visible = false;
+			seeYou1.visible = true;
+			game.inCutscene = true;
+			game.canPause = false;
+		});
 
 		new FlxTimer().start(4, function(tmr:FlxTimer) {
 			seeYou1.visible = false;
@@ -736,9 +752,12 @@ class SSerafim extends BaseStage
 			FlxG.sound.play(Paths.sound('sserafim/cutscene/end-2'));
 		});
 
-		new FlxTimer().start(9, function(tmr:FlxTimer) {
+		new FlxTimer().start(8, function(tmr:FlxTimer) {
 			seeYou1.visible = false;
 			seeYou2.visible = false;
+		});
+
+		new FlxTimer().start(9, function(tmr:FlxTimer) {
 			game.endSong();
 		});
 	}
@@ -776,13 +795,7 @@ class SSerafim extends BaseStage
 				}
 
 			case 'sserafimKick':
-				var isFinal:Bool = value1 != null && value1.trim().toLowerCase() == 'true';
-				kick(isFinal);
-				if (isFinal)
-				{
-					var ms:Float = value2 != null ? Std.parseFloat(value2) : 0;
-					if (ms > 0) new FlxTimer().start(ms / 1000, function(tmr:FlxTimer) startClear());
-				}
+				kick(value1 != null && value1.trim().toLowerCase() == 'true');
 
 			case 'sserafimCover':
 				cover.alpha = (value1 != null && value1.trim().toLowerCase() == 'true') ? 1 : 0;
@@ -1271,8 +1284,6 @@ class SSerafim extends BaseStage
 		for (spr in [bg, backTables, backStools, truck, truckDoor, frontStool, counterStretch, burgerCutscene])
 			spr.shader = neutral ? null : stageShader;
 		perspectiveFloor.sprite.shader = neutral ? null : stageShader;
-		for (d in dust)
-			d.shader = neutral ? null : stageShader;
 		for (char in band)
 			if (char != null) char.shader = neutral ? null : characterShader;
 		for (mouth in mouths)
