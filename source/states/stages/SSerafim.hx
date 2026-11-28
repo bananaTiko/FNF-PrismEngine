@@ -222,11 +222,11 @@ class SSerafim extends BaseStage
 		// V-Slice never gives the dust backdrops the stage shader, so they keep their
 		// own tint while the diner darkens.
 
-		// V-Slice cancels the countdown to play the intro. setStartCallback runs in its
-		// place, and the intro starts the countdown once it is done. Like V-Slice, the
-		// intro only plays in Story Mode: Freeplay jumps straight into the song.
-		retryResume = isStoryMode && PlayState.retrying;
-		if (isStoryMode && !seenCutscene && !PlayState.retrying) setStartCallback(startIntroCutscene);
+		// V-Slice cancels the countdown to play the intro whatever mode the song was
+		// launched in, so Freeplay gets the cutscene too; only a retry skips it, since
+		// that resumes from the wrecked diner instead of replaying the whole thing.
+		retryResume = PlayState.retrying;
+		if (!retryResume) setStartCallback(startIntroCutscene);
 	}
 
 	function makeDust(image:String, x:Float, y:Float, scroll:Float, scale:Float, alpha:Float, velX:Float, color:Int):FlxBackdrop
@@ -641,6 +641,17 @@ class SSerafim extends BaseStage
 			yunjin.playAnim('kick2', true);
 			yunjinDancing = true;
 			FlxG.sound.play(Paths.sound('sserafim/door-kick-2'));
+			// V-Slice swaps the crash stand-ins for the real girlfriend when the door goes.
+			if (cutsceneGf != null)
+			{
+				cutsceneGf.visible = false;
+				cutsceneGf.active = false;
+			}
+			if (cutsceneBf != null)
+			{
+				cutsceneBf.visible = false;
+				cutsceneBf.active = false;
+			}
 			gf.visible = true;
 			if (game.iconP2 != null) game.iconP2.visible = true;
 			// The door is part of her animation at first, so only show it afterwards.
@@ -909,22 +920,23 @@ class SSerafim extends BaseStage
 		setCutsceneSpritesActive(active);
 
 		if (cutsceneMain != null) cutsceneMain.visible = active;
-		if (!active)
+		if (active)
 		{
 			if (cutsceneGf != null) cutsceneGf.visible = false;
 			if (cutsceneBf != null) cutsceneBf.visible = false;
 		}
 
-		// The band only turns up when the song's events reveal them.
-		if (active)
-		{
-			yunjin.visible = false;
-			chaewon.visible = false;
-			eunchae.visible = false;
-			boyfriend.visible = false;
-			dad.visible = false;
-			gf.visible = false;
-		}
+		// V-Slice restores its baseVisible here: only Yunjin is on stage when the
+		// wrecked diner appears, and hiding her would play her door kick on an
+		// invisible sprite.
+		yunjin.visible = !active;
+		chaewon.visible = false;
+		eunchae.visible = false;
+		boyfriend.visible = false;
+		dad.visible = false;
+
+		// V-Slice keeps the real girlfriend out of the shot until Yunjin kicks the door.
+		gf.visible = false;
 
 		truck.visible = !active;
 		truckDoor.visible = false;
@@ -1189,9 +1201,16 @@ class SSerafim extends BaseStage
 		cutsceneFinished = true;
 		cutscenePlaying = false;
 
-		if (cutsceneGf != null) cutsceneGf.visible = false;
-		if (cutsceneBf != null) cutsceneBf.visible = false;
-		setCutsceneSpritesActive(false);
+		// V-Slice's setCutsceneVisibility(false) only hides the main cutscene sprite: BF
+		// and GF stay on the floor where the crash left them until the door goes, so let
+		// their get-up finish instead of freezing and hiding them here.
+		if (cutsceneMain != null)
+		{
+			cutsceneMain.visible = false;
+			cutsceneMain.active = false;
+		}
+		if (cutsceneGf != null) cutsceneGf.anim.resume();
+		if (cutsceneBf != null) cutsceneBf.anim.resume();
 		if (skipText != null) skipText.visible = false;
 
 		camGame.zoom = normalZoom;
